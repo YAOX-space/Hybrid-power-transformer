@@ -1,0 +1,105 @@
+{
+  "dnn": {
+    "method": "dnn",
+    "test_mae_norm": 0.005077,
+    "test_mse_norm": 4e-05,
+    "test_mae_pu": 0.0028,
+    "expected_settling_ms": 30.0
+  },
+  "drl": {
+    "method": "drl",
+    "note": "Evaluated in MATLAB via drl_trainer.m \u2014 see training logs.",
+    "expected_settling_ms": 20.0
+  },
+  "lstm": {
+    "method": "lstm",
+    "accuracy_pct": 99.9,
+    "precision": 99.63,
+    "recall": 99.74,
+    "f1_score": 99.68,
+    "detect_latency_ms": 5.0,
+    "inference_ms": 0.5594,
+    "meets_acc_target": true,
+    "meets_latency_target": true,
+    "confusion_matrix": [
+      [
+        14551,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        855,
+        0,
+        0,
+        0,
+        0,
+        6
+      ],
+      [
+        0,
+        0,
+        847,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        735,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        153,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        131,
+        0
+      ],
+      [
+        1,
+        11,
+        0,
+        0,
+        0,
+        0,
+        1054
+      ]
+    ]
+  },
+  "cwt_cnn": {
+    "method": "cwt_cnn",
+    "accuracy_pct": 100.0,
+    "precision": 100.0,
+    "recall": 100.0,
+    "f1_score": 100.0,
+    "n_classes": 13
+  },
+  "frt": {
+    "method": "frt",
+    "mean_recovery_ms": 3.4,
+    "max_recovery_ms": 3.5,
+    "success_rate_pct": 100.0,
+    "meets_target": "True"
+  }
+}
