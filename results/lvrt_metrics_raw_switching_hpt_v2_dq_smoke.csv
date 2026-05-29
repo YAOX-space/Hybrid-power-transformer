@@ -1,0 +1,8 @@
+file,sc_id,scenario,fault_start_s,fault_end_s,v2_min_pu_fault,v2_mean_pu_fault,v2_recovery_ms_to_0p90,vdc_peak_pu_post_fault,vdc_min_pu_post_fault,i2_peak_pu_post_fault,q2_abs_peak_kvar_fault,lvrt_pass_basic
+scenario_0001_switching_0_normal_run001.mat,0,normal,0.029019,0.05,0.937,0.9481,0.031,1.0543,0.9283,1.1557,239.185,True
+scenario_0051_switching_3_igbt_oc_sh_run001.mat,3,igbt_oc_sh,0.02615,0.05,0.9327,0.9476,0.0,1.0987,0.7797,1.3665,282.26,True
+scenario_0101_switching_4_igbt_oc_se_run001.mat,4,igbt_oc_se,0.0137,0.05,0.8233,0.9128,0.0,1.1224,0.9324,1.2771,258.187,True
+scenario_0151_switching_5_cap_fault_run001.mat,5,cap_fault,0.02735,0.05,0.9272,0.9389,0.0,1.127,0.8952,1.4549,353.045,True
+scenario_0201_switching_6_sc_1ph_run001.mat,6,sc_1ph,0.0256,0.05,0.8367,0.9437,0.25,1.0169,0.6537,1.4872,303.436,False
+scenario_0251_switching_7_sc_3ph_run001.mat,7,sc_3ph,0.0161,0.05,0.3132,0.9282,1.05,1.0828,0.6823,2.5249,436.868,False
+scenario_0301_switching_8_cascade_run001.mat,8,cascade,0.0165,0.05,0.838,0.9311,2.2,1.1258,0.7803,1.4269,327.502,True

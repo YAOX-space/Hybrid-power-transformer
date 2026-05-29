@@ -1,0 +1,14 @@
+{
+  "phase": "offline",
+  "n_scenarios": 350,
+  "dq_pass_pct": 64.0,
+  "physics_recoverable": 39,
+  "physics_estimated_pass_pct": 75.14,
+  "failure_breakdown": {
+    "pass": 224,
+    "vdc_low": 126,
+    "i2_high": 0,
+    "recovery": 0,
+    "vdc_high": 0
+  }
+}

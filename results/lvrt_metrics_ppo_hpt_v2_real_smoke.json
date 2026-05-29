@@ -1,0 +1,32 @@
+{
+  "raw_dir": "E:\\research_space\\Hybrid-power-transformer\\data\\ppo_hpt_v2_real_smoke",
+  "summary": {
+    "sc_3ph": {
+      "n": 1,
+      "pass_rate_pct": 0.0,
+      "v2_min_pu_min": 0.3132,
+      "vdc_peak_pu_max": 1.0866,
+      "vdc_min_pu_min": 0.6222,
+      "i2_peak_pu_max": 2.5274,
+      "recovery_ms_mean": 0.95,
+      "recovery_ms_max": 0.95
+    }
+  },
+  "rows": [
+    {
+      "file": "scenario_0251_switching_7_sc_3ph_run001.mat",
+      "sc_id": 7,
+      "scenario": "sc_3ph",
+      "fault_start_s": 0.0161,
+      "fault_end_s": 0.05,
+      "v2_min_pu_fault": 0.3132,
+      "v2_mean_pu_fault": 0.9313,
+      "v2_recovery_ms_to_0p90": 0.95,
+      "vdc_peak_pu_post_fault": 1.0866,
+      "vdc_min_pu_post_fault": 0.6222,
+      "i2_peak_pu_post_fault": 2.5274,
+      "q2_abs_peak_kvar_fault": 365.626,
+      "lvrt_pass_basic": false
+    }
+  ]
+}

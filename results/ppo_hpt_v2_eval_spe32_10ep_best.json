@@ -1,0 +1,75 @@
+{
+  "checkpoint": "data\\models\\ppo_hpt_v2_real_spe32_10ep_best.pt",
+  "n": 350,
+  "mean_reward": 7.7239064666666675,
+  "pass_rate_pct": 59.42857142857143,
+  "v2_min_mean": 0.8085125714285715,
+  "vdc_min_mean": 0.7546345714285714,
+  "vdc_max_mean": 1.0780431428571429,
+  "i2_max_mean": 1.6152571428571427,
+  "summary_by_sc_id": {
+    "0": {
+      "n": 50,
+      "pass_rate_pct": 100.0,
+      "reward_mean": 10.7784926,
+      "v2_min_mean": 0.9317839999999998,
+      "vdc_min_mean": 0.9126099999999999,
+      "vdc_max_mean": 1.057492,
+      "i2_max_mean": 1.3762979999999998
+    },
+    "3": {
+      "n": 50,
+      "pass_rate_pct": 90.0,
+      "reward_mean": 10.153394666666667,
+      "v2_min_mean": 0.9305940000000001,
+      "vdc_min_mean": 0.790182,
+      "vdc_max_mean": 1.088596,
+      "i2_max_mean": 1.40634
+    },
+    "4": {
+      "n": 50,
+      "pass_rate_pct": 100.0,
+      "reward_mean": 10.33375,
+      "v2_min_mean": 0.8251919999999999,
+      "vdc_min_mean": 0.9159820000000001,
+      "vdc_max_mean": 1.10064,
+      "i2_max_mean": 1.3730699999999998
+    },
+    "5": {
+      "n": 50,
+      "pass_rate_pct": 20.0,
+      "reward_mean": 5.773019999999999,
+      "v2_min_mean": 0.9295019999999999,
+      "vdc_min_mean": 0.6698119999999999,
+      "vdc_max_mean": 1.1283320000000001,
+      "i2_max_mean": 1.410268
+    },
+    "6": {
+      "n": 50,
+      "pass_rate_pct": 16.0,
+      "reward_mean": 5.238200666666667,
+      "v2_min_mean": 0.825812,
+      "vdc_min_mean": 0.617952,
+      "vdc_max_mean": 1.017978,
+      "i2_max_mean": 1.7114360000000002
+    },
+    "7": {
+      "n": 50,
+      "pass_rate_pct": 2.0,
+      "reward_mean": 2.091950222222222,
+      "v2_min_mean": 0.380452,
+      "vdc_min_mean": 0.559718,
+      "vdc_max_mean": 1.0346499999999998,
+      "i2_max_mean": 2.578884
+    },
+    "8": {
+      "n": 50,
+      "pass_rate_pct": 88.0,
+      "reward_mean": 9.69853711111111,
+      "v2_min_mean": 0.8362519999999999,
+      "vdc_min_mean": 0.816186,
+      "vdc_max_mean": 1.118614,
+      "i2_max_mean": 1.4505040000000002
+    }
+  }
+}

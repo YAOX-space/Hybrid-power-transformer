@@ -1,0 +1,2 @@
+file,sc_id,scenario,fault_start_s,fault_end_s,v2_min_pu_fault,v2_mean_pu_fault,v2_recovery_ms_to_0p90,vdc_peak_pu_post_fault,vdc_min_pu_post_fault,i2_peak_pu_post_fault,q2_abs_peak_kvar_fault,lvrt_pass_basic
+scenario_0251_switching_7_sc_3ph_run001.mat,7,sc_3ph,0.0161,0.05,0.3132,0.9313,0.95,1.0866,0.6222,2.5274,365.626,False

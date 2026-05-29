@@ -1,0 +1,17 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "mean_reward": 10.808324812464416
+    },
+    {
+      "epoch": 2,
+      "mean_reward": 10.6877267706953
+    },
+    {
+      "epoch": 3,
+      "mean_reward": 10.82988481416367
+    }
+  ],
+  "checkpoint": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\ppo_hpt_v2_dry_run.pt"
+}

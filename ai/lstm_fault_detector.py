@@ -15,9 +15,12 @@ Usage:
   python lstm_fault_detector.py --detect <mat> # detect fault in a single file
 """
 
+from __future__ import annotations
+
 import argparse
 import time
 from pathlib import Path
+from typing import Tuple
 
 import numpy as np
 import torch
@@ -29,12 +32,18 @@ from sklearn.metrics import (classification_report, confusion_matrix,
 
 from data_loader import (build_fault_dataset, make_balanced_loader,
                          make_val_loader, FAULT_CLASSES, N_CLASSES,
-                         WINDOW_SIZE, N_FEAT_FAULT)
+                         WINDOW_SIZE, N_FEAT_FAULT, RAW_DIR)
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-MODEL_DIR = Path(__file__).parent.parent / 'data' / 'models'
+MODEL_DIR = Path(__file__).resolve().parent.parent / 'data' / 'models'
 MODEL_DIR.mkdir(exist_ok=True)
-CKPT_PATH = MODEL_DIR / 'lstm_fault_detector.pt'
+CKPT_PATH = MODEL_DIR / f'lstm_fault_detector_{RAW_DIR.name}.pt'
+
+
+def checkpoint_path_for_arch(arch: str) -> Path:
+    if arch in ('auto', 'cnn'):
+        return CKPT_PATH
+    return MODEL_DIR / f'lstm_fault_detector_{RAW_DIR.name}_{arch}.pt'
 
 # ── Hyperparameters ────────────────────────────────────────────────────────────
 HIDDEN_SIZE   = 128
@@ -45,6 +54,58 @@ BATCH_SIZE    = 256
 LR            = 1e-3
 EPOCHS        = 60
 PATIENCE      = 10             # Early stopping
+
+
+class FocalLoss(nn.Module):
+    """Cross-entropy variant that focuses training on hard/confusing samples."""
+
+    def __init__(self, alpha: torch.Tensor | None = None, gamma: float = 1.5):
+        super().__init__()
+        self.register_buffer('alpha', alpha)
+        self.gamma = gamma
+
+    def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        ce = nn.functional.cross_entropy(logits, target, reduction='none')
+        pt = torch.exp(-ce)
+        if self.alpha is not None:
+            ce = ce * self.alpha[target]
+        return ((1.0 - pt) ** self.gamma * ce).mean()
+
+
+def class_weights_from_dataset(dataset, device: torch.device) -> torch.Tensor:
+    labels = dataset.y.numpy()
+    counts = np.bincount(labels, minlength=N_CLASSES).astype(np.float32)
+    weights = 1.0 / np.sqrt(np.maximum(counts, 1.0))
+    weights = weights / weights.mean()
+    return torch.tensor(weights, dtype=torch.float32, device=device)
+
+
+def resolve_device(device: str) -> Tuple[torch.device, str, bool]:
+    """Resolve cpu/cuda/dml/auto into a torch device and pin-memory setting."""
+    if device == 'auto':
+        if torch.cuda.is_available():
+            device = 'cuda'
+        else:
+            try:
+                import torch_directml
+                return torch_directml.device(), 'dml', False
+            except Exception:
+                device = 'cpu'
+
+    if device == 'cuda':
+        if not torch.cuda.is_available():
+            raise RuntimeError('CUDA was requested, but this PyTorch build cannot access CUDA.')
+        torch.backends.cudnn.benchmark = True
+        return torch.device('cuda'), 'cuda', True
+
+    if device == 'dml':
+        import torch_directml
+        return torch_directml.device(), 'dml', False
+
+    if device == 'cpu':
+        return torch.device('cpu'), 'cpu', False
+
+    raise ValueError(f'Unsupported device: {device}. Use auto, cuda, dml, or cpu.')
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -85,29 +146,172 @@ class LSTMFaultDetector(nn.Module):
             return torch.softmax(logits, dim=-1)
 
 
+class CNNFaultDetector(nn.Module):
+    """GPU-friendly temporal CNN for 5 ms sliding-window fault detection."""
+
+    def __init__(self, input_size=N_FEAT_FAULT, n_classes=N_CLASSES, dropout=DROPOUT):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Conv1d(input_size, 64, kernel_size=5, padding=2),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Conv1d(64, 96, kernel_size=5, padding=4, dilation=2),
+            nn.BatchNorm1d(96),
+            nn.ReLU(),
+            nn.Conv1d(96, 128, kernel_size=5, padding=8, dilation=4),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.AdaptiveAvgPool1d(1),
+        )
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Dropout(dropout),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, n_classes),
+        )
+
+    def forward(self, x):
+        # x: (batch, seq_len, features) -> (batch, features, seq_len)
+        x = x.transpose(1, 2)
+        return self.classifier(self.net(x))
+
+    def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
+        with torch.no_grad():
+            logits = self.forward(x)
+            return torch.softmax(logits, dim=-1)
+
+
+class TCNFaultDetector(nn.Module):
+    """Causal temporal convolutional network for 5 ms HPT fault windows."""
+
+    def __init__(self, input_size=N_FEAT_FAULT, n_classes=N_CLASSES, dropout=DROPOUT):
+        super().__init__()
+        channels = [64, 96, 128, 128]
+        layers = []
+        in_ch = input_size
+        for idx, out_ch in enumerate(channels):
+            dilation = 2 ** idx
+            pad = (5 - 1) * dilation
+            layers += [
+                nn.ConstantPad1d((pad, 0), 0.0),
+                nn.Conv1d(in_ch, out_ch, kernel_size=5, dilation=dilation),
+                nn.BatchNorm1d(out_ch),
+                nn.ReLU(),
+                nn.Dropout(dropout * 0.5),
+            ]
+            in_ch = out_ch
+        self.tcn = nn.Sequential(*layers)
+        self.classifier = nn.Sequential(
+            nn.AdaptiveAvgPool1d(1),
+            nn.Flatten(),
+            nn.Linear(channels[-1], 64),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(64, n_classes),
+        )
+
+    def forward(self, x):
+        x = x.transpose(1, 2)
+        return self.classifier(self.tcn(x))
+
+    def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
+        with torch.no_grad():
+            return torch.softmax(self.forward(x), dim=-1)
+
+
+class CNNLSTMFaultDetector(nn.Module):
+    """CNN front-end plus causal LSTM temporal memory."""
+
+    def __init__(self, input_size=N_FEAT_FAULT, n_classes=N_CLASSES, dropout=DROPOUT):
+        super().__init__()
+        self.cnn = nn.Sequential(
+            nn.Conv1d(input_size, 64, kernel_size=5, padding=2),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Conv1d(64, 96, kernel_size=5, padding=2),
+            nn.BatchNorm1d(96),
+            nn.ReLU(),
+        )
+        self.lstm = nn.LSTM(
+            input_size=96,
+            hidden_size=96,
+            num_layers=1,
+            batch_first=True,
+            bidirectional=False,
+        )
+        self.classifier = nn.Sequential(
+            nn.Dropout(dropout),
+            nn.Linear(96, 64),
+            nn.ReLU(),
+            nn.Linear(64, n_classes),
+        )
+
+    def forward(self, x):
+        z = self.cnn(x.transpose(1, 2)).transpose(1, 2)
+        y, _ = self.lstm(z)
+        return self.classifier(y[:, -1, :])
+
+    def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
+        with torch.no_grad():
+            return torch.softmax(self.forward(x), dim=-1)
+
+
+def create_model(arch: str, device_name: str) -> nn.Module:
+    if arch == 'auto':
+        arch = 'cnn' if device_name == 'dml' else 'lstm'
+    if arch == 'lstm':
+        return LSTMFaultDetector()
+    if arch == 'cnn':
+        return CNNFaultDetector()
+    if arch == 'tcn':
+        return TCNFaultDetector()
+    if arch == 'cnn_lstm':
+        return CNNLSTMFaultDetector()
+    raise ValueError(f'Unsupported arch: {arch}. Use auto, lstm, cnn, tcn, or cnn_lstm.')
+
+
 # ══════════════════════════════════════════════════════════════════════════════
-def train(epochs: int = EPOCHS, device: str = 'auto'):
-    if device == 'auto':
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f'Training on: {device}')
+def train(epochs: int = EPOCHS, device: str = 'auto', arch: str = 'auto',
+          loss_name: str = 'ce'):
+    device, device_name, pin_memory = resolve_device(device)
+    if arch == 'auto':
+        arch = 'cnn' if device_name == 'dml' else 'lstm'
+    ckpt_path = checkpoint_path_for_arch(arch)
+    print(f'Training on: {device_name} ({device}), arch={arch}')
 
     # ── Data ──
     train_ds, val_ds, test_ds, _ = build_fault_dataset()
-    train_loader = make_balanced_loader(train_ds, batch_size=BATCH_SIZE)
-    val_loader   = make_val_loader(val_ds,   batch_size=512)
-    test_loader  = make_val_loader(test_ds,  batch_size=512)
+    train_loader = make_balanced_loader(
+        train_ds, batch_size=BATCH_SIZE, num_workers=0, pin_memory=pin_memory)
+    val_loader   = make_val_loader(
+        val_ds, batch_size=512, num_workers=0, pin_memory=pin_memory)
+    test_loader  = make_val_loader(
+        test_ds, batch_size=512, num_workers=0, pin_memory=pin_memory)
 
     # ── Model ──
-    model = LSTMFaultDetector().to(device)
+    model = create_model(arch, device_name).to(device)
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'Model parameters: {n_params:,}')
 
     # ── Loss: cross-entropy (balanced via WeightedRandomSampler already) ──
-    criterion = nn.CrossEntropyLoss()
+    class_weights = class_weights_from_dataset(train_ds, device)
+    print('Class weights:', ' '.join(
+        f'{FAULT_CLASSES[i]}={class_weights[i].item():.2f}'
+        for i in range(N_CLASSES)))
+
+    if loss_name == 'ce':
+        criterion = nn.CrossEntropyLoss()
+    elif loss_name == 'weighted_ce':
+        criterion = nn.CrossEntropyLoss(weight=class_weights)
+    elif loss_name == 'focal':
+        criterion = FocalLoss(alpha=class_weights, gamma=1.5)
+    else:
+        raise ValueError(f'Unsupported loss: {loss_name}. Use ce, weighted_ce, or focal.')
     optimizer = Adam(model.parameters(), lr=LR, weight_decay=1e-5)
     scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-5)
 
-    best_val_acc = 0.0
+    best_val_acc = -1.0
     patience_counter = 0
     history = {'train_loss': [], 'val_loss': [], 'val_acc': []}
 
@@ -162,7 +366,8 @@ def train(epochs: int = EPOCHS, device: str = 'auto'):
                 'model_state': model.state_dict(),
                 'val_acc': val_acc,
                 'history': history,
-            }, CKPT_PATH)
+                'arch': arch,
+            }, ckpt_path)
             print(f'         ✓ Saved (val_acc={val_acc*100:.2f}%)')
         else:
             patience_counter += 1
@@ -172,10 +377,10 @@ def train(epochs: int = EPOCHS, device: str = 'auto'):
 
     # ── Final evaluation on test set ──
     print(f'\n=== Test Set Evaluation (best model) ===')
-    ckpt = torch.load(CKPT_PATH, map_location=device)
+    ckpt = torch.load(ckpt_path, map_location=device)
     model.load_state_dict(ckpt['model_state'])
     evaluate(model, test_loader, device)
-    print(f'\nModel saved to: {CKPT_PATH}')
+    print(f'\nModel saved to: {ckpt_path}')
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -195,10 +400,12 @@ def evaluate(model: LSTMFaultDetector, loader, device: str):
     acc = accuracy_score(y_true, y_pred)
     print(f'Overall Accuracy: {acc*100:.2f}%')
     print(f'\nClassification Report:')
-    print(classification_report(y_true, y_pred,
-                                target_names=list(FAULT_CLASSES.values()),
-                                zero_division=0))
-    cm = confusion_matrix(y_true, y_pred)
+    print(classification_report(
+        y_true, y_pred,
+        labels=list(range(N_CLASSES)),
+        target_names=list(FAULT_CLASSES.values()),
+        zero_division=0))
+    cm = confusion_matrix(y_true, y_pred, labels=list(range(N_CLASSES)))
     print('Confusion Matrix:')
     print(cm)
 
@@ -289,16 +496,27 @@ if __name__ == '__main__':
     parser.add_argument('--onnx',   action='store_true', help='Export to ONNX')
     parser.add_argument('--epochs', type=int, default=EPOCHS)
     parser.add_argument('--device', type=str, default='auto')
+    parser.add_argument('--arch', type=str, default='auto',
+                        choices=['auto', 'lstm', 'cnn', 'tcn', 'cnn_lstm'])
+    parser.add_argument('--loss', type=str, default='ce',
+                        choices=['ce', 'weighted_ce', 'focal'])
     args = parser.parse_args()
 
     if args.train:
-        train(epochs=args.epochs, device=args.device)
+        train(epochs=args.epochs, device=args.device, arch=args.arch,
+              loss_name=args.loss)
     elif args.eval:
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        device, device_name, pin_memory = resolve_device(args.device)
+        print(f'Evaluating on: {device_name} ({device})')
         _, _, test_ds, _ = build_fault_dataset()
-        loader = make_val_loader(test_ds, batch_size=512)
-        model = LSTMFaultDetector().to(device)
-        ckpt = torch.load(CKPT_PATH, map_location=device)
+        loader = make_val_loader(
+            test_ds, batch_size=512, num_workers=0, pin_memory=pin_memory)
+        arch = args.arch
+        if arch == 'auto':
+            ckpt = torch.load(CKPT_PATH, map_location=device)
+            arch = ckpt.get('arch', 'cnn' if device_name == 'dml' else 'lstm')
+        ckpt = torch.load(checkpoint_path_for_arch(arch), map_location=device)
+        model = create_model(arch, device_name).to(device)
         model.load_state_dict(ckpt['model_state'])
         evaluate(model, loader, device)
     elif args.onnx:

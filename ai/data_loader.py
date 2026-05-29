@@ -10,8 +10,10 @@ Supported tasks:
 
 import os
 import glob
+import re
 import numpy as np
 import scipy.io as sio
+import mat73
 from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 import torch
@@ -19,17 +21,21 @@ from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 import pickle
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-RAW_DIR   = Path(__file__).parent.parent / 'data' / 'raw_ode'  # ODE physics-based data
-PROC_DIR  = Path(__file__).parent.parent / 'data' / 'processed'
-MODEL_DIR = Path(__file__).parent.parent / 'data' / 'models'
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_DEFAULT_RAW_DIR = PROJECT_ROOT / 'data' / 'raw_switching_hpt_v2'
+RAW_DIR   = Path(os.environ.get('HPT_RAW_DIR', _DEFAULT_RAW_DIR)).expanduser()
+if not RAW_DIR.is_absolute():
+    RAW_DIR = (Path(__file__).resolve().parent / RAW_DIR).resolve()
+PROC_DIR  = PROJECT_ROOT / 'data' / 'processed'
+MODEL_DIR = PROJECT_ROOT / 'data' / 'models'
 PROC_DIR.mkdir(parents=True, exist_ok=True)
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Constants ──────────────────────────────────────────────────────────────────
-F_SAMPLE    = 20_000          # Hz — must match MATLAB run_scenarios.m
+F_SAMPLE    = 20_000          # Hz, matches data_collection/run_switching_scenarios.m
 WINDOW_SIZE = 100             # samples = 5ms at 20kHz (matches <5ms target)
 STRIDE      = 100             # 5ms stride (non-overlapping — keeps memory manageable)
-MAX_FILES   = 300             # cap files to keep RAM under ~4 GB
+MAX_FILES   = int(os.environ.get('HPT_MAX_FILES', '0'))  # 0 means use all files
 FAULT_CLASSES = {
     0: 'normal',
     1: 'igbt_oc_sh',
@@ -41,8 +47,10 @@ FAULT_CLASSES = {
 }
 N_CLASSES = len(FAULT_CLASSES)
 
-# Features for fault detection:  V_dc, I_sh_a/b/c, I_se_a/b/c  → 7 channels
-FAULT_FEATURES = ['V_dc', 'Ish_d', 'Ish_q', 'I1_a', 'I1_b', 'I1_c',
+# Features for fault detection — 9 channels:
+# dc_err_proxy = 0.05*(800-Vdc) + 0.02*(id1-id2)  (Simulink DQ_Features ch0, not real Ish_d)
+# Iq2_kA      = iq2/1000  (secondary q-axis current, ch1 of Ish_dq workspace var)
+FAULT_FEATURES = ['V_dc', 'dc_err_proxy', 'Iq2_kA', 'I1_a', 'I1_b', 'I1_c',
                   'I2_a', 'I2_b', 'I2_c']   # 9 channels
 N_FEAT_FAULT = len(FAULT_FEATURES)
 
@@ -58,7 +66,10 @@ class HPTMatLoader:
     """Reads one .mat file and returns structured arrays."""
 
     def __init__(self, mat_path: str):
-        mat = sio.loadmat(mat_path)
+        try:
+            mat = sio.loadmat(mat_path)
+        except NotImplementedError:
+            mat = mat73.loadmat(mat_path)
         T = mat['t_uniform'].squeeze()
         N = len(T)
 
@@ -68,7 +79,7 @@ class HPTMatLoader:
         V2 = mat['V2_abc']
         I2 = mat['I2_abc']
         Vdc = mat['V_dc'].squeeze() # (N,)
-        Ish = mat['Ish_dq']         # (N, 2)  [d, q]
+        Ish = mat['Ish_dq']         # (N, 2)  [dc_err_proxy, Iq2_kA]  — see DQ_Features in build script
         Ise = mat['Ise_dq']
         P1  = mat['P1'].squeeze()
         Q1  = mat['Q1'].squeeze()
@@ -96,8 +107,23 @@ class HPTMatLoader:
         self.labels = labels
         self.T = T
         self.N = N
-        self.sc_label = str(mat.get('sc_label', ['?'])[0])
-        self.sc_id    = int(mat.get('sc_id', [[-1]])[0][0])
+        self.sc_label = _mat_scalar(mat.get('sc_label', '?'), '?')
+        self.sc_id    = int(_mat_scalar(mat.get('sc_id', -1), -1))
+
+
+def _mat_scalar(value, default):
+    """Return a Python scalar from scipy.io or mat73 MATLAB scalar/string data."""
+    if value is None:
+        return default
+    arr = np.asarray(value)
+    if arr.shape == ():
+        return arr.item()
+    if arr.size == 0:
+        return default
+    item = arr.flat[0]
+    if isinstance(item, np.ndarray):
+        return _mat_scalar(item, default)
+    return item
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -154,7 +180,10 @@ def build_fault_dataset(
     Reads all .mat files, extracts sliding windows, normalizes, splits.
     Returns: (train_ds, val_ds, test_ds, scaler)
     """
-    cache = PROC_DIR / 'fault_windows.npz'
+    source_id = re.sub(r'[^A-Za-z0-9_.-]+', '_', raw_dir.resolve().name)
+    cache = PROC_DIR / f'fault_windows_{source_id}.npz'
+    if scaler_path == PROC_DIR / 'fault_scaler.pkl':
+        scaler_path = PROC_DIR / f'fault_scaler_{source_id}.pkl'
 
     if cache.exists() and not force_rebuild:
         print(f'Loading cached dataset from {cache}')
@@ -164,11 +193,11 @@ def build_fault_dataset(
         mat_files = sorted(glob.glob(str(raw_dir / '*.mat')))
         if not mat_files:
             raise FileNotFoundError(
-                f'No .mat files found in {raw_dir}. Run run_scenarios.m first.')
+                f'No .mat files found in {raw_dir}. Run run_switching_scenarios.m first.')
 
         # Balance classes: sample evenly across scenario types
         rng_sel = np.random.default_rng(0)
-        if len(mat_files) > MAX_FILES:
+        if MAX_FILES > 0 and len(mat_files) > MAX_FILES:
             mat_files = list(rng_sel.choice(mat_files, MAX_FILES, replace=False))
 
         X_list, y_list = [], []
@@ -235,20 +264,22 @@ def build_fault_dataset(
 
 
 def make_balanced_loader(dataset: FaultDetectionDataset, batch_size: int = 256,
-                         num_workers: int = 4) -> DataLoader:
+                         num_workers: int = 4,
+                         pin_memory: bool = True) -> DataLoader:
     """Class-balanced sampler to handle rare fault events."""
     labels = dataset.y.numpy()
     class_counts = np.bincount(labels, minlength=N_CLASSES)
     weights = 1.0 / (class_counts[labels] + 1e-8)
     sampler = WeightedRandomSampler(weights, num_samples=len(dataset), replacement=True)
     return DataLoader(dataset, batch_size=batch_size, sampler=sampler,
-                      num_workers=num_workers, pin_memory=True)
+                      num_workers=num_workers, pin_memory=pin_memory)
 
 
 def make_val_loader(dataset: FaultDetectionDataset, batch_size: int = 512,
-                    num_workers: int = 4) -> DataLoader:
+                    num_workers: int = 4,
+                    pin_memory: bool = True) -> DataLoader:
     return DataLoader(dataset, batch_size=batch_size, shuffle=False,
-                      num_workers=num_workers, pin_memory=True)
+                      num_workers=num_workers, pin_memory=pin_memory)
 
 
 def _print_class_dist(name, labels):
@@ -262,7 +293,7 @@ def _print_class_dist(name, labels):
 def export_mat_to_numpy():
     """
     Convenience function: converts all .mat files to a single .npz archive
-    readable by numpy without MATLAB. Called after run_scenarios.m completes.
+    readable by numpy without MATLAB. Called after run_switching_scenarios.m completes.
     """
     mat_files = sorted(glob.glob(str(RAW_DIR / '*.mat')))
     print(f'Exporting {len(mat_files)} .mat files...')

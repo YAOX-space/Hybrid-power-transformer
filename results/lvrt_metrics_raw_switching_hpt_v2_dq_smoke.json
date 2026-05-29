@@ -1,0 +1,182 @@
+{
+  "raw_dir": "E:\\research_space\\Hybrid-power-transformer\\data\\raw_switching_hpt_v2_dq_smoke",
+  "summary": {
+    "cap_fault": {
+      "n": 1,
+      "pass_rate_pct": 100.0,
+      "v2_min_pu_min": 0.9272,
+      "vdc_peak_pu_max": 1.127,
+      "vdc_min_pu_min": 0.8952,
+      "i2_peak_pu_max": 1.4549,
+      "recovery_ms_mean": 0.0,
+      "recovery_ms_max": 0.0
+    },
+    "cascade": {
+      "n": 1,
+      "pass_rate_pct": 100.0,
+      "v2_min_pu_min": 0.838,
+      "vdc_peak_pu_max": 1.1258,
+      "vdc_min_pu_min": 0.7803,
+      "i2_peak_pu_max": 1.4269,
+      "recovery_ms_mean": 2.2,
+      "recovery_ms_max": 2.2
+    },
+    "igbt_oc_se": {
+      "n": 1,
+      "pass_rate_pct": 100.0,
+      "v2_min_pu_min": 0.8233,
+      "vdc_peak_pu_max": 1.1224,
+      "vdc_min_pu_min": 0.9324,
+      "i2_peak_pu_max": 1.2771,
+      "recovery_ms_mean": 0.0,
+      "recovery_ms_max": 0.0
+    },
+    "igbt_oc_sh": {
+      "n": 1,
+      "pass_rate_pct": 100.0,
+      "v2_min_pu_min": 0.9327,
+      "vdc_peak_pu_max": 1.0987,
+      "vdc_min_pu_min": 0.7797,
+      "i2_peak_pu_max": 1.3665,
+      "recovery_ms_mean": 0.0,
+      "recovery_ms_max": 0.0
+    },
+    "normal": {
+      "n": 1,
+      "pass_rate_pct": 100.0,
+      "v2_min_pu_min": 0.937,
+      "vdc_peak_pu_max": 1.0543,
+      "vdc_min_pu_min": 0.9283,
+      "i2_peak_pu_max": 1.1557,
+      "recovery_ms_mean": 0.031,
+      "recovery_ms_max": 0.031
+    },
+    "sc_1ph": {
+      "n": 1,
+      "pass_rate_pct": 0.0,
+      "v2_min_pu_min": 0.8367,
+      "vdc_peak_pu_max": 1.0169,
+      "vdc_min_pu_min": 0.6537,
+      "i2_peak_pu_max": 1.4872,
+      "recovery_ms_mean": 0.25,
+      "recovery_ms_max": 0.25
+    },
+    "sc_3ph": {
+      "n": 1,
+      "pass_rate_pct": 0.0,
+      "v2_min_pu_min": 0.3132,
+      "vdc_peak_pu_max": 1.0828,
+      "vdc_min_pu_min": 0.6823,
+      "i2_peak_pu_max": 2.5249,
+      "recovery_ms_mean": 1.05,
+      "recovery_ms_max": 1.05
+    }
+  },
+  "rows": [
+    {
+      "file": "scenario_0001_switching_0_normal_run001.mat",
+      "sc_id": 0,
+      "scenario": "normal",
+      "fault_start_s": 0.029019,
+      "fault_end_s": 0.05,
+      "v2_min_pu_fault": 0.937,
+      "v2_mean_pu_fault": 0.9481,
+      "v2_recovery_ms_to_0p90": 0.031,
+      "vdc_peak_pu_post_fault": 1.0543,
+      "vdc_min_pu_post_fault": 0.9283,
+      "i2_peak_pu_post_fault": 1.1557,
+      "q2_abs_peak_kvar_fault": 239.185,
+      "lvrt_pass_basic": true
+    },
+    {
+      "file": "scenario_0051_switching_3_igbt_oc_sh_run001.mat",
+      "sc_id": 3,
+      "scenario": "igbt_oc_sh",
+      "fault_start_s": 0.02615,
+      "fault_end_s": 0.05,
+      "v2_min_pu_fault": 0.9327,
+      "v2_mean_pu_fault": 0.9476,
+      "v2_recovery_ms_to_0p90": 0.0,
+      "vdc_peak_pu_post_fault": 1.0987,
+      "vdc_min_pu_post_fault": 0.7797,
+      "i2_peak_pu_post_fault": 1.3665,
+      "q2_abs_peak_kvar_fault": 282.26,
+      "lvrt_pass_basic": true
+    },
+    {
+      "file": "scenario_0101_switching_4_igbt_oc_se_run001.mat",
+      "sc_id": 4,
+      "scenario": "igbt_oc_se",
+      "fault_start_s": 0.0137,
+      "fault_end_s": 0.05,
+      "v2_min_pu_fault": 0.8233,
+      "v2_mean_pu_fault": 0.9128,
+      "v2_recovery_ms_to_0p90": 0.0,
+      "vdc_peak_pu_post_fault": 1.1224,
+      "vdc_min_pu_post_fault": 0.9324,
+      "i2_peak_pu_post_fault": 1.2771,
+      "q2_abs_peak_kvar_fault": 258.187,
+      "lvrt_pass_basic": true
+    },
+    {
+      "file": "scenario_0151_switching_5_cap_fault_run001.mat",
+      "sc_id": 5,
+      "scenario": "cap_fault",
+      "fault_start_s": 0.02735,
+      "fault_end_s": 0.05,
+      "v2_min_pu_fault": 0.9272,
+      "v2_mean_pu_fault": 0.9389,
+      "v2_recovery_ms_to_0p90": 0.0,
+      "vdc_peak_pu_post_fault": 1.127,
+      "vdc_min_pu_post_fault": 0.8952,
+      "i2_peak_pu_post_fault": 1.4549,
+      "q2_abs_peak_kvar_fault": 353.045,
+      "lvrt_pass_basic": true
+    },
+    {
+      "file": "scenario_0201_switching_6_sc_1ph_run001.mat",
+      "sc_id": 6,
+      "scenario": "sc_1ph",
+      "fault_start_s": 0.0256,
+      "fault_end_s": 0.05,
+      "v2_min_pu_fault": 0.8367,
+      "v2_mean_pu_fault": 0.9437,
+      "v2_recovery_ms_to_0p90": 0.25,
+      "vdc_peak_pu_post_fault": 1.0169,
+      "vdc_min_pu_post_fault": 0.6537,
+      "i2_peak_pu_post_fault": 1.4872,
+      "q2_abs_peak_kvar_fault": 303.436,
+      "lvrt_pass_basic": false
+    },
+    {
+      "file": "scenario_0251_switching_7_sc_3ph_run001.mat",
+      "sc_id": 7,
+      "scenario": "sc_3ph",
+      "fault_start_s": 0.0161,
+      "fault_end_s": 0.05,
+      "v2_min_pu_fault": 0.3132,
+      "v2_mean_pu_fault": 0.9282,
+      "v2_recovery_ms_to_0p90": 1.05,
+      "vdc_peak_pu_post_fault": 1.0828,
+      "vdc_min_pu_post_fault": 0.6823,
+      "i2_peak_pu_post_fault": 2.5249,
+      "q2_abs_peak_kvar_fault": 436.868,
+      "lvrt_pass_basic": false
+    },
+    {
+      "file": "scenario_0301_switching_8_cascade_run001.mat",
+      "sc_id": 8,
+      "scenario": "cascade",
+      "fault_start_s": 0.0165,
+      "fault_end_s": 0.05,
+      "v2_min_pu_fault": 0.838,
+      "v2_mean_pu_fault": 0.9311,
+      "v2_recovery_ms_to_0p90": 2.2,
+      "vdc_peak_pu_post_fault": 1.1258,
+      "vdc_min_pu_post_fault": 0.7803,
+      "i2_peak_pu_post_fault": 1.4269,
+      "q2_abs_peak_kvar_fault": 327.502,
+      "lvrt_pass_basic": true
+    }
+  ]
+}

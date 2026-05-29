@@ -23,7 +23,7 @@ V_dc_ref    = 800;           % DC bus reference voltage (V)
 C_dc        = 2200e-6;       % DC link capacitance (F)
 V_dc_init   = 800;           % Initial DC voltage (V)
 
-%% VSC_sh (Shunt Converter — 3-phase bridge, secondary side)
+%% Energy-extraction converter (3-phase bridge at secondary LV bus)
 % Maintains V_dc, reactive power compensation, harmonic suppression
 V_sh_rated  = V_secondary;   % Nominal AC voltage at shunt port (400V)
 I_sh_max    = S_pe / (sqrt(3) * V_sh_rated);  % Max current (A)
@@ -33,7 +33,7 @@ R_sh        = 0.05;          % Shunt filter resistance (Ohm)
 Tsh_ratio   = 1.0;
 Tsh_leakage = 0.02;          % pu
 
-%% VSC_se (Series Converter — 3x single-phase H-bridge, primary side)
+%% Regulation converter (3x single-phase H-bridges for series injection)
 % Injects series voltage for regulation and power flow control
 V_se_max    = 0.20 * V_grid_ph;  % Max series voltage = ±20% of primary phase voltage
 I_se_max    = S_rated / (sqrt(3) * V_grid_ph);  % Rated line current (A)
@@ -44,38 +44,38 @@ Tse_ratio   = V_grid_ph / (V_dc_ref / 2);  % Approximate turns ratio
 Tse_leakage = 0.02;          % pu
 
 %% PWM and Sampling
-f_sw_sh     = 5e3;           % VSC_sh switching frequency (Hz)
-f_sw_se     = 5e3;           % VSC_se switching frequency (Hz)
+f_sw_sh     = 5e3;           % energy-extraction VSC switching frequency (Hz)
+f_sw_se     = 5e3;           % regulation VSC switching frequency (Hz)
 f_sample    = 20e3;          % Data logging sample rate (Hz), 50us sample time
 T_sample    = 1/f_sample;    % Sample time (s)
 T_sim_step  = 50e-6;         % Simulink solver step size (s)
 
-%% PI Controller Tuning — VSC_sh Inner Current Loop (dq-axis)
+%% PI Controller Tuning — energy-extraction VSC inner current loop (dq-axis)
 % Bandwidth target: 1/10 of switching frequency = 500 Hz
 wb_sh       = 2*pi*500;      % Inner loop bandwidth (rad/s)
 Kp_ish      = L_sh * wb_sh;  % Proportional gain
 Ki_ish      = R_sh * wb_sh;  % Integral gain
 
-%% PI Controller Tuning — VSC_se Inner Voltage/Current Loop
+%% PI Controller Tuning — regulation VSC inner voltage/current loop
 wb_se       = 2*pi*500;
 Kp_ise      = L_se * wb_se;
 Ki_ise      = R_se * wb_se;
 
-%% PI Controller Tuning — DC Voltage Outer Loop (VSC_sh)
+%% PI Controller Tuning — DC Voltage Outer Loop (energy-extraction VSC)
 wb_dc       = 2*pi*50;       % DC voltage loop bandwidth (rad/s, ~1/10 of inner)
 Kp_vdc      = C_dc * wb_dc;
 Ki_vdc      = Kp_vdc * wb_dc / 10;
 
-%% PI Controller Tuning — AC Voltage Outer Loop (VSC_se)
+%% PI Controller Tuning — AC Voltage Outer Loop (regulation VSC)
 wb_vac      = 2*pi*50;
 Kp_vac      = 1.0;
 Ki_vac      = 50.0;
 
-%% PI Controller Tuning — Reactive Power (VSC_sh)
+%% PI Controller Tuning — Reactive Power (energy-extraction VSC)
 Kp_q        = 0.01;
 Ki_q        = 5.0;
 
-%% PI Controller Tuning — Power Flow (VSC_se)
+%% PI Controller Tuning — Power Flow (regulation VSC)
 Kp_pf       = 0.5;
 Ki_pf       = 20.0;
 

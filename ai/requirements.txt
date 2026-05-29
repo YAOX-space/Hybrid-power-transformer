@@ -1,35 +1,18 @@
-# HPT AI Methods — Python dependencies
-# Install: pip install -r requirements.txt
+# HPT v2 AI dependencies
 
-# Core
 numpy>=1.24
 scipy>=1.10
 scikit-learn>=1.3
-
-# Deep learning
-torch>=2.1          # CPU or CUDA — install the CUDA variant manually if GPU available
-                    # e.g.: pip install torch --index-url https://download.pytorch.org/whl/cu121
-
-# Wavelet transform (Method D)
-PyWavelets>=1.4
-
-# MATLAB .mat file reading
-# scipy.io handles v5 .mat files; for v7.3 (HDF5) files use:
-mat73>=0.60         # pip install mat73
-
-# Data loading / preprocessing
 pandas>=2.0
-h5py>=3.9           # for v7.3 .mat HDF5 format
-
-# Plotting (evaluate.py)
+h5py>=3.9
+mat73>=0.60
 matplotlib>=3.7
 
-# Optional: MATLAB Engine for Python (Method A sweep, Method B DRL)
-# Install separately from MATLAB installation:
-#   cd /Applications/MATLAB_R2022a.app/extern/engines/python
-#   python setup.py install
-# matlabengine>=9.12   # uncomment after manual install
+# Install the desired PyTorch backend separately when possible.
+# Current Windows workflow uses torch-directml for GPU acceleration.
+torch>=2.1
+torch-directml>=0.2
 
-# Optional: ONNX export (lstm_fault_detector.py --onnx)
+# Optional: ONNX export for lstm_fault_detector.py --onnx
 # onnx>=1.14
 # onnxruntime>=1.16

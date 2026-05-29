@@ -1,0 +1,82 @@
+{
+  "n_scenarios": 350,
+  "conf_threshold": 0.8,
+  "n_gated": 92,
+  "fault_class_accuracy": 0.7171,
+  "strategy_accuracy": 0.7714,
+  "strategy_counts": {
+    "0": 178,
+    "1": 23,
+    "2": 41,
+    "3": 108
+  },
+  "mean_confidence": 0.8711,
+  "confusion_matrix": [
+    [
+      50,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      9,
+      18,
+      5,
+      0,
+      0,
+      1,
+      17
+    ],
+    [
+      2,
+      2,
+      22,
+      0,
+      0,
+      0,
+      24
+    ],
+    [
+      6,
+      2,
+      1,
+      29,
+      0,
+      11,
+      1
+    ],
+    [
+      0,
+      1,
+      0,
+      0,
+      43,
+      5,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      50,
+      0
+    ],
+    [
+      1,
+      5,
+      4,
+      0,
+      0,
+      1,
+      39
+    ]
+  ],
+  "msffn_checkpoint": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\msffn_fault_detector_raw_switching_hpt_v2_fixed_all_v2.pt",
+  "dq_dir": "E:\\research_space\\Hybrid-power-transformer\\data\\raw_switching_hpt_v2_fixed_dq",
+  "out_csv": "data_collection\\msffn_fahc_strategy_table.csv"
+}

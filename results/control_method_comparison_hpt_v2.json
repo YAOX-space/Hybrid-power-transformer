@@ -1,0 +1,448 @@
+{
+  "scope": "corrected HPT v2 topology only",
+  "rows": [
+    {
+      "id": "rule_frt_hpt_v2",
+      "name": "Rule-based FRT",
+      "family": "Traditional control",
+      "dataset": "data/raw_switching_hpt_v2_fixed_rule",
+      "status": "fixed 350-scenario table, corrected HPT v2 topology",
+      "legacy": false,
+      "mean_pass_rate_pct": 60.57,
+      "worst_pass_rate_pct": 0.0,
+      "max_vdc_pu": 1.1549,
+      "min_vdc_pu": 0.4694,
+      "max_i2_pu": 3.4308,
+      "min_v2_pu": 0.2536,
+      "max_recovery_ms": 9.3,
+      "metrics": "results\\lvrt_metrics_raw_switching_hpt_v2_fixed_rule.json",
+      "scenario_summary": {
+        "cap_fault": {
+          "n": 50,
+          "pass_rate_pct": 20.0,
+          "v2_min_pu_min": 0.9216,
+          "vdc_peak_pu_max": 1.1549,
+          "vdc_min_pu_min": 0.567,
+          "i2_peak_pu_max": 1.6583,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "cascade": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.8184,
+          "vdc_peak_pu_max": 1.1547,
+          "vdc_min_pu_min": 0.7512,
+          "i2_peak_pu_max": 1.814,
+          "recovery_ms_mean": 1.129,
+          "recovery_ms_max": 6.5
+        },
+        "igbt_oc_se": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.8168,
+          "vdc_peak_pu_max": 1.1434,
+          "vdc_min_pu_min": 0.8896,
+          "i2_peak_pu_max": 1.6869,
+          "recovery_ms_mean": 2.306,
+          "recovery_ms_max": 9.3
+        },
+        "igbt_oc_sh": {
+          "n": 50,
+          "pass_rate_pct": 88.0,
+          "v2_min_pu_min": 0.9207,
+          "vdc_peak_pu_max": 1.1184,
+          "vdc_min_pu_min": 0.745,
+          "i2_peak_pu_max": 1.6469,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "normal": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.9242,
+          "vdc_peak_pu_max": 1.1041,
+          "vdc_min_pu_min": 0.9053,
+          "i2_peak_pu_max": 1.6164,
+          "recovery_ms_mean": 0.026,
+          "recovery_ms_max": 0.049
+        },
+        "sc_1ph": {
+          "n": 50,
+          "pass_rate_pct": 16.0,
+          "v2_min_pu_min": 0.656,
+          "vdc_peak_pu_max": 1.1038,
+          "vdc_min_pu_min": 0.5247,
+          "i2_peak_pu_max": 2.1648,
+          "recovery_ms_mean": 0.194,
+          "recovery_ms_max": 0.5
+        },
+        "sc_3ph": {
+          "n": 50,
+          "pass_rate_pct": 0.0,
+          "v2_min_pu_min": 0.2536,
+          "vdc_peak_pu_max": 1.1027,
+          "vdc_min_pu_min": 0.4694,
+          "i2_peak_pu_max": 3.4308,
+          "recovery_ms_mean": 1.077,
+          "recovery_ms_max": 1.8
+        }
+      }
+    },
+    {
+      "id": "dq_double_loop_hpt_v2",
+      "name": "dq double-loop baseline",
+      "family": "Traditional control",
+      "dataset": "data/raw_switching_hpt_v2_fixed_dq",
+      "status": "fixed 350-scenario table, corrected HPT v2 topology",
+      "legacy": false,
+      "mean_pass_rate_pct": 64.0,
+      "worst_pass_rate_pct": 14.0,
+      "max_vdc_pu": 1.1549,
+      "min_vdc_pu": 0.4698,
+      "max_i2_pu": 3.4346,
+      "min_v2_pu": 0.2536,
+      "max_recovery_ms": 9.3,
+      "metrics": "results\\lvrt_metrics_raw_switching_hpt_v2_fixed_dq.json",
+      "scenario_summary": {
+        "cap_fault": {
+          "n": 50,
+          "pass_rate_pct": 20.0,
+          "v2_min_pu_min": 0.9217,
+          "vdc_peak_pu_max": 1.1549,
+          "vdc_min_pu_min": 0.567,
+          "i2_peak_pu_max": 1.6582,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "cascade": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.8184,
+          "vdc_peak_pu_max": 1.1547,
+          "vdc_min_pu_min": 0.7518,
+          "i2_peak_pu_max": 1.8142,
+          "recovery_ms_mean": 1.129,
+          "recovery_ms_max": 6.5
+        },
+        "igbt_oc_se": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.8169,
+          "vdc_peak_pu_max": 1.142,
+          "vdc_min_pu_min": 0.8896,
+          "i2_peak_pu_max": 1.6869,
+          "recovery_ms_mean": 2.306,
+          "recovery_ms_max": 9.3
+        },
+        "igbt_oc_sh": {
+          "n": 50,
+          "pass_rate_pct": 88.0,
+          "v2_min_pu_min": 0.9207,
+          "vdc_peak_pu_max": 1.1184,
+          "vdc_min_pu_min": 0.745,
+          "i2_peak_pu_max": 1.6487,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "normal": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.9241,
+          "vdc_peak_pu_max": 1.1042,
+          "vdc_min_pu_min": 0.9053,
+          "i2_peak_pu_max": 1.6167,
+          "recovery_ms_mean": 0.026,
+          "recovery_ms_max": 0.049
+        },
+        "sc_1ph": {
+          "n": 50,
+          "pass_rate_pct": 26.0,
+          "v2_min_pu_min": 0.656,
+          "vdc_peak_pu_max": 1.1038,
+          "vdc_min_pu_min": 0.6391,
+          "i2_peak_pu_max": 2.1648,
+          "recovery_ms_mean": 0.19,
+          "recovery_ms_max": 0.5
+        },
+        "sc_3ph": {
+          "n": 50,
+          "pass_rate_pct": 14.0,
+          "v2_min_pu_min": 0.2536,
+          "vdc_peak_pu_max": 1.1056,
+          "vdc_min_pu_min": 0.4698,
+          "i2_peak_pu_max": 3.4346,
+          "recovery_ms_mean": 1.13,
+          "recovery_ms_max": 1.9
+        }
+      }
+    },
+    {
+      "id": "ppo_drl_hpt_v2",
+      "name": "PPO/DRL controller",
+      "family": "AI control",
+      "dataset": "data/ppo_hpt_v2_rollouts/ppo_batch_1779763706483",
+      "status": "fixed 350-scenario evaluation of best spe32 10-epoch checkpoint",
+      "legacy": false,
+      "mean_pass_rate_pct": 59.43,
+      "worst_pass_rate_pct": 2.0,
+      "max_vdc_pu": 1.155,
+      "min_vdc_pu": 0.4236,
+      "max_i2_pu": 3.4143,
+      "min_v2_pu": 0.2537,
+      "max_recovery_ms": 9.3,
+      "metrics": "results\\lvrt_metrics_ppo_hpt_v2_spe32_10ep_best.json",
+      "scenario_summary": {
+        "cap_fault": {
+          "n": 50,
+          "pass_rate_pct": 20.0,
+          "v2_min_pu_min": 0.9222,
+          "vdc_peak_pu_max": 1.1537,
+          "vdc_min_pu_min": 0.5645,
+          "i2_peak_pu_max": 1.6575,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "cascade": {
+          "n": 50,
+          "pass_rate_pct": 88.0,
+          "v2_min_pu_min": 0.8186,
+          "vdc_peak_pu_max": 1.155,
+          "vdc_min_pu_min": 0.7395,
+          "i2_peak_pu_max": 1.8145,
+          "recovery_ms_mean": 1.133,
+          "recovery_ms_max": 6.5
+        },
+        "igbt_oc_se": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.8185,
+          "vdc_peak_pu_max": 1.1384,
+          "vdc_min_pu_min": 0.8851,
+          "i2_peak_pu_max": 1.6778,
+          "recovery_ms_mean": 2.31,
+          "recovery_ms_max": 9.3
+        },
+        "igbt_oc_sh": {
+          "n": 50,
+          "pass_rate_pct": 90.0,
+          "v2_min_pu_min": 0.9207,
+          "vdc_peak_pu_max": 1.117,
+          "vdc_min_pu_min": 0.7387,
+          "i2_peak_pu_max": 1.6418,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "normal": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.9245,
+          "vdc_peak_pu_max": 1.1016,
+          "vdc_min_pu_min": 0.8994,
+          "i2_peak_pu_max": 1.6135,
+          "recovery_ms_mean": 0.026,
+          "recovery_ms_max": 0.049
+        },
+        "sc_1ph": {
+          "n": 50,
+          "pass_rate_pct": 16.0,
+          "v2_min_pu_min": 0.656,
+          "vdc_peak_pu_max": 1.1003,
+          "vdc_min_pu_min": 0.5189,
+          "i2_peak_pu_max": 2.1385,
+          "recovery_ms_mean": 0.193,
+          "recovery_ms_max": 0.5
+        },
+        "sc_3ph": {
+          "n": 50,
+          "pass_rate_pct": 2.0,
+          "v2_min_pu_min": 0.2537,
+          "vdc_peak_pu_max": 1.0998,
+          "vdc_min_pu_min": 0.4236,
+          "i2_peak_pu_max": 3.4143,
+          "recovery_ms_mean": 1.075,
+          "recovery_ms_max": 1.8
+        }
+      }
+    },
+    {
+      "id": "msffn_fahc_pipeline",
+      "name": "MSFFN→FAHC pipeline",
+      "family": "AI control",
+      "dataset": "data/raw_switching_hpt_v2_pipeline",
+      "status": "MSFFN online detection (5 ms) → FAHC strategy → Mode 7; fixed 350-scenario table",
+      "legacy": false,
+      "mean_pass_rate_pct": 61.71,
+      "worst_pass_rate_pct": 14.0,
+      "max_vdc_pu": 1.1549,
+      "min_vdc_pu": 0.4698,
+      "max_i2_pu": 3.4346,
+      "min_v2_pu": 0.2536,
+      "max_recovery_ms": 9.3,
+      "metrics": "results\\lvrt_metrics_raw_switching_hpt_v2_pipeline.json",
+      "scenario_summary": {
+        "cap_fault": {
+          "n": 50,
+          "pass_rate_pct": 20.0,
+          "v2_min_pu_min": 0.9222,
+          "vdc_peak_pu_max": 1.1549,
+          "vdc_min_pu_min": 0.567,
+          "i2_peak_pu_max": 1.6582,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "cascade": {
+          "n": 50,
+          "pass_rate_pct": 86.0,
+          "v2_min_pu_min": 0.8179,
+          "vdc_peak_pu_max": 1.1546,
+          "vdc_min_pu_min": 0.7263,
+          "i2_peak_pu_max": 1.8185,
+          "recovery_ms_mean": 1.135,
+          "recovery_ms_max": 6.5
+        },
+        "igbt_oc_se": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.8169,
+          "vdc_peak_pu_max": 1.142,
+          "vdc_min_pu_min": 0.832,
+          "i2_peak_pu_max": 1.7134,
+          "recovery_ms_mean": 2.306,
+          "recovery_ms_max": 9.3
+        },
+        "igbt_oc_sh": {
+          "n": 50,
+          "pass_rate_pct": 86.0,
+          "v2_min_pu_min": 0.9207,
+          "vdc_peak_pu_max": 1.1184,
+          "vdc_min_pu_min": 0.738,
+          "i2_peak_pu_max": 1.629,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "normal": {
+          "n": 50,
+          "pass_rate_pct": 100.0,
+          "v2_min_pu_min": 0.9241,
+          "vdc_peak_pu_max": 1.1042,
+          "vdc_min_pu_min": 0.9053,
+          "i2_peak_pu_max": 1.6167,
+          "recovery_ms_mean": 0.026,
+          "recovery_ms_max": 0.049
+        },
+        "sc_1ph": {
+          "n": 50,
+          "pass_rate_pct": 26.0,
+          "v2_min_pu_min": 0.656,
+          "vdc_peak_pu_max": 1.1038,
+          "vdc_min_pu_min": 0.6391,
+          "i2_peak_pu_max": 2.1648,
+          "recovery_ms_mean": 0.19,
+          "recovery_ms_max": 0.5
+        },
+        "sc_3ph": {
+          "n": 50,
+          "pass_rate_pct": 14.0,
+          "v2_min_pu_min": 0.2536,
+          "vdc_peak_pu_max": 1.1056,
+          "vdc_min_pu_min": 0.4698,
+          "i2_peak_pu_max": 3.4346,
+          "recovery_ms_mean": 1.138,
+          "recovery_ms_max": 2.0
+        }
+      }
+    }
+  ],
+  "legacy_rows": [
+    {
+      "id": "dnn_frt_hpt_v2",
+      "name": "DNN-FRT (legacy, invalid)",
+      "family": "AI control",
+      "dataset": "data/raw_switching_hpt_v2_fixed_dnn",
+      "status": "EXCLUDED — imitation policy trained on old topology; 0.29% pass rate on HPT v2",
+      "legacy": true,
+      "mean_pass_rate_pct": 0.29,
+      "worst_pass_rate_pct": 0.0,
+      "max_vdc_pu": 1.12,
+      "min_vdc_pu": 0.2129,
+      "max_i2_pu": 3.4742,
+      "min_v2_pu": 0.2593,
+      "max_recovery_ms": 6.95,
+      "metrics": "results\\lvrt_metrics_raw_switching_hpt_v2_fixed_dnn.json",
+      "scenario_summary": {
+        "cap_fault": {
+          "n": 50,
+          "pass_rate_pct": 0.0,
+          "v2_min_pu_min": 0.917,
+          "vdc_peak_pu_max": 0.9846,
+          "vdc_min_pu_min": 0.2129,
+          "i2_peak_pu_max": 1.6988,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "cascade": {
+          "n": 50,
+          "pass_rate_pct": 2.0,
+          "v2_min_pu_min": 0.8091,
+          "vdc_peak_pu_max": 1.0951,
+          "vdc_min_pu_min": 0.4512,
+          "i2_peak_pu_max": 1.9407,
+          "recovery_ms_mean": 0.949,
+          "recovery_ms_max": 5.75
+        },
+        "igbt_oc_se": {
+          "n": 50,
+          "pass_rate_pct": 0.0,
+          "v2_min_pu_min": 0.8214,
+          "vdc_peak_pu_max": 1.0622,
+          "vdc_min_pu_min": 0.4699,
+          "i2_peak_pu_max": 1.797,
+          "recovery_ms_mean": 1.464,
+          "recovery_ms_max": 6.95
+        },
+        "igbt_oc_sh": {
+          "n": 50,
+          "pass_rate_pct": 0.0,
+          "v2_min_pu_min": 0.9092,
+          "vdc_peak_pu_max": 1.12,
+          "vdc_min_pu_min": 0.4283,
+          "i2_peak_pu_max": 1.7244,
+          "recovery_ms_mean": 0.0,
+          "recovery_ms_max": 0.0
+        },
+        "normal": {
+          "n": 50,
+          "pass_rate_pct": 0.0,
+          "v2_min_pu_min": 0.9275,
+          "vdc_peak_pu_max": 0.9813,
+          "vdc_min_pu_min": 0.5145,
+          "i2_peak_pu_max": 1.7365,
+          "recovery_ms_mean": 0.026,
+          "recovery_ms_max": 0.049
+        },
+        "sc_1ph": {
+          "n": 50,
+          "pass_rate_pct": 0.0,
+          "v2_min_pu_min": 0.6559,
+          "vdc_peak_pu_max": 0.9889,
+          "vdc_min_pu_min": 0.4996,
+          "i2_peak_pu_max": 2.0556,
+          "recovery_ms_mean": 0.138,
+          "recovery_ms_max": 0.35
+        },
+        "sc_3ph": {
+          "n": 50,
+          "pass_rate_pct": 0.0,
+          "v2_min_pu_min": 0.2593,
+          "vdc_peak_pu_max": 0.9831,
+          "vdc_min_pu_min": 0.5026,
+          "i2_peak_pu_max": 3.4742,
+          "recovery_ms_mean": 0.773,
+          "recovery_ms_max": 1.1
+        }
+      }
+    }
+  ],
+  "honest_conclusion": "AI control (PPO/DRL) has not beaten traditional control on the corrected HPT v2 model. DNN-FRT is excluded — it was trained on the old topology and is not a valid comparison."
+}

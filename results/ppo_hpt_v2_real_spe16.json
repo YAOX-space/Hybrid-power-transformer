@@ -1,0 +1,32 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "mean_reward": 1.7246319444444445,
+      "mean_lvrt_pass": 0.0,
+      "mean_v2_min": 0.3842375,
+      "mean_vdc_min": 0.5445875,
+      "mean_vdc_max": 1.0587875,
+      "mean_i2_max": 2.571325
+    },
+    {
+      "epoch": 2,
+      "mean_reward": 1.4738993055555558,
+      "mean_lvrt_pass": 0.0,
+      "mean_v2_min": 0.37590625,
+      "mean_vdc_min": 0.524675,
+      "mean_vdc_max": 1.0222562499999999,
+      "mean_i2_max": 2.66331875
+    },
+    {
+      "epoch": 3,
+      "mean_reward": 1.741954861111111,
+      "mean_lvrt_pass": 0.0,
+      "mean_v2_min": 0.38089999999999996,
+      "mean_vdc_min": 0.5486500000000001,
+      "mean_vdc_max": 1.05078125,
+      "mean_i2_max": 2.5691687500000002
+    }
+  ],
+  "checkpoint": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\ppo_hpt_v2_real_spe16.pt"
+}
