@@ -1,5 +1,35 @@
+# ── Data (large files, generated) ──────────────────────────────────────────────
 data/
 .venv/
+
+# ── Python ──────────────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc*
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# ── MATLAB / Simulink ───────────────────────────────────────────────────────────
 slprj/
+*.asv
+*.autosave
+codegen/
+
+# ── Papers & images (do not commit binary blobs) ────────────────────────────────
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.docx
+*.xlsx
+
+# ── OS / editor ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/

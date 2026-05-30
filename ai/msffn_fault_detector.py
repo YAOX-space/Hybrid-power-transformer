@@ -41,12 +41,14 @@ from torch.utils.data import Dataset
 from data_loader import (
     FAULT_CLASSES, N_CLASSES, N_FEAT_FAULT, RAW_DIR, WINDOW_SIZE,
     build_fault_dataset, make_balanced_loader, make_val_loader,
+    _feat_ver as _FEAT_VER,
 )
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 MODEL_DIR = Path(__file__).resolve().parent.parent / 'data' / 'models'
 MODEL_DIR.mkdir(exist_ok=True)
-CKPT_PATH = MODEL_DIR / f'msffn_fault_detector_{RAW_DIR.name}.pt'
+# Checkpoint path includes feature version so v1 and v2 models coexist
+CKPT_PATH = MODEL_DIR / f'msffn_fault_detector_{RAW_DIR.name}_v{_FEAT_VER}.pt'
 
 # ── Hyper-parameters ───────────────────────────────────────────────────────────
 BATCH_SIZE   = 256
@@ -60,8 +62,8 @@ JITTER_MAX   = 2
 BRANCH_DIM   = 128
 TCN_CHANNELS = [32, 64, 128]
 N_FFT_BINS   = 26          # bins 1–26  ≈  200 Hz – 5 200 Hz  (at 20 kHz, 5 ms window)
-N_STAT_FEATS = 9 * N_FEAT_FAULT   # 81
-N_FFT_FEATS  = N_FFT_BINS * N_FEAT_FAULT  # 234
+N_STAT_FEATS = 9 * N_FEAT_FAULT   # 81 (v1) or 126 (v2 with 14 channels)
+N_FFT_FEATS  = N_FFT_BINS * N_FEAT_FAULT  # 234 (v1) or 364 (v2)
 
 
 # ── Deterministic feature extractors ──────────────────────────────────────────

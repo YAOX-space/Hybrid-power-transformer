@@ -47,11 +47,34 @@ FAULT_CLASSES = {
 }
 N_CLASSES = len(FAULT_CLASSES)
 
-# Features for fault detection — 9 channels:
-# dc_err_proxy = 0.05*(800-Vdc) + 0.02*(id1-id2)  (Simulink DQ_Features ch0, not real Ish_d)
-# Iq2_kA      = iq2/1000  (secondary q-axis current, ch1 of Ish_dq workspace var)
-FAULT_FEATURES = ['V_dc', 'dc_err_proxy', 'Iq2_kA', 'I1_a', 'I1_b', 'I1_c',
-                  'I2_a', 'I2_b', 'I2_c']   # 9 channels
+# Features for fault detection — two configurations:
+#
+# FAULT_FEATURES_V1 (9 channels, legacy / pre-2026-05-29):
+#   V_dc, dc_err_proxy, Iq2_kA, I1_a/b/c, I2_a/b/c
+#
+# FAULT_FEATURES_V2 (14 channels, enhanced per literature review 2026-05-29):
+#   Adds Ise_d, Ise_q (series VSC dq currents) and V2_a/b/c (secondary voltages).
+#   Literature basis:
+#     - Ise_dq: direct diagnostic for igbt_oc_se (series converter faults);
+#               series current drops to near-zero on open-circuit IGBT [Lai 2026]
+#     - V2_abc: secondary voltage shape distinguishes sc_1ph (asymmetric sag) from
+#               sc_3ph (symmetric deep sag) and cap_fault (DC ripple on V2) [Liu 2021]
+#   Both channels are available in all existing .mat files (confirmed 2026-05-29).
+
+FAULT_FEATURES_V1 = ['V_dc', 'dc_err_proxy', 'Iq2_kA',
+                     'I1_a', 'I1_b', 'I1_c',
+                     'I2_a', 'I2_b', 'I2_c']           # 9 channels
+
+FAULT_FEATURES_V2 = ['V_dc', 'dc_err_proxy', 'Iq2_kA',
+                     'I1_a', 'I1_b', 'I1_c',
+                     'I2_a', 'I2_b', 'I2_c',
+                     'Ise_d', 'Ise_q',                  # +2: series VSC dq currents
+                     'V2_a', 'V2_b', 'V2_c']            # +3: secondary voltages
+
+# Active feature set — controlled by env var HPT_FEATURE_VERSION (default '2')
+import os as _os
+_feat_ver = _os.environ.get('HPT_FEATURE_VERSION', '2')
+FAULT_FEATURES = FAULT_FEATURES_V2 if _feat_ver != '1' else FAULT_FEATURES_V1
 N_FEAT_FAULT = len(FAULT_FEATURES)
 
 # Features for DNN controller: V1_rms, V2_rms, V_dc, P1, Q1, P2, mode → 7
@@ -92,12 +115,23 @@ class HPTMatLoader:
         V1_rms = np.sqrt(np.mean(V1**2, axis=1))
         V2_rms = np.sqrt(np.mean(V2**2, axis=1))
 
-        # Pack fault-detection feature matrix  (N, N_FEAT_FAULT)
-        self.X_fault = np.column_stack([
-            Vdc, Ish[:, 0], Ish[:, 1],
-            I1[:, 0], I1[:, 1], I1[:, 2],
-            I2[:, 0], I2[:, 1], I2[:, 2],
-        ])
+        # Pack fault-detection feature matrix
+        if _feat_ver != '1':
+            # V2 version (14 channels): add Ise_dq + V2_abc
+            self.X_fault = np.column_stack([
+                Vdc, Ish[:, 0], Ish[:, 1],
+                I1[:, 0], I1[:, 1], I1[:, 2],
+                I2[:, 0], I2[:, 1], I2[:, 2],
+                Ise[:, 0], Ise[:, 1],               # series VSC d/q currents
+                V2[:, 0], V2[:, 1], V2[:, 2],       # secondary voltages
+            ])
+        else:
+            # V1 legacy (9 channels)
+            self.X_fault = np.column_stack([
+                Vdc, Ish[:, 0], Ish[:, 1],
+                I1[:, 0], I1[:, 1], I1[:, 2],
+                I2[:, 0], I2[:, 1], I2[:, 2],
+            ])
 
         # Pack controller feature matrix  (N, N_FEAT_CTRL)
         self.X_ctrl = np.column_stack([
