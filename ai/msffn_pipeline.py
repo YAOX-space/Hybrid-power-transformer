@@ -51,13 +51,15 @@ DEFAULT_OUT_CSV  = PROJECT_ROOT / 'data_collection' / 'msffn_fahc_strategy_table
 DEFAULT_CONF_THR = 0.80   # only deviate from Strategy 0 if softmax confidence ≥ this
 
 # Fault-class (0-6) → FAHC strategy (0-3)
-# Matches sc_id_to_strategy in results/fahc_strategy_config.json
 #   class 0 (normal) / 1 (igbt_oc_sh) / 2 (igbt_oc_se) → strategy 0  (nominal setpoints)
 #   class 3 (cap_fault)  → strategy 1  (Vdc_ref=760 V)
 #   class 4 (sc_1ph)     → strategy 2  (Vdc_ref=740 V)
 #   class 5 (sc_3ph)     → strategy 3  (Vdc_ref=720 V)
-#   class 6 (cascade)    → strategy 3
-FAULT_CLASS_TO_STRATEGY = {0: 0, 1: 0, 2: 0, 3: 1, 4: 2, 5: 3, 6: 3}
+#   class 6 (cascade)    → strategy 1  (Vdc_ref=760 V)  ← FIX: was 3, caused 7 failures
+#     Reason: cascade Vdc_min mean=0.819pu, well above 0.75pu threshold.
+#     S3 (720V ref) reduces charging power and pushes borderline scenarios below 0.75pu.
+#     S1 (760V ref) provides mild headroom without destabilising the DC link.
+FAULT_CLASS_TO_STRATEGY = {0: 0, 1: 0, 2: 0, 3: 1, 4: 2, 5: 3, 6: 1}
 
 
 # ── helpers ────────────────────────────────────────────────────────────────────

@@ -22,7 +22,11 @@ Strategy table
       Vdc_ref = 740 V   V2_ref = 380 V   I_lim = 2.8 pu
       → moderate energy-save + allow V2 to dip 5 % less aggressively regulated
 
-  Strategy 3  (sc_id 5,6 — three-phase SC / cascade)
+  Strategy 1  (sc_id 3,6 — capacitor fault + cascade)
+      Vdc_ref = 760 V   V2_ref = 400 V   I_lim = 2.8 pu
+      → mild energy-save; cascade Vdc_min=0.819pu, no aggressive save needed
+
+  Strategy 3  (sc_id 5 — three-phase SC only)
       Vdc_ref = 720 V   V2_ref = 360 V   I_lim = 2.5 pu
       → maximum energy-save; 134 J extra headroom in DC link
 
@@ -68,14 +72,17 @@ STRATEGIES = {
         'sc_ids': [0, 1, 2],
         'rationale': 'Mild/no fault: dq double-loop at nominal setpoints'},
     1: {'name': 'energy_save_1', 'Vdc_ref': 760, 'V2_ref': 400, 'I_lim': 2.8,
-        'sc_ids': [3],
-        'rationale': 'Cap fault: mild DC-link energy save + tighter I limit'},
+        'sc_ids': [3, 6],
+        'rationale': 'Cap fault + cascade: mild DC-link energy save + tighter I limit.'
+                     ' cascade Vdc_min=0.819pu >> 0.75pu threshold — S3 was causing'
+                     ' 7 borderline cascade scenarios to fail by over-reducing Vdc_ref.'},
     2: {'name': 'energy_save_2', 'Vdc_ref': 740, 'V2_ref': 380, 'I_lim': 2.8,
         'sc_ids': [4],
         'rationale': 'Single-phase SC: moderate energy save + V2 regulation relaxed'},
     3: {'name': 'energy_save_3', 'Vdc_ref': 720, 'V2_ref': 360, 'I_lim': 2.5,
-        'sc_ids': [5, 6],
-        'rationale': '3-ph SC / cascade: max energy save; ΔE=134 J headroom'},
+        'sc_ids': [5],
+        'rationale': '3-ph SC only: max energy save; ΔE=134 J headroom.'
+                     ' cascade removed — cascade passes 100% with dq, S3 was harmful.'},
 }
 
 SC_ID_TO_STRATEGY = {sc: sid for sid, s in STRATEGIES.items() for sc in s['sc_ids']}
@@ -357,7 +364,7 @@ def simulate_fahc(n_scenarios: int = 350) -> None:
     env['HPT_CONTROLLER_MODE']       = '7'
 
     cmd = ['matlab', '-batch',
-           "cd('E:/research_space/Hybrid-power-transformer/data_collection');"
+           "cd('" + os.environ.get('HPT_DATA_COLLECTION', '/Users/yao/Research/THU/summer/data_collection') + "');"
            "run('run_switching_scenarios.m');"]
 
     print(f'Launching FAHC Simulink batch ({len(table)} scenarios) ...')

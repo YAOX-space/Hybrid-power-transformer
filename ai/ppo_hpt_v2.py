@@ -190,7 +190,7 @@ class ScenarioTableEnv:
         cmd = [
             'matlab',
             '-batch',
-            "cd('E:/research_space/Hybrid-power-transformer/data_collection'); run('run_switching_scenarios.m');",
+            "" + os.environ.get('HPT_MATLAB_BATCH', "cd('/Users/yao/Research/THU/summer/data_collection'); run('run_switching_scenarios.m');") + "",
         ]
         completed = subprocess.run(
             cmd,
@@ -232,7 +232,7 @@ class ScenarioTableEnv:
         cmd = [
             'matlab',
             '-batch',
-            "cd('E:/research_space/Hybrid-power-transformer/data_collection'); run('run_switching_scenarios.m');",
+            "" + os.environ.get('HPT_MATLAB_BATCH', "cd('/Users/yao/Research/THU/summer/data_collection'); run('run_switching_scenarios.m');") + "",
         ]
         completed = subprocess.run(
             cmd,

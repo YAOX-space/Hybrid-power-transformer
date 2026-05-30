@@ -411,7 +411,7 @@ def grid_search_scenario(
                 env['HPT_ILIM_DELTA']      = str(di)
 
                 cmd = ['matlab', '-batch',
-                       "cd('E:/research_space/Hybrid-power-transformer/data_collection');"
+                       "cd('" + os.environ.get('HPT_DATA_COLLECTION', '/Users/yao/Research/THU/summer/data_collection') + "');"
                        "run('run_switching_scenarios.m');"]
                 cp = subprocess.run(cmd, cwd=str(PROJECT_ROOT), env=env,
                                     capture_output=True, text=True, timeout=180)
@@ -565,7 +565,7 @@ def evaluate_checkpoint(ckpt_path: Path, n_scenarios: int = 350) -> None:
     env['HPT_CONTROLLER_MODE']    = '6'
 
     cmd = ['matlab', '-batch',
-           "cd('E:/research_space/Hybrid-power-transformer/data_collection');"
+           "cd('" + os.environ.get('HPT_DATA_COLLECTION', '/Users/yao/Research/THU/summer/data_collection') + "');"
            "run('run_switching_scenarios.m');"]
     cp = subprocess.run(cmd, cwd=str(PROJECT_ROOT), env=env,
                         capture_output=True, text=True,

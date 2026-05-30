@@ -63,14 +63,31 @@ I_se_max    = S_rated / (sqrt(3) * V_grid_ph);  % Rated line current (A) = 23.1 
 L_se        = 1e-3;          % Series filter inductance (H)
 R_se        = 0.02;          % Series filter resistance (Ohm)
 
-% Coupling transformer T_se turns ratio (H-bridge side : MV primary side)
-% CORRECTED (D-fix): For ±20% injection on primary side from 800V H-bridge:
-%   Required turns ratio = V_dc_ref / V_se_max = 800 / 1155 ≈ 0.693
-%   (H-bridge produces ±Vdc, needs step-UP to inject ±V_se_max on MV side)
-%   N_hbridge : N_mv = 1 : (V_se_max / V_dc_ref) = 1 : 1.44
-%   Old (wrong) formula: V_grid_ph / (V_dc_ref/2) = 5774/400 = 14.4
-Tse_ratio   = V_dc_ref / V_se_max;  % ≈ 0.693 (H-bridge:MV = 1 : 1.44 step-up)
+%% TOPOLOGY CORRECTION (2026-05-30):
+% Literature (Tang 2025, Zhongdian, Song 2023): VSC_se (调控换流器) is connected
+% in SERIES on the LV (400V) secondary side via isolation transformer Tse.
+% VSC_sh (取能换流器) is connected in PARALLEL on the MV (10kV) primary side
+% via coupling transformer Tsh.
+% Our previous model had these positions SWAPPED. This section reflects the correct topology.
+
+% V_se_max for LV-side injection (CORRECTED):
+%   ±20% of V2_phase = ±20% × (V_secondary/√3) = ±20% × 231V = ±46.2V
+V_se_max    = 0.20 * V_secondary / sqrt(3);  % ±46.2 V per phase, LV side [Tang 2025, eq.2]
+
+% Tse isolation transformer ratio (H-bridge → LV series injection):
+%   H-bridge output peak = Vdc/2 = 400V
+%   Series injection peak = V_se_max × √2 ≈ 65V
+%   Step-DOWN ratio: 400V → 46.2V → Tse_ratio = V_dc_ref/2 / V_se_max ≈ 8.66
+Tse_ratio   = (V_dc_ref/2) / V_se_max;  % ≈ 8.66 (step-down, H-bridge:LV = 8.66:1)
 Tse_leakage = 0.02;          % pu
+
+% Tsh coupling transformer (VSC_sh on MV primary side):
+%   Primary: 10kV Delta — connects in parallel to MV primary bus [Tang 2025, Fig.1]
+%   Secondary: 400V Yg  — feeds VSC_sh (same level as existing filters)
+Tsh_primary  = V_primary;    % 10kV line-to-line (Delta)
+Tsh_secondary = V_secondary; % 400V line-to-line (Yg)
+Tsh_ratio    = V_primary / V_secondary;  % = 25 (same as main transformer)
+Tsh_leakage  = 0.02;         % pu
 
 %% PWM and Sampling
 f_sw_sh     = 5e3;           % energy-extraction VSC switching frequency (Hz)
