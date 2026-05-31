@@ -215,9 +215,12 @@ def build_fault_dataset(
     Returns: (train_ds, val_ds, test_ds, scaler)
     """
     source_id = re.sub(r'[^A-Za-z0-9_.-]+', '_', raw_dir.resolve().name)
-    cache = PROC_DIR / f'fault_windows_{source_id}.npz'
+    # Include feature version in cache/scaler names so v1 and v2 windows coexist.
+    # Include feature version so v1 (9ch) and v2 (14ch) caches/scalers coexist.
+    versioned_id = f'{source_id}_fv{_feat_ver}'
+    cache = PROC_DIR / f'fault_windows_{versioned_id}.npz'
     if scaler_path == PROC_DIR / 'fault_scaler.pkl':
-        scaler_path = PROC_DIR / f'fault_scaler_{source_id}.pkl'
+        scaler_path = PROC_DIR / f'fault_scaler_{versioned_id}.pkl'
 
     if cache.exists() and not force_rebuild:
         print(f'Loading cached dataset from {cache}')

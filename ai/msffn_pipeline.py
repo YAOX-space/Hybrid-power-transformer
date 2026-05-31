@@ -39,7 +39,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from data_loader import FAULT_CLASSES, N_CLASSES, F_SAMPLE, WINDOW_SIZE
+from data_loader import FAULT_CLASSES, N_CLASSES, F_SAMPLE, WINDOW_SIZE, N_FEAT_FAULT, _feat_ver as _FEAT_VER
 
 MODEL_DIR   = PROJECT_ROOT / 'data' / 'models'
 PROC_DIR    = PROJECT_ROOT / 'data' / 'processed'
@@ -83,9 +83,20 @@ def _squeeze2d(arr: np.ndarray, n_rows: int) -> np.ndarray:
     return a
 
 
-def extract_window(mat: dict) -> tuple[np.ndarray, int] | None:
+def n_channels_from_state(state: dict) -> int:
+    """Infer number of input channels from the MSFFN checkpoint state dict.
+    stat_mlp.0.weight has shape (256, N_STAT_FEATS) where N_STAT_FEATS = 9 * n_channels.
     """
-    Return (X_window, true_class) where X_window is (WINDOW_SIZE, 9).
+    w = state.get('stat_mlp.0.weight')
+    if w is not None:
+        return int(w.shape[1]) // 9
+    return N_FEAT_FAULT   # fall back to env-var-controlled default
+
+
+def extract_window(mat: dict, n_ch: int = N_FEAT_FAULT) -> tuple[np.ndarray, int] | None:
+    """
+    Return (X_window, true_class) where X_window is (WINDOW_SIZE, n_ch).
+    n_ch should be derived from the loaded model (9 for v1, 14 for v2).
     Window starts at fault onset (or last 5 ms for normal scenarios).
     Returns None if the file is too short.
     """
@@ -113,14 +124,25 @@ def extract_window(mat: dict) -> tuple[np.ndarray, int] | None:
         start = N - WINDOW_SIZE
         end   = N
 
-    # Build feature matrix — order must match HPTMatLoader.X_fault
-    Xf = np.column_stack([
+    # Build feature matrix — column order must match HPTMatLoader.X_fault
+    cols = [
         Vdc[start:end],
         Ish[start:end, 0],
         Ish[start:end, 1] if Ish.shape[1] > 1 else np.zeros(WINDOW_SIZE, np.float32),
         I1[start:end, 0], I1[start:end, 1], I1[start:end, 2],
         I2[start:end, 0], I2[start:end, 1], I2[start:end, 2],
-    ]).astype(np.float32)   # (WINDOW_SIZE, 9)
+    ]
+    if n_ch > 9:
+        # v2: append Ise_dq (series VSC d/q currents) + V2_abc (secondary voltages)
+        Ise = _squeeze2d(mat['Ise_dq'], N)
+        V2  = _squeeze2d(mat['V2_abc'], N)
+        cols += [
+            Ise[start:end, 0],
+            Ise[start:end, 1] if Ise.shape[1] > 1 else np.zeros(WINDOW_SIZE, np.float32),
+            V2[start:end, 0], V2[start:end, 1], V2[start:end, 2],
+        ]
+
+    Xf = np.column_stack(cols).astype(np.float32)   # (WINDOW_SIZE, n_ch)
 
     if len(Xf) < WINDOW_SIZE:
         pad = WINDOW_SIZE - len(Xf)
@@ -153,18 +175,33 @@ def find_msffn_checkpoint(override: str | None = None) -> Path:
 
 
 def find_scaler(ckpt_path: Path) -> object:
-    # Derive scaler name from checkpoint name
+    # Derive scaler name from checkpoint name.
+    # Checkpoint naming: msffn_fault_detector_{dataset_dir}_v{feat_ver}.pt  (new)
+    #                 or msffn_fault_detector_{dataset_dir}.pt               (legacy)
+    # Scaler naming:   fault_scaler_{dataset_dir}_fv{feat_ver}.pkl           (new)
+    #                 or fault_scaler_{dataset_dir}.pkl                       (legacy)
+    import re as _re
     dataset_tag = ckpt_path.stem.replace('msffn_fault_detector_', '')
-    scaler_path = PROC_DIR / f'fault_scaler_{dataset_tag}.pkl'
-    if not scaler_path.exists():
-        # Fall back to any available scaler
-        fallbacks = sorted(PROC_DIR.glob('fault_scaler_*.pkl'))
-        if not fallbacks:
-            raise FileNotFoundError(
-                f'No scaler found in {PROC_DIR}. '
-                'Run: python ai/data_loader.py to rebuild the dataset.')
-        scaler_path = fallbacks[-1]
-    print(f'  scaler  : {scaler_path.name}')
+    stripped    = _re.sub(r'_v\d+$', '', dataset_tag)   # strip trailing _vN if present
+    # Priority: exact match → versioned stripped → unversioned stripped → any fallback
+    for candidate in [
+        PROC_DIR / f'fault_scaler_{dataset_tag}_fv{_FEAT_VER}.pkl',
+        PROC_DIR / f'fault_scaler_{dataset_tag}.pkl',
+        PROC_DIR / f'fault_scaler_{stripped}_fv{_FEAT_VER}.pkl',
+        PROC_DIR / f'fault_scaler_{stripped}.pkl',
+    ]:
+        if candidate.exists():
+            print(f'  scaler  : {candidate.name}')
+            with open(candidate, 'rb') as f:
+                return pickle.load(f)
+    # Last resort: any scaler
+    fallbacks = sorted(PROC_DIR.glob('fault_scaler_*.pkl'))
+    if not fallbacks:
+        raise FileNotFoundError(
+            f'No scaler found in {PROC_DIR}. '
+            'Run: python ai/data_loader.py to rebuild the dataset.')
+    scaler_path = fallbacks[-1]
+    print(f'  scaler  : {scaler_path.name} (fallback)')
     with open(scaler_path, 'rb') as f:
         return pickle.load(f)
 
@@ -191,6 +228,10 @@ def run(dq_dir: Path, out_csv: Path, conf_threshold: float = DEFAULT_CONF_THR,
     print(f'  model   : {ckpt_path.name}')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     ckpt   = torch.load(ckpt_path, map_location='cpu', weights_only=False)
+    # Infer actual number of input channels from the checkpoint weights
+    # (avoids mismatch when HPT_FEATURE_VERSION doesn't match the saved model)
+    n_ch = n_channels_from_state(ckpt['model_state'])
+    print(f'  n_channels: {n_ch} ({"v2" if n_ch > 9 else "v1"} model)')
     model  = MSFFN().to(device)
     model.load_state_dict(ckpt['model_state'])
     model.eval()
@@ -205,7 +246,7 @@ def run(dq_dir: Path, out_csv: Path, conf_threshold: float = DEFAULT_CONF_THR,
         except Exception as e:
             skipped.append((path.name, str(e)))
             continue
-        result = extract_window(mat)
+        result = extract_window(mat, n_ch=n_ch)
         if result is None:
             skipped.append((path.name, 'too short'))
             continue
