@@ -1,0 +1,9 @@
+{
+  "lvrt_pass_pct": 100.0,
+  "vdc_min_mean": 1.0044,
+  "vdc_min_min": 0.8997,
+  "mean_reward": 3.85,
+  "model": "SAC direct [m_sh,m_se_d,m_se_q]",
+  "env": "ODE Euler 1ms",
+  "steps": 500000
+}

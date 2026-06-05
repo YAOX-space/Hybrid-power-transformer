@@ -6,5 +6,7 @@
       "Write(*)",
       "Read(*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": ["matlab"],
+  "enableAllProjectMcpServers": true
 }

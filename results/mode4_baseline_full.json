@@ -1,0 +1,31 @@
+{
+  "overall": 64,
+  "normal": {
+    "lvrt": 100,
+    "vdcmin": 0.917
+  },
+  "igbt_oc_sh": {
+    "lvrt": 88,
+    "vdcmin": 0.794
+  },
+  "igbt_oc_se": {
+    "lvrt": 100,
+    "vdcmin": 0.92
+  },
+  "cap_fault": {
+    "lvrt": 20,
+    "vdcmin": 0.679
+  },
+  "sc_1ph": {
+    "lvrt": 26,
+    "vdcmin": 0.707
+  },
+  "sc_3ph": {
+    "lvrt": 14,
+    "vdcmin": 0.615
+  },
+  "cascade": {
+    "lvrt": 100,
+    "vdcmin": 0.819
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "matlab": {
+      "command": "C:\\Users\\m1391\\.matlab\\agentic-toolkits\\bin\\matlab-mcp-core-server.exe",
+      "args": []
+    }
+  }
+}
