@@ -57,19 +57,34 @@ M_SE_BOUND  = 0.30
 # ── Observation builder ────────────────────────────────────────────────────────
 
 def scenario_obs(row: pd.Series) -> np.ndarray:
-    """14-dim observation: sc_id one-hot (7) + 7 continuous features."""
-    oh = np.zeros(7, dtype=np.float32)
-    oh[SC_ID_TO_IDX[int(row.sc_id)]] = 1.0
-    feat = np.array([
-        float(row.P_load)   / 400e3,
-        float(row.Q_load)   / 250e3,
-        float(row.t_fault)  / 0.05,
-        float(row.fault_variant) / 6.0,
-        float(row.fault_mag),
-        float(row.fault_resistance),
-        float(row.ground_resistance),
+    """17-dim observation at fault onset, matching HPTDirectEnv training layout.
+
+    Fix #5 (2026-06-06): the previous version returned a 14-dim vector
+    (sc_id one-hot + scenario params), which is INCOMPATIBLE with the SAC trained
+    on the 17-dim physics state — feeding it produces meaningless actions.  This now
+    mirrors generate_sac_actions.initial_state_obs exactly:
+      [V_dc_pu, V2_pu, I2_pu, dVdc_norm, dV2_norm,        (5)
+       MSFFN fault_probs × 7,                              (7)
+       t_since_fault_norm, in_fault,                       (2)
+       last_action × 3]                                    (3)
+    """
+    sc_id = int(row.sc_id)
+    P, Q  = float(row.P_load), float(row.Q_load)
+    I_ld    = (2/3) * np.hypot(P, Q) / V2_PK
+    I2_pu_0 = float(np.clip(I_ld / I2_NOM_PK, 0, 5))
+
+    fault_probs = np.zeros(7, dtype=np.float32)
+    fault_probs[SC_ID_TO_IDX.get(sc_id, 0)] = 0.92
+    fault_probs[0] += 0.08                                  # residual normal prob
+
+    m_sh_balance = float(V2_PK / (VDC_NOM / 2.0))           # ≈0.817 active-power balance
+
+    return np.array([
+        1.0, 1.0, I2_pu_0, 0.0, 0.0,
+        *fault_probs,
+        0.0, 1.0,
+        m_sh_balance, 0.0, 0.0,
     ], dtype=np.float32)
-    return np.concatenate([oh, feat])
 
 
 def state_obs(
@@ -78,16 +93,26 @@ def state_obs(
     sc_id: int, t_since_fault_s: float,
     last_action: np.ndarray,
 ) -> np.ndarray:
-    """17-dim runtime observation for online SAC."""
-    oh = np.zeros(7, dtype=np.float32)
-    oh[SC_ID_TO_IDX.get(sc_id, 0)] = 1.0
+    """17-dim runtime observation for online SAC.
+
+    Fix #5: the fault-probability block must mirror the MSFFNSimulator used in
+    training (0.92 on the true class, 0.08 residual normal after the 5 ms detection
+    delay), not a clean one-hot, so the observation distribution matches.
+    """
+    fp = np.zeros(7, dtype=np.float32)
+    if t_since_fault_s < 5e-3:
+        fp[0] = 0.7
+        fp[SC_ID_TO_IDX.get(sc_id, 0)] += 0.3
+    else:
+        fp[SC_ID_TO_IDX.get(sc_id, 0)] = 0.92
+        fp[0] += 0.08
     return np.array([
         np.clip(Vdc_pu, 0, 1.5),
         np.clip(V2_pu,  0, 1.5),
         np.clip(I2_pu,  0, 5.0),
         np.clip(dVdc_dt / 10000, -1, 1),
         np.clip(dV2_dt  /  5000, -1, 1),
-        *oh,
+        *fp,
         np.clip(t_since_fault_s / 0.05, 0, 1),
         float(t_since_fault_s > 0),
         *last_action.tolist(),

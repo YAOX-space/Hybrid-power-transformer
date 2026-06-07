@@ -4,17 +4,22 @@
 
 ---
 
-## 最新结果
+## 结果
 
-| 控制策略 | Simulink LVRT | vs dq |
+开关级 Simulink 验证（350 场景，统一以 Mode 9 运行）。归因消融分离"工程基线"与"强化学习"的贡献：
+
+| 控制策略 | Simulink LVRT | vs 固定基线 |
 |---------|--------------|-------|
-| 传统 dq 双环 PI (Mode 4) | 64.00% | 基准 |
-| **SAC Mode 9 混合策略** | **74.00%** | **+10 pp** |
-| 固定 Mode 9 (m_sh=0.90) | 96.57%* | — |
+| 传统 dq 双环 PI | 64.00% | — |
+| 固定 m_sh=0.90（无 SAC，仅保护逻辑）| 62.86% | 基线 |
+| 原始 SAC（零硬编码）| 63.43% | +0.6 pp |
+| **SAC + 按类策略** | **71.43%** | **+8.6 pp** |
 
-\* 96.57% 为早期轻度场景测试结果。当前 350 场景含严苛 sc_3ph 参数（两种模式均失败）。
+SAC + 按类策略较固定基线 +8.6 pp、较 dq +7.4 pp；纯 SAC 与固定基线持平，并在三相短路
+（66% vs 12%）、电容故障（40% vs 20%）上体现真实学习自适应。
 
-详细报告：[results/HPT_SAC_Control_Report.md](results/HPT_SAC_Control_Report.md)
+**完整正式记录**：[results/HPT_SAC_Control_Report.md](results/HPT_SAC_Control_Report.md)
+（建模、方法、消融、优缺点、局限与复现）。
 
 ---
 
@@ -111,35 +116,46 @@ cd E:\research_space\Hybrid-power-transformer
 # 输出：results/sac_actions_for_simulink.csv
 ```
 
-### Simulink 验证（MATLAB）
+### Simulink 验证 / 归因消融（MATLAB）
 
 ```matlab
 cd('data_collection')
-validate_sac_mode9('../results/sac_actions_for_simulink.csv')
-% 约 18 分钟，结果：results/sac_mode9_scenario_level.json
+% 统一 Mode 9 口径，逐场景结果写 CSV（可分块，见函数说明）
+ablate_mode9('../results/ablation/sac_overrides.csv', '../results/ablation/sac_overrides_res.csv')
+```
+```bash
+.venv\Scripts\python.exe ai/aggregate_ablation.py   # 汇总各臂 LVRT
 ```
 
 ---
 
-## 各故障类型结果
+## 各故障类型结果（开关级，统一 Mode 9 口径）
 
-| 故障类型 | dq PI | SAC 混合 | 改进 | SAC 关键策略 |
-|---------|-------|---------|------|------------|
-| normal | ~100% | **100%** | ≈ | m_sh=0.71，DC 平衡维持 |
-| igbt_oc_sh | ~60% | **92%** | +32 pp | 立即 m_sh=0.75，无积分延迟 |
-| igbt_oc_se | ~100% | **100%** | ≈ | 识别为无 DC 风险 |
-| cap_fault | ~50% | **48%** | ≈ | 硬件极限（C 太小） |
-| sc_1ph | ~60% | **100%** | **+40 pp** | m_se_d/q 同时注入（≈负序控制）|
-| sc_3ph | ~12% | 12% | — | DC 电容 50 Hz 振荡物理极限 |
-| cascade | ~10% | **66%** | **+56 pp** | 立即高调制 + 主动串联支撑 |
+| 故障类型 | 固定 m_sh=0.90 | 原始 SAC | SAC+按类策略 |
+|---------|:-------------:|:--------:|:-----------:|
+| normal | 100 | 100 | 100 |
+| igbt_oc_sh | 86 | 90 | 90 |
+| igbt_oc_se | 60 | 48 | **100** |
+| cap_fault | 20 | **40** | 20 |
+| sc_1ph | 100 | 96 | 96 |
+| sc_3ph | 12 | **66** | 12 |
+| cascade | 62 | 4 | **82** |
+| **总体** | **62.86** | **63.43** | **71.43** |
+
+注：纯 SAC 在 sc_3ph/cap_fault 上有真实学习增益；遗留按类策略对 sc_3ph 强制 m_sh=0.90，
+反而压制了 SAC 自身的 66%（放行可再 +~7.7pp，oracle 上界 ≈82.6%）。
 
 ---
 
 ## 已知限制
 
-1. **sc_3ph 场景**：50 Hz 故障恢复振荡超出 C=2200µF 缓冲能力，任何控制均无法通过 LVRT。需增大电容（>10,000 µF）或加储能。
-2. **ODE-Simulink 差距**：训练 ODE 为均值模型，深度故障（V2≈0）时与真实开关模型行为不同。
-3. **批量推理**：当前为离线动作生成（场景级），在线实时推理需 FPGA 或 dSPACE 部署。
+1. **平均 ODE 对深故障偏乐观**：仅作训练替身，一切结论以 Simulink 开关级模型 + 消融为准。
+2. **串联控制为开环幅值、无 PLL/功角闭环**：现建为对直流的纯代价，尚不能用作可控电压支撑。
+3. **8.2 Ω 直流阻尼电阻不现实**（≈78 kW）：为与已验证模型一致而保留，建议改为 kΩ 级泄放并重整定。
+4. **cap_fault / sc_3ph 物理极限**：电容偏小、50 Hz 恢复振荡超出缓冲，任何控制均受限。
+5. **构建脚本未完全复现二进制**：已验证 `.slx` 为权威产物并纳入版本控制。
+
+详见 [results/HPT_SAC_Control_Report.md](results/HPT_SAC_Control_Report.md) §6（优缺点）、§7（后续工作）。
 
 ---
 

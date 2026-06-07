@@ -10,33 +10,33 @@ Using device: cuda  (NVIDIA GeForce RTX 3070 Ti Laptop GPU)
 
 Starting training...
 
-  step=  25,000  LVRT=100.0%  VdcMin=0.997  best=100.0%  1min
-  step=  50,000  LVRT=97.1%  VdcMin=1.022  best=100.0%  2min
-  step=  75,000  LVRT=95.7%  VdcMin=1.005  best=100.0%  3min
-  step= 100,000  LVRT=100.0%  VdcMin=0.994  best=100.0%  5min
-  step= 125,000  LVRT=100.0%  VdcMin=1.023  best=100.0%  6min
-  step= 150,000  LVRT=100.0%  VdcMin=1.012  best=100.0%  7min
-  step= 175,000  LVRT=100.0%  VdcMin=1.006  best=100.0%  8min
-  step= 200,000  LVRT=100.0%  VdcMin=1.015  best=100.0%  9min
-  step= 225,000  LVRT=100.0%  VdcMin=1.026  best=100.0%  10min
-  step= 250,000  LVRT=100.0%  VdcMin=1.034  best=100.0%  12min
-  step= 275,000  LVRT=100.0%  VdcMin=1.041  best=100.0%  13min
-  step= 300,000  LVRT=100.0%  VdcMin=1.047  best=100.0%  14min
-  step= 325,000  LVRT=100.0%  VdcMin=1.065  best=100.0%  15min
-  step= 350,000  LVRT=100.0%  VdcMin=1.067  best=100.0%  16min
-  step= 375,000  LVRT=100.0%  VdcMin=1.091  best=100.0%  17min
-  step= 400,000  LVRT=100.0%  VdcMin=1.071  best=100.0%  18min
-  step= 425,000  LVRT=100.0%  VdcMin=1.072  best=100.0%  20min
-  step= 450,000  LVRT=100.0%  VdcMin=1.057  best=100.0%  21min
-  step= 475,000  LVRT=100.0%  VdcMin=1.060  best=100.0%  22min
-  step= 500,000  LVRT=100.0%  VdcMin=1.074  best=100.0%  23min
+  step=  25,000  LVRT=74.3%  VdcMin=0.759  best=74.3%  1min
+  step=  50,000  LVRT=74.3%  VdcMin=0.768  best=74.3%  2min
+  step=  75,000  LVRT=74.3%  VdcMin=0.763  best=74.3%  4min
+  step= 100,000  LVRT=74.3%  VdcMin=0.779  best=74.3%  5min
+  step= 125,000  LVRT=74.3%  VdcMin=0.796  best=74.3%  6min
+  step= 150,000  LVRT=74.3%  VdcMin=0.799  best=74.3%  7min
+  step= 175,000  LVRT=72.9%  VdcMin=0.803  best=74.3%  8min
+  step= 200,000  LVRT=71.4%  VdcMin=0.814  best=74.3%  9min
+  step= 225,000  LVRT=71.4%  VdcMin=0.810  best=74.3%  10min
+  step= 250,000  LVRT=72.9%  VdcMin=0.812  best=74.3%  12min
+  step= 275,000  LVRT=71.4%  VdcMin=0.810  best=74.3%  13min
+  step= 300,000  LVRT=72.9%  VdcMin=0.810  best=74.3%  14min
+  step= 325,000  LVRT=74.3%  VdcMin=0.814  best=74.3%  15min
+  step= 350,000  LVRT=74.3%  VdcMin=0.813  best=74.3%  16min
+  step= 375,000  LVRT=72.9%  VdcMin=0.812  best=74.3%  17min
+  step= 400,000  LVRT=74.3%  VdcMin=0.815  best=74.3%  19min
+  step= 425,000  LVRT=74.3%  VdcMin=0.811  best=74.3%  20min
+  step= 450,000  LVRT=71.4%  VdcMin=0.811  best=74.3%  21min
+  step= 475,000  LVRT=72.9%  VdcMin=0.812  best=74.3%  22min
+  step= 500,000  LVRT=71.4%  VdcMin=0.807  best=74.3%  23min
 
 ============================================================
 FINAL RESULTS
-LVRT pass: 100.00%
-VdcMin:    1.004 pu (mean)
-VdcMin:    0.900 pu (worst)
-Reward:    3.9
+LVRT pass: 70.57%
+VdcMin:    0.738 pu (mean)
+VdcMin:    0.137 pu (worst)
+Reward:    -0.2
 Training:  23 min
 
 Saved -> results/sac_hpt_direct_result.json

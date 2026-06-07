@@ -5,12 +5,28 @@ The SAC agent directly outputs modulation-equivalent signals that bypass
 the PI loops, controlling the two VSCs at the most fundamental level:
 
   Action (3D continuous, physically bounded):
-    a[0]  m_sh  ∈ [0.0, 0.9]   shunt VSC modulation index
-                                 → drives I_sh ≈ m_sh × V_dc/(2×L_sh×ω)
+    a[0]  m_sh  ∈ [0.0, 0.9]   shunt VSC active-power command
+                                 → active d-axis current  I_sh_d = (m_sh/0.9)·I_sh_max
+                                 → DC charging power       P_sh = 1.5·V2_d·I_sh_d
+                                 (monotonic: m_sh↑ ⇒ Vdc↑, matches Simulink Mode 9)
     a[1]  m_se_d ∈ [-0.3, 0.3] series VSC d-axis modulation
                                  → V_se_d = m_se_d × V_dc/2 / Tse_ratio
     a[2]  m_se_q ∈ [-0.3, 0.3] series VSC q-axis modulation
                                  → V_se_q = m_se_q × V_dc/2 / Tse_ratio
+
+  PHYSICS MODEL (see results/HPT_SAC_Control_Report.md for the full record):
+    - Shunt VSC is an active rectifier: m_sh sets the ACTIVE d-axis current drawn
+      from the bus; active power P = 1.5·V_sh_bus·I_sh_d gives the physically-correct
+      monotonic relation m_sh↑ ⇒ Vdc↑.
+    - Shunt is fed from the MV (10 kV) bus via Tsh, so P_sh uses the MV-side voltage
+      V_sh_bus (which sags less than the LV load bus during LV faults), not V2_d.
+    - Series H-bridge always DRAINS the DC bus to synthesise its injection (apparent-
+      power model, P_se ≥ 0); it cannot charge the bus.
+    - The 8.2 Ω DC damping resistor (≈78 kW) is modelled so the operating point and
+      DC dynamics match the switching model.
+    - I2 includes the fault-branch current so the I2 ≤ 3 pu criterion is trainable.
+    The averaged ODE is a TRAINING SURROGATE; the Simulink switching model is the
+    authoritative judge (the ODE is optimistic for deep faults such as sc_3ph).
 
   Physical limits (from simulink/parameters.m):
     |V_se| ≤ 46.2 V  (hardware: Tse transformer limit)
@@ -77,7 +93,19 @@ R_SH      = 0.05           # Ω  shunt filter
 # P_sh = (3/2)·V_d·I_d requires V_d = phase peak = 400/√3·√2 ≈ 326.6 V
 V_SH_RAT  = V2_PK          # V  = 326.6 V  phase peak (was wrong: 400 V line-RMS)
 I_SH_MAX  = 173.2          # A  shunt rated current
-V_SE_MAX  = 46.2           # V  series injection hardware limit (LV-side phase peak)
+# 2026-06-06 PHYSICS FIX: DC-link damping resistor present in the Simulink model
+# (build_hpt_switching_model.m: DC_Link_Damping_Resistor = 8.2 Ω across the 800 V bus).
+# It draws Vdc²/R ≈ 78 kW — a large continuous DC load that sets the steady-state
+# operating point (balance m_sh ≈ 0.82).  The previous ODE omitted it, which is the
+# main reason the trained policy did not transfer.  NOTE: 8.2 Ω is unrealistically
+# small for a real bleeder; it is modelled here only to MATCH the validated switching
+# model.  See results/HPT_SAC_Control_Report.md for the recommendation to enlarge it.
+R_DC_DAMP = 8.2           # Ω  DC-link damping/bleeder resistor (matches Simulink)
+# V_se_max: parameters.m defines ±46.2 V as an RMS phase quantity (0.20×400/√3); the
+# dq vector |V_se| clipped in the ODE is PEAK, so the consistent peak limit is
+# 46.2·√2 ≈ 65.3 V (Fix #7).  With |m_se|≤0.30 and Vdc≤1000 V, |V_se|≤~17 V so this
+# clip never binds — the correction is for physical consistency only.
+V_SE_MAX  = 46.2 * np.sqrt(2)   # V  series injection hardware limit (LV-side phase PEAK ≈65.3 V)
 I2_NOM    = 400e3 / (np.sqrt(3) * V2_LL)   # A  ≈ 577 A  (RMS)
 # Fix #1: normalisation base must be peak current to match lvrt_metrics.py / Simulink
 I2_NOM_PK = I2_NOM * np.sqrt(2)             # A  ≈ 816.5 A  (peak = √2 × RMS)
@@ -102,10 +130,13 @@ W_V2       =  5.0   # V2 deviation
 W_I2       =  8.0   # overcurrent
 W_RECOVERY =  3.0   # V2 recovery speed
 W_MARGIN   =  3.0   # Vdc margin incentive
-# Series VSC modulation penalty: discourages excessive m_se which drains DC in Simulink.
-# With W_MSE=3.0: at m_se_d=0.12 penalty=-0.043 (small, sc_1ph benefit overcomes it),
-# at m_se_d=0.25 penalty=-0.188 (larger, pushes SAC back from high injection).
-W_MSE      =  3.0   # series modulation penalty (prevents Simulink DC drain)
+# Series VSC modulation regulariser.
+# 2026-06-06 (#8): the series H-bridge now ALWAYS drains the DC bus (apparent-power
+# model) with no DC upside, matching Simulink.  Series only helps the (lightly
+# weighted) V2 term, so for the Vdc-dominated LVRT objective the agent should keep
+# m_se small.  W_MSE restored to 3.0 to firmly discourage the DC-draining over-
+# injection that wrecked Simulink transfer (raw-SAC ablation = 0.6%).
+W_MSE      =  3.0   # series modulation control-effort regulariser
 
 # ── Fault detection thresholds ─────────────────────────────────────────────────
 DVDC_FAULT_THRESHOLD  = 1000.0    # V/s   — start high-freq if Vdc falling fast
@@ -229,6 +260,21 @@ def _ode_direct(t: float, x: np.ndarray, params: dict) -> np.ndarray:
     else:               # igbt faults, cap_fault: no voltage sag
         V_g_d = V2_PK;  V_g_q = 0.0
 
+    # ── Shunt-feed (MV) bus voltage  (#7 topology fix, 2026-06-06) ──────────
+    # The energy-extraction VSC is connected to the MV (10 kV) PRIMARY bus via the
+    # Tsh coupling transformer, NOT to the LV load bus.  During an LV-side fault the
+    # MV bus sags LESS than the LV bus, because the grid Thevenin impedance and the
+    # main-transformer impedance are not negligible.  Empirically (Simulink sc_3ph
+    # probe): LV → 0.40 pu while MV → 0.67 pu, i.e. the MV bus sags ≈0.55× as much.
+    # Shunt active power must therefore use this MV-side voltage, NOT V2_d (the LV
+    # state) which the previous fix wrongly used.
+    #   NOTE: the averaged model still over-estimates deliverable power in deep sags
+    #   (the switching rectifier cannot push ideal P=1.5·V·I when its input is at
+    #   0.67 pu), so the ODE remains OPTIMISTIC for sc_3ph vs Simulink.  Simulink is
+    #   the authoritative arbiter — see results/HPT_SAC_Control_Report.md.
+    K_MV_SAG   = 0.55
+    V_sh_bus_d = V2_PK * (1.0 - K_MV_SAG * (1.0 - V_g_d / V2_PK))
+
     # ── Derive physical signals from modulation indices ────────────────────
     # Series VSC: SPWM averaged output per phase = m × (V_dc/2 / Tse_ratio)
     # This is the fundamental-frequency component in the dq frame.
@@ -245,14 +291,17 @@ def _ode_direct(t: float, x: np.ndarray, params: dict) -> np.ndarray:
         V_se_d *= V_SE_MAX / V_se_mag
         V_se_q *= V_SE_MAX / V_se_mag
 
-    # Shunt VSC: correct d-q averaged model.
-    # SPWM average output: V_sh_d = m_sh × (Vdc/2)  (PLL-aligned, d-axis)
-    # Inductor current: I_sh_d = (V2_d - V_sh_d) / (ω × L_sh)
-    # Positive I_sh_d means current flows from AC bus into DC link (charging).
-    # This matches the empirical Simulink equilibrium: at m_sh=0.68, Vdc=800V,
-    # V2_d=326.6V → V_sh=272V → I_sh=58.4A → P_sh=28.6kW (PI balance point).
-    V_sh_d = m_sh * (max(V_dc, 50.0) / 2.0)
-    I_sh_d = np.clip((V2_d - V_sh_d) / (OMEGA * L_sh_eff), -I_SH_MAX, I_SH_MAX)
+    # Shunt VSC: active-rectifier averaged model (CORRECTED 2026-06-06).
+    # The energy-extraction VSC regulates the DC bus by drawing ACTIVE current from
+    # the AC bus.  Its modulation command maps to a d-axis (active) current reference
+    # that the fast inner current loop tracks:
+    #     I_sh_d = (m_sh / M_SH_MAX) · I_sh_max     (active current, A)
+    # Active power into the DC link:  P_sh = 1.5 · V2_d · I_sh_d.
+    # Because power scales with the ACTUAL bus voltage V2_d, a sagging bus limits the
+    # extractable power (physically correct), and m_sh↑ ⇒ I_sh_d↑ ⇒ P_sh↑ ⇒ Vdc↑ —
+    # the monotonic sign confirmed empirically in Simulink Mode 9
+    # (m_sh 0.40/0.60/0.817/0.90 → Vdc 750/760/876/913 V).
+    I_sh_d = np.clip((m_sh / M_SH_MAX) * I_SH_MAX, 0.0, I_SH_MAX)
 
     # ── Load current (constant P+jQ) ───────────────────────────────────────
     V2_mag2 = max(V2_d**2 + V2_q**2, (V2_PK * 0.05)**2)
@@ -272,17 +321,41 @@ def _ode_direct(t: float, x: np.ndarray, params: dict) -> np.ndarray:
     dV2_q   = (V2_ss_q - V2_q) / tau_V2
 
     # ── DC power balance ───────────────────────────────────────────────────
-    P_se_out = 1.5 * (V_se_d * I_ld_d + V_se_q * I_ld_q)
-    # Fix: P_sh must use actual V2_d (not constant V_SH_RAT = V2_PK).
-    # During sc_3ph fault, V2_d ≈ 0 → P_sh = 0 (no power transfer across shorted bus).
-    # Using fixed V2_PK overestimated P_sh during faults and was physically incorrect.
-    P_sh_in  = 1.5 * V2_d * I_sh_d
+    # Series converter DC draw (#8 fix, 2026-06-06).  The previous active-power form
+    #   P_se = 1.5(V_se_d·I_ld_d + V_se_q·I_ld_q)
+    # could go NEGATIVE, i.e. the ODE let the series converter *charge* the DC bus by
+    # choosing m_se_d<0.  The retrained SAC exploited exactly that (m_se_d≈−0.23) and
+    # the policy then collapsed the real DC bus in Simulink (raw-SAC ablation = 0.6%).
+    # Empirically (Simulink series probe, m_sh=0.82): any significant |m_se| DRAINS the
+    # DC bus (m_se_d=−0.2 → Vdc 870→684 V; m_se_q=+0.2 → 870→687 V) and never charges
+    # it.  Model the H-bridge as ALWAYS drawing power from the DC bus to synthesise its
+    # series injection — use the apparent power it handles, so the drain is sign-free
+    # and the charging exploit is removed:
+    P_se_out = 1.5 * np.hypot(V_se_d, V_se_q) * np.hypot(I_ld_d, I_ld_q)
+    # P_sh uses the MV-side shunt-feed bus voltage V_sh_bus_d (#7).  During an LV
+    # fault the MV bus still sags (e.g. to ~0.67 pu in sc_3ph), so the extractable
+    # power drops below the DC load and the bus still collapses — but less abruptly
+    # than the (incorrect) LV-referenced version implied.
+    P_sh_in  = 1.5 * V_sh_bus_d * I_sh_d
 
     # IGBT fault on shunt VSC: reduce P_sh proportionally
     if in_fault and sc_id in (3, 8):
         P_sh_in *= max(0.0, 1.0 - fault_mag)
 
-    P_dc_net = P_sh_in - P_se_out
+    # DC-link damping/bleeder resistor load (matches Simulink, ≈78 kW at 800 V).
+    # This is the dominant steady-state DC load and sets balance m_sh ≈ 0.82.
+    P_dc_load = V_dc**2 / R_DC_DAMP
+
+    P_dc_net  = P_sh_in - P_se_out - P_dc_load
+
+    # NOTE (#10, 2026-06-06): a single-phase fault genuinely produces a negative-
+    # sequence 100 Hz (2ω) DC power pulsation, but the previous code modelled it with
+    # a fabricated amplitude (0.5·|P_sh|) *designed to be cancelled by m_se_q* — that
+    # is reward-shaping disguised as physics, not a derived quantity, so it has been
+    # REMOVED.  This positive-sequence averaged ODE does not represent sc_1ph
+    # unbalance; whether series q-axis injection actually helps sc_1ph is determined
+    # by the Simulink switching model (which does model the unbalance), not the ODE.
+
     dV_dc    = P_dc_net / (C_dc_eff * max(V_dc, 50.0))
 
     # ── AC voltage PI integrators (track V2 for next step reference) ───────
@@ -386,10 +459,13 @@ class HPTDirectEnv(gym.Env):
         I_ld_q0 = -(2.0/3.0) * Q / V2d0
         V_se_d0 = R_SE * I_ld_d0 - OMEGA * L_SE * I_ld_q0
         V_se_q0 = R_SE * I_ld_q0 + OMEGA * L_SE * I_ld_d0
-        P_se_ss = 1.5 * (V_se_d0 * I_ld_d0 + V_se_q0 * I_ld_q0)
-        I_sh_ss = P_se_ss / (1.5 * V2d0) if V2d0 > 1.0 else 0.0
-        V_sh_ss = V2d0 - I_sh_ss * OMEGA * L_sh_eff
-        m_sh_ss = float(np.clip(V_sh_ss / (VDC_NOM / 2.0), 0.0, M_SH_MAX))
+        P_se_ss = 1.5 * np.hypot(V_se_d0, V_se_q0) * np.hypot(I_ld_d0, I_ld_q0)  # apparent (#8)
+        # Active-power balance (CORRECTED 2026-06-06): the shunt must supply the series
+        # converter draw PLUS the DC damping-resistor load.  Solve for the active
+        # current command, then map back to the modulation command m_sh.
+        P_dc_load_ss = VDC_NOM**2 / R_DC_DAMP                  # ≈78 kW at 800 V
+        I_sh_ss = (P_se_ss + P_dc_load_ss) / (1.5 * V2d0) if V2d0 > 1.0 else 0.0
+        m_sh_ss = float(np.clip((I_sh_ss / I_SH_MAX) * M_SH_MAX, 0.0, M_SH_MAX))
 
         self._x = np.array([VDC_NOM, V2d0, 0.0, I_ld_d0 * 0.01, 0.0])
         self._t = 0.0
@@ -452,9 +528,8 @@ class HPTDirectEnv(gym.Env):
         V2_q   = self._x[2]
         V_dc_pu = V_dc / VDC_NOM
         V2_pu   = np.hypot(V2_d, V2_q) / V2_PK
-        # Fix #1: I_ld from dq power is peak current; normalise by peak base I2_NOM_PK
-        I_ld_mag = (2.0/3.0) * np.hypot(sc['P_load'], sc['Q_load']) / max(np.hypot(V2_d, V2_q), 1.0)
-        I2_pu   = I_ld_mag / I2_NOM_PK   # peak/peak_base → 1.0 pu at rated
+        # Fix #1/#3: peak base, and include fault-branch current (see _i2_peak_pu)
+        I2_pu   = self._i2_peak_pu(V2_d, V2_q)
 
         # Rate of change (for state and fault detection)
         self._dVdc_dt = (V_dc - self._V_dc_prev) / Δt
@@ -566,9 +641,7 @@ class HPTDirectEnv(gym.Env):
         V2_q   = self._x[2]
         V_dc_pu = np.clip(V_dc / VDC_NOM, 0.0, 1.5)
         V2_pu   = np.clip(np.hypot(V2_d, V2_q) / V2_PK, 0.0, 1.5)
-        I_ld    = (2.0/3.0) * np.hypot(self._sc['P_load'], self._sc['Q_load']) \
-                  / max(np.hypot(V2_d, V2_q), 1.0)
-        I2_pu   = np.clip(I_ld / I2_NOM_PK, 0.0, 5.0)   # Fix #1: peak base
+        I2_pu   = np.clip(self._i2_peak_pu(V2_d, V2_q), 0.0, 5.0)   # Fix #1/#3
 
         dVdc_norm = np.clip(self._dVdc_dt / 10000.0, -1.0, 1.0)
         dV2_norm  = np.clip(self._dV2_dt  /  5000.0, -1.0, 1.0)
@@ -597,6 +670,28 @@ class HPTDirectEnv(gym.Env):
             self._last_act,                                   # 3
         ]).astype(np.float32)
         return obs
+
+    def _i2_peak_pu(self, V2_d, V2_q) -> float:
+        """Secondary current in pu (peak base), INCLUDING fault-branch current.
+
+        Fix #3 (2026-06-06): the previous model used only the constant-power load
+        current, so the I2 ≤ 3.0 pu LVRT criterion was never exercised in training.
+        During an active short-circuit window the fault branch carries V2/R_f, which
+        flows through the secondary measurement and must be counted in I2.
+        """
+        V2mag  = np.hypot(V2_d, V2_q)
+        I_ld   = (2.0/3.0) * np.hypot(self._sc['P_load'], self._sc['Q_load']) / max(V2mag, 1.0)
+        I_flt  = 0.0
+        sc_id  = int(self._sc['sc_id'])
+        if sc_id in (6, 7):
+            fault_dur = self._dr.get('fault_duration', 0.015)
+            t_f       = self._sc['t_fault']
+            if t_f <= self._t < t_f + fault_dur:
+                R_f = float(self._sc['fault_resistance']) + float(self._sc['ground_resistance'])
+                I_flt = V2mag / max(R_f, 1e-3)
+                if sc_id == 6:        # single-phase: partial positive-seq contribution
+                    I_flt *= 0.4
+        return (I_ld + I_flt) / I2_NOM_PK
 
     def _msffn_fault_prob(self) -> float:
         """Probability of any non-normal fault (used for freq switch)."""
