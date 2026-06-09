@@ -15,3 +15,30 @@
 
 === expert "asym": 180 scenarios ===
   [asym] step= 25,000 FRT=68% (con=100 rea=100 lim=100 rec=100 sur=68) best=68% 2min
+  [asym] step= 50,000 FRT=76% (con=100 rea=78 lim=100 rec=100 sur=80) best=76% 4min
+  [asym] step= 75,000 FRT=64% (con=100 rea=91 lim=100 rec=100 sur=64) best=76% 6min
+  [asym] step=100,000 FRT=52% (con=100 rea=98 lim=100 rec=100 sur=52) best=76% 8min
+  [asym] step=125,000 FRT=76% (con=100 rea=84 lim=100 rec=100 sur=76) best=76% 10min
+  [asym] step=150,000 FRT=81% (con=100 rea=89 lim=100 rec=100 sur=81) best=81% 12min
+  [asym] step=175,000 FRT=15% (con=100 rea=95 lim=100 rec=99 sur=15) best=81% 14min
+  [asym] step=200,000 FRT=24% (con=100 rea=64 lim=100 rec=100 sur=38) best=81% 16min
+  [asym] step=225,000 FRT=52% (con=100 rea=55 lim=100 rec=100 sur=66) best=81% 18min
+  [asym] step=250,000 FRT=30% (con=100 rea=50 lim=100 rec=100 sur=55) best=81% 20min
+  [asym] step=275,000 FRT=59% (con=100 rea=88 lim=100 rec=100 sur=59) best=81% 22min
+  [asym] step=300,000 FRT=69% (con=100 rea=81 lim=100 rec=100 sur=69) best=81% 24min
+
+=== expert "hvrt": 80 scenarios ===
+  [hvrt] step= 25,000 FRT=100% (con=100 rea=100 lim=100 rec=100 sur=100) best=100% 2min
+  [hvrt] step= 50,000 FRT=100% (con=100 rea=100 lim=100 rec=100 sur=100) best=100% 4min
+  [hvrt] step= 75,000 FRT=100% (con=100 rea=100 lim=100 rec=100 sur=100) best=100% 6min
+  [hvrt] step=100,000 FRT=100% (con=100 rea=100 lim=100 rec=100 sur=100) best=100% 8min
+  [hvrt] step=125,000 FRT=40% (con=100 rea=100 lim=100 rec=100 sur=40) best=100% 10min
+  [hvrt] step=150,000 FRT=100% (con=100 rea=100 lim=100 rec=100 sur=100) best=100% 12min
+  [hvrt] step=175,000 FRT=21% (con=100 rea=49 lim=100 rec=50 sur=91) best=100% 14min
+  [hvrt] step=200,000 FRT=22% (con=100 rea=30 lim=100 rec=98 sur=22) best=100% 16min
+  [hvrt] step=225,000 FRT=34% (con=100 rea=100 lim=100 rec=100 sur=34) best=100% 18min
+  [hvrt] step=250,000 FRT=79% (con=100 rea=100 lim=100 rec=85 sur=92) best=100% 21min
+  [hvrt] step=275,000 FRT=50% (con=100 rea=100 lim=100 rec=100 sur=50) best=100% 23min
+  [hvrt] step=300,000 FRT=75% (con=100 rea=100 lim=100 rec=100 sur=75) best=100% 25min
+
+ALL EXPERTS DONE: {'sym': 33.3, 'asym': 81.2, 'hvrt': 100.0}
