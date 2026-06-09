@@ -13,9 +13,74 @@
 
 ## 1. 引言
 
-HPT 由一台工频变压器并联"取能换流器"（并联 VSC，经 Tsh 接中压侧）与串联"调控换流器"（串联 VSC，经 Tse 串入低压线），共享一条直流母线。故障穿越要求装置在电网电压跌落时**不脱网、按标准注入无功支撑电压、并按电压-时间包络恢复**。
+### 1.1 混合配电变压器背景
 
-传统 dq 双环 PI 控制在深跌、弱网、不对称故障下存在协调困难。本文用强化学习（SAC）学习并联无功与串联电压的协调策略，并回答一个核心问题：**在一个全部件齐全、开关级的 HPT 上，按国标 FRT 评判，RL 控制相对传统控制到底有多少优势？**
+配电变压器是配电网末端的核心设备。传统工频变压器结构简单、效率高，但**无电压调节与潮流控制能力**，难以应对分布式电源（光伏、风电）高渗透下的电压波动、三相不平衡、谐波与潮流双向化等新型配网挑战。固态变压器（Solid-State Transformer, SST）以全功率电力电子变换实现灵活调控，但全功率变换带来**成本高、效率偏低、可靠性下降**等问题，距大规模配网应用尚远 [3], [4]。
+
+**混合配电变压器（Hybrid Power Transformer, HPT）** 是二者的折中：以工频主变承担绝大部分主功率传输（保证效率与可靠性），仅用**小容量电力电子单元**（本文 PE 容量为额定的 30%）做并联/串联补偿，从而兼顾效率与可调性 [5], [7]。本文 HPT 拓扑由四部分构成（图见 §3.1）：① 工频主变（Δ-Yg，10 kV/400 V）；② **并联取能换流器**（shunt VSC，经耦合变 Tsh 接中压侧，维持直流母线、注入无功）；③ **串联调控换流器**（series VSC，经注入变 Tse 串入低压线，调控电压）；④ 二者**共享的直流母线**。
+
+### 1.2 故障穿越与并网导则
+
+随分布式电源渗透率提高，并网导则普遍要求设备具备**故障穿越（Fault Ride-Through, FRT）** 能力：电网电压跌落（低电压穿越 LVRT）或骤升（高电压穿越 HVRT）时，设备须在规定的**电压-时间包络**内**保持并网（不脱网）**，并**主动注入无功电流支撑电网电压**，故障清除后按规定恢复 [8]。中国国家标准 **GB/T 19963（风电场接入）[1]** 与 **GB/T 19964（光伏电站接入）[2]** 明确规定了 LVRT/HVRT 的电压-时间曲线与故障期无功电流注入要求（容性无功 `I_q ≥ 1.5(0.9 − U)` pu，U 为并网点电压标幺值）。本文据此为 HPT 定义标准 FRT 场景与判据。
+
+电网故障按对称性分为**对称三相**与**不对称**（单相接地、两相、两相接地）；不对称故障产生**负序乃至零序分量**，控制上需正负序分离处理 [9], [10]。
+
+### 1.3 强化学习控制背景
+
+并网电压源换流器（VSC）的经典控制为基于 **Park 变换** [11] 的 **dq 旋转坐标矢量解耦 PI 控制**：把三相交流量变换到与电网同步旋转的两轴（d 轴有功、q 轴无功）直流量，配合锁相环（PLL）实现有功/无功解耦调节 [8]；STATCOM 的无功电压支撑亦建立在此框架上 [12]。然而 HPT 在 FRT 下面临**多目标耦合**（撑电压、保直流母线、限流、按包络恢复）且工况复杂（深跌、弱网、不对称、并/串联共享直流），解析整定的 PI 难以同时兼顾。
+
+**深度强化学习（DRL）** 以数据驱动方式学习多目标控制策略，无需精确解析模型，近年在电力系统控制中受到关注 [16]。**Soft Actor-Critic（SAC）[13]** 是一种最大熵框架下的 off-policy actor-critic 算法（理论基础见 [14]），兼具**样本效率高、训练稳定、适合连续动作**等优点，适用于换流器连续调制控制。本文采用 SAC（实现基于 Stable-Baselines3 [15]）学习并联无功与串联电压的协调 FRT 策略。
+
+### 1.4 本文工作与贡献
+
+本文回答一个核心问题：**在一个全部件齐全、开关级建模的 HPT 上，按国标 FRT 评判，强化学习控制相对传统 dq 控制到底有多少优势？** 主要工作：
+
+1. 按 GB/T 标准重新定义 HPT 的故障穿越场景（320 个）与 5 项量化判据；
+2. 构建"**平均值 ODE 快速训练 + 开关级 Simulink 权威验证**"两层方法学，训练 SAC 协调策略；
+3. **从零脚本重建全部件齐全、可复现的开关级 HPT 模型**，并将 SAC 策略网络**导出权重内嵌进 Simulink 控制块逐步推理（真闭环）**，与 dq 双环 PI 同平台对比；
+4. 在全部 240 个 LVRT 场景上给出量化对比与机理分析，并**如实报告调参实验的负结果与单口拓扑的物理硬限**。
+
+### 1.5 基础理论与算式
+
+**① Clarke/Park 变换** [11]（abc→αβ→dq，幅值不变型；θ 为 PLL 锁定的电网相角）：
+
+$$v_\alpha=\tfrac{2}{3}\!\left(v_a-\tfrac{1}{2}v_b-\tfrac{1}{2}v_c\right),\quad v_\beta=\tfrac{2}{3}\cdot\tfrac{\sqrt3}{2}(v_b-v_c)$$
+$$v_d=\cos\theta\,v_\alpha+\sin\theta\,v_\beta,\quad v_q=-\sin\theta\,v_\alpha+\cos\theta\,v_\beta$$
+
+**② 同步旋转坐标锁相环（SRF-PLL）**：以 PI 驱动 `v_q→0` 锁定正序相角：
+
+$$\omega=\omega_0+\Big(K_{p,\text{pll}}+\tfrac{K_{i,\text{pll}}}{s}\Big)\frac{v_q}{|V|},\qquad \theta=\int\omega\,dt$$
+
+**③ 正/负序提取（T/4 延迟法）** [10]（`x'` 表示延迟四分之一基波周期 = 90° 相移）：
+
+$$V^{+}_{\alpha}=\tfrac12(v_\alpha-v'_\beta),\ V^{+}_{\beta}=\tfrac12(v_\beta+v'_\alpha);\quad |V^{+}|=\sqrt{V_\alpha^{+2}+V_\beta^{+2}}$$
+$$V^{-}_{\alpha}=\tfrac12(v_\alpha+v'_\beta),\ V^{-}_{\beta}=\tfrac12(v_\beta-v'_\alpha);\quad |V^{-}|=\sqrt{V_\alpha^{-2}+V_\beta^{-2}}$$
+
+**④ VSC dq 电流内环解耦控制** [8]（电流以"流入变流器"为正，前馈电网电压 + 交叉解耦）：
+
+$$u_d=v_d-\Big(K_p+\tfrac{K_i}{s}\Big)(i_d^*-i_d)+\omega L\,i_q,\qquad u_q=v_q-\Big(K_p+\tfrac{K_i}{s}\Big)(i_q^*-i_q)-\omega L\,i_d$$
+
+内环按带宽 `ω_b=2π·500 rad/s` 整定：`K_p=L\,ω_b=9.42`，`K_i=R\,ω_b=157` [5]。
+
+**⑤ 无功优先限流**（PE 容量有限，无功优先、有功让位）：
+
+$$i_q^*=\mathrm{clip}(i_{q,\text{ref}},-I_{q,\max},I_{q,\max}),\qquad |i_d^*|\le\sqrt{I_{\text{conv,max}}^2-i_q^{*2}}$$
+
+**⑥ GB/T 故障期无功 droop** [1], [2]：
+
+$$I_q=1.5\,(0.9-U)\ \text{pu}\quad(U<0.9),\qquad I_q\le I_{q,\max}=0.3\ \text{pu}$$
+
+**⑦ 共享直流母线功率平衡**（并联取能 − 串联消耗 − 损耗）：
+
+$$C_{dc}\,V_{dc}\frac{dV_{dc}}{dt}=P_{sh}-P_{se}-P_{\text{loss}}$$
+
+深跌时并联取能口 `P_{sh}∝U_{MV}` 随中压跌落而锐减，是 Vdc 存活的物理瓶颈（见 §5）。
+
+**⑧ SAC 最大熵强化学习目标** [13]（α 为温度系数，H 为策略熵）：
+
+$$J(\pi)=\sum_{t}\mathbb{E}_{(s_t,a_t)\sim\rho_\pi}\big[r(s_t,a_t)+\alpha\,\mathcal{H}(\pi(\cdot|s_t))\big]$$
+
+确定性部署动作经 tanh 压缩并线性映射到动作空间：`a=a_{\text{low}}+\tfrac12(\tanh(\mu_\theta(s))+1)(a_{\text{high}}-a_{\text{low}})`。
 
 ---
 
@@ -34,7 +99,7 @@ HPT 由一台工频变压器并联"取能换流器"（并联 VSC，经 Tsh 接�
 
 ### 2.2 标准故障穿越定义（GB/T）
 
-摒弃早期自造的"器件故障 + LV 侧故障 + Vdc 存活"非标准范式，按 **GB/T 19963/19964（风/光伏 LVRT）** 重新定义：
+摒弃早期自造的"器件故障 + LV 侧故障 + Vdc 存活"非标准范式，按 **GB/T 19963 [1] / GB/T 19964 [2]（风/光伏 LVRT）** 重新定义：
 
 - **故障类型**：对称三相 + 不对称（单相接地、两相、两相接地），含正负序；
 - **残压深度**：0.2 / 0.5 / 0.75；
@@ -44,7 +109,7 @@ HPT 由一台工频变压器并联"取能换流器"（并联 VSC，经 Tsh 接�
 
 ### 2.3 SAC 策略
 
-4 维动作 `[i_sh_d, i_sh_q, m_se_d, m_se_q]`（并联有功/无功电流、串联 d/q 注入），21 维观测，net 256³，400k 步。ODE 侧最优：
+采用 Soft Actor-Critic [13]（实现基于 Stable-Baselines3 [15]）。4 维动作 `[i_sh_d, i_sh_q, m_se_d, m_se_q]`（并联有功/无功电流、串联 d/q 注入），21 维观测，net 256³，400k 步。ODE 侧最优：
 
 | connect | reactive | limit | recover | survive | **frt_pass** |
 |---------|----------|-------|---------|---------|----------|
@@ -87,9 +152,11 @@ MV 弱网(R/L按SCR) → MV序故障 → 主变 Δ-Yg(400kVA) → LV负载
 
 ### 3.2 控制实现
 
-- **并联 VSC**：SRF-PLL 锁相 + dq 电流内环（Kp=9.42/Ki=157 体系，解耦前馈）+ 无功优先限流 + Vdc 外环（双向有功电流）+ 抗饱和 + 软启动预充；
+- **并联 VSC**：SRF-PLL 锁相（§2 式②）+ dq 电流内环（式④，Kp=9.42/Ki=157 解耦前馈 [5], [8]）+ 无功优先限流（式⑤）+ Vdc 外环（双向有功电流）+ 抗饱和 + 软启动预充；不对称故障下正/负序由 T/4 延迟法提取（式③ [10]）；
 - **串联 VSC**：锁 LV 角的开环 dq 电压注入（±20%）；
 - **斩波器**：Vdc>1.20pu 投入（仅管故障过压）。
+
+> 该并联控制即经典 STATCOM/并网 VSC 矢量控制 [8], [12]；SAC 闭环（§4.1）则以学习策略替代外层指令生成。
 
 ### 3.3 模型保真度（诚实分级）
 
@@ -154,7 +221,7 @@ MV 弱网(R/L按SCR) → MV序故障 → 主变 Δ-Yg(400kVA) → LV负载
 
 ![图1 5判据对比](figs/fig1_criteria_bar.png)
 
-**图 1**　完整 HPT 上标准 FRT 的 5 判据 + 综合通过率（24 个 LVRT 场景）。SAC 在限流、Vdc 存活、综合通过率上领先；dq 在无功跟踪上领先。
+**图 1**　完整 HPT 上标准 FRT 的 5 判据 + 综合通过率（全部 240 个 LVRT 场景，SAC 为闭环）。SAC 在限流、Vdc 存活、综合通过率上领先；dq 在无功跟踪上领先。
 
 ### 4.3 机理分析（逐场景判据级）
 
@@ -242,4 +309,173 @@ dq 仅在 reactive 挂。两相故障强不对称、负序大，正序 dq 坐标
 | `frt_standard/gen_sac_frt_actions.py` | 从 `sac_frt_best.zip` 生成 SAC 动作设定值 |
 | `frt_standard/{FRT_SPEC.md, frt_scenarios.csv, frt_env.py, frt_metrics.py, train_frt_sac.py}` | GB/T 规格、320 场景、训练环境与指标 |
 | `results/FRT_SAC_vs_dq_FullHPT.md` / `frt_full_compare.{mat,txt}` | 对比结果数据 |
+| `frt_standard/export_sac_actor.py` | 导出 SAC actor 权重供 Simulink 闭环内嵌 |
 | 复现环境 | MATLAB R2025a + Simscape Electrical；Python `E:\anaconda\envs\pandapower_dev`（SB3 2.8.0 + torch + gymnasium） |
+
+---
+
+## 附录 A：平均值 ODE 训练环境（`frt_env.py`，可复现）
+
+ODE 环境是训练用的**快速近似代理**（非真实物理，结论以 Simulink 为准），全部以标幺值（pu，1.0 = 额定端电压/额定电流）建模，单步控制步 `DT = 2 ms`，并以 `TSCALE = 0.20` 压缩 GB/T 秒级曲线以缩短训练 episode（相对判据尺度不变）。
+
+**A.1 状态 / 动作 / 观测**
+
+- **状态（4）**：`[Vdc, V2p, V2n, ξ]` = 直流母线、正序端电压、负序端电压、积分器；初值 `[1, 1, 0, 0]`。
+- **动作（4，连续 Box）**：`a = [i_sh_d, i_sh_q, m_se_d, m_se_q]`（并联有功/无功电流、串联 d/q 注入）。
+  下界 `[0, −I_Q_MAX, −0.20, −0.20]`，上界 `[I_CONV_MAX, I_Q_MAX, 0.20, 0.20]`。
+- **观测（21，Box，clip[−5,5]）**，按序：
+  `[0]Vdc [1]V2p [2]V2n [3]|i_q| [4,5]占位0,0 [6]vdev=0.9−V2p [7]i_q_err=i_q_ref−i_q [8]i_q [9–14]故障one-hot probs(6) [15]归一时间clip((t−t_f)/0.5,0,1) [16]in_fault [17–20]上一步动作`。
+  其中故障期 `probs[fp]=0.92, probs[0]+=0.08`，否则 `probs[0]=1`；故障类索引 `F2I={normal:0, sym3ph:1, 1ph_g:2, 2ph:3, 2ph_g:4, swell:5}`。
+
+**A.2 故障序分量映射** `fault_sequence(type, U)`（U=目标残压，返回正序、负序）：
+
+| 类型 | 正序 V⁺ | 负序 V⁻ |
+|------|---------|---------|
+| sym3ph | U | 0 |
+| 1ph_g | (2+U)/3 | (1−U)/3 |
+| 2ph | (1+U)/2 | (1−U)/2 |
+| 2ph_g | (1+2U)/3 | (1−U)/3 |
+
+**A.3 动力学（每步）**
+
+- 端电压一阶滞后（τ=TAU_V2=10 ms），`K_q = K_Q_BASE / SCR`：
+  `V2p_ss = max(0, V⁺ + SE_GAIN·V_se_d + K_q·i_sh_q)`；`V2p ← V2p + (V2p_ss−V2p)·DT/τ`
+  `V2n_ss = max(0, V⁻ − |V_se_q|)`；同式更新 `V2n`。
+- 无功优先限流：`i_sh_q∈[−I_Q_MAX, I_Q_MAX]`；`i_sh_d∈[0, √(I_CONV_MAX²−i_sh_q²)]`。
+- 直流母线（10 子步，`τ_dc=DC_TAU≈3.52 ms`）：
+  `P_sh=V⁺·i_sh_d`（MV 侧取能）；`P_se=0.5·hypot(V_se_d,V_se_q)`；`P_load=Vdc²·K_DC`；
+  `dVdc=(P_sh−P_se−P_load)/(τ_dc·max(0.2,Vdc))`；`Vdc∈[0.05,1.6]`。
+
+**A.4 脱网判定（LVRT 包络）**：`hold=0.625·TSCALE`，`reach=2.0·TSCALE`；`t_rel≤hold` 下界 `max(0,U−0.05)`，`hold<t_rel≤reach` 线性升至 0.9，之后 0.9；`V2p < 包络−0.001 → tripped`。
+
+**A.5 奖励** `r = r_connect + r_reactive + r_limit + r_v2 + r_vdc + 1`：
+
+| 项 | 表达式 |
+|----|--------|
+| r_connect | −20（tripped）否则 0 |
+| r_reactive | −W·\|i_q_ref − i_sh_q\|，W = 3(v1)/8(v2)/5(v3) |
+| r_limit | −5·max(0, hypot(i_sh_d,i_sh_q) − I_CONV_MAX) |
+| r_v2 | −5·\|1−V2p\| − 3·V2n |
+| r_vdc | −10·max(0, 0.75−Vdc) − 5·max(0, Vdc−1.25) |
+
+无功 droop 参考 `i_q_ref`：`V2p<0.9 → min(I_Q_MAX, 1.5(0.9−V2p))`；`V2p>1.1 → max(−I_Q_MAX, −1.5(V2p−1.1))`；否则 0。
+
+**A.6 常量表（v1 头条 / v2 / v3 标定值）**
+
+| 常量 | v1（原始） | v2 | v3 | 含义 |
+|------|-----------|----|----|------|
+| I_Q_MAX | 0.30 | 0.30 | **0.25** | 无功指令上限 |
+| I_CONV_MAX | 0.35 | 0.35 | 0.35 | 并联总电流上限 |
+| V_SE_MAX | 0.20 | 0.20 | 0.20 | 串联注入上限 |
+| K_Q_BASE | **1.0** | 0.22 | 0.22 | 无功→电压增益基（K_q=此/SCR） |
+| SE_GAIN | **1.0** | 0.47 | 0.47 | 串联注入电压有效增益 |
+| r_reactive 权重 W | **3** | 8 | 5 | 无功跟踪奖励权重 |
+| K_DC | 0.195 | 同 | 同 | 直流泄放（=(800²/8.2)/400e3） |
+| DC_TAU | 3.52 ms | 同 | 同 | =2·704/400e3 |
+| TAU_V2 | 10 ms | 同 | 同 | 端电压滞后 |
+| DT / TSCALE | 2 ms / 0.20 | 同 | 同 | 控制步 / 时间压缩 |
+
+> 头条结果（FRT 25%）为 **v1**（原始列）训练所得；v2/v3 为后续标定+调奖励实验（§4.5，未超过 v1）。当前 `frt_env.py` 内为 v3 值；复现 v1 需把上表 v1 列回填。
+
+---
+
+## 附录 B：SAC 训练配置（`train_frt_sac.py`，可复现）
+
+基于 Stable-Baselines3 [15] 的 SAC [13]，`MlpPolicy`。
+
+**B.1 超参数**
+
+| 参数 | 值 | 参数 | 值 |
+|------|----|------|----|
+| learning_rate | 3e-4 | net_arch | [256, 256, 256] |
+| buffer_size | 100,000 | ent_coef | auto（自动温度） |
+| batch_size | 512 | seed | 42 |
+| tau | 0.005 | n_envs | 8（DummyVecEnv） |
+| gamma | 0.99 | total_steps | 400k(v1/v3) / 600k(v2) |
+| train_freq | 1 | eval_freq | 25,000 |
+| gradient_steps | 2 | device | cuda 若可用否则 cpu |
+
+**B.2 流程**：8 个并行环境各加载全 320 场景（随机种子）；每 25k 步在 80 个随机场景上评 5 判据，按综合 `frt_pass` 选最优 checkpoint → `sac_frt_best.zip`；最优模型用于 Simulink 验证。best-model 选择避免后期退化（实测后期常崩 survive→0）。确定性部署动作 = `tanh(μ_θ(s))` 经线性缩放到动作空间（§2 式⑧）。
+
+---
+
+## 附录 C：Simulink 开关级模型与验证流程（`build_hpt_frt_full.m` / `validate_frt_full.m`，可复现）
+
+**C.1 求解器**：`powergui` Discrete，`Ts=20 µs`；`Solver=ode23tb`；SPWM 载波 5 kHz；`StopTime` 取场景 `T_sim`（封顶 1.2 s）。`build_hpt_frt_full(stage)`：stage 1 骨架 → 2 并联 → 3 串联 → 4 双控制模式。
+
+**C.2 元件与参数**（10 kV MV / 400 V LV）
+
+| 块 | 库/类型 | 关键参数 |
+|----|--------|---------|
+| Grid | Three-Phase Source（Yg） | 10 kV，`SpecifyImpedance=off`，R/L 按 SCR（强 7.91 Ω/75.5 mH，弱 11.79 Ω/263 mH），Voltage=校准 EMF |
+| GridFault | powerlib Three-Phase Fault | MV 母线，R_g=0.001 Ω，R_fault 标定，相/接地按类型 |
+| Main_Tx | Three-Phase Transformer(2W) | 400 kVA，W1 Delta(D11) 10 kV，W2 Yg 400 V，[R 0.005, L 0.025 pu] |
+| Tsh | 同上 | 120 kVA，Delta(D11) 10 kV / Yg 400 V，漏 0.02 |
+| Tse_1/2/3 | 单相 Linear Transformer(2W) | 30 kVA，W1 400 V / W2 46.2 V，漏 0.03；W2 串入 LV 线 |
+| ShVSC / SeVSC | Universal Bridge | 3 臂，IGBT/Diodes，共享 DC |
+| Lsh | 3φ Series RLC Branch | RL，R 0.05 Ω / L 3 mH |
+| Cdc | Series RLC Branch | C 2200 µF，初值 800 V |
+| Chop+Rchop | IGBT + 电阻 | R=800²/120e3≈5.33 Ω，Vdc>1.20 pu 投入 |
+| Load | 3φ Series RLC Load | Y 接地，额定 400 kW |
+
+**C.3 控制块（MATLAB Function）**
+
+- **CTRL_sh（并联）**：SRF-PLL（Kp 90 / Ki 1500，err=+Vq/|V|）+ dq 电流内环（Kp 2.5 / Ki 150，解耦 ωL + 前馈 Vd/Vq + 抗饱和）+ Vdc 外环（Kpv 0.5 / Kiv 8，双向、限速）+ 软启动（Vdc>620 V latch）。电流以"流入变流器"为正。
+- **CTRL_se（串联）**：锁 LV 角 + 开环 dq 电压注入，调制 `= 5·m_se`（映射 ±0.2 → ±1）。
+- **HLC（高层选择）**：`mode=4` dq-droop / `mode=10` SAC 设定值 / `mode=11` SAC 闭环。
+
+**C.4 Mode 11 闭环（SAC 内嵌）**：`export_sac_actor.py` 导出权重 → `sac_actor_weights.mat`，`coder.load` 进 HLC。每步在模型内**重建 21 维观测**：`Vdc/800`；正/负序 V2p/V2n（T/4 = 250 采样延迟法，式③）；`i_q` 用上步动作代理（避代数环）；`i_q_err=droop−i_q`；故障 one-hot 由 `fclass/fdur/t_fault` 常量给；时间；上步动作。前向 = 3×ReLU(256)+μ+tanh+缩放（已对 Python 验证误差 1e-7）；映射 `i_q→iq_ref(×173.2)`、`m_se_d/q→−mse_d/q`（串联符号与 ODE 相反取负）。
+
+**C.5 验证流程（`validate_frt_full.m`）**
+
+1. 读 `frt_scenarios.csv`（滤 LVRT）；
+2. **每 SCR 校 EMF**：无故障跑，使故障前 LV→1.0 pu；
+3. **每 (SCR, 残压, 故障型) 标定 R_fault**：扫 {2,5,12,30,80,200} Ω，取使故障窗正序幅值最接近目标 {0.2,0.5,0.75} 者；
+4. 每场景跑 `mode 4`(dq) 与 `mode 11`(闭环SAC)，按 §2.4 算 5 判据；
+5. 增量保存，输出 `results/frt_full_compare.{mat,txt}`。
+
+---
+
+## 参考文献
+
+**并网标准**
+
+[1] GB/T 19963.1—2021，《风电场接入电力系统技术规定 第 1 部分：陆上风电》，国家市场监督管理总局，2021.
+
+[2] GB/T 19964—2012，《光伏发电站接入电力系统技术规定》，中国国家标准化管理委员会，2012.
+
+**混合/固态变压器**
+
+[3] X. She, A. Q. Huang, and R. Burgos, "Review of solid-state transformer technologies and their application in power distribution systems," *IEEE J. Emerg. Sel. Topics Power Electron.*, vol. 1, no. 3, pp. 186–198, Sep. 2013.
+
+[4] J. E. Huber and J. W. Kolar, "Applicability of solid-state transformers in today's and future distribution grids," *IEEE Trans. Smart Grid*, vol. 10, no. 1, pp. 317–326, Jan. 2019.
+
+[5] Liu *et al.*, "Power flow analysis and DC-link voltage control of hybrid distribution transformer," *IEEE Trans. Power Electron.*, vol. 36, no. 11, Nov. 2021.
+
+[6] Lai *et al.*, "Enhancing transient performance of hybrid distribution transformer using event-triggered PI-resonant-repetitive control," *IEEE Trans. Power Electron.*, vol. 41, no. 2, Feb. 2026.
+
+[7] Shang *et al.*, "Hybrid power transformer voltage control strategy for grid-connected PV," in *Proc. IEEE Conf. Energy Internet and Energy System Integration (CEEPE)*, 2024.
+
+**并网变流器控制与故障穿越**
+
+[8] R. Teodorescu, M. Liserre, and P. Rodríguez, *Grid Converters for Photovoltaic and Wind Power Systems*. Hoboken, NJ, USA: Wiley-IEEE Press, 2011.
+
+[9] P. Rodríguez, A. V. Timbus, R. Teodorescu, M. Liserre, and F. Blaabjerg, "Flexible active power control of distributed power generation systems during grid faults," *IEEE Trans. Ind. Electron.*, vol. 54, no. 5, pp. 2583–2592, Oct. 2007.
+
+[10] P. Rodríguez *et al.*, "Decoupled double synchronous reference frame PLL for power converters control," *IEEE Trans. Power Electron.*, vol. 22, no. 2, pp. 584–592, Mar. 2007.
+
+[11] R. H. Park, "Two-reaction theory of synchronous machines—Generalized method of analysis—Part I," *Trans. AIEE*, vol. 48, no. 3, pp. 716–727, 1929.
+
+[12] C. Schauder and H. Mehta, "Vector analysis and control of advanced static VAr compensators," *IEE Proc. C — Gener. Transm. Distrib.*, vol. 140, no. 4, pp. 299–306, Jul. 1993.
+
+**强化学习**
+
+[13] T. Haarnoja, A. Zhou, P. Abbeel, and S. Levine, "Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor," in *Proc. Int. Conf. Mach. Learn. (ICML)*, 2018, pp. 1861–1870.
+
+[14] R. S. Sutton and A. G. Barto, *Reinforcement Learning: An Introduction*, 2nd ed. Cambridge, MA, USA: MIT Press, 2018.
+
+[15] A. Raffin, A. Hill, A. Gleave, A. Kanervisto, M. Ernestus, and N. Dormann, "Stable-Baselines3: Reliable reinforcement learning implementations," *J. Mach. Learn. Res.*, vol. 22, no. 268, pp. 1–8, 2021.
+
+[16] D. Cao *et al.*, "Reinforcement learning and its applications in modern power and energy systems: A review," *J. Mod. Power Syst. Clean Energy*, vol. 8, no. 6, pp. 1029–1042, Nov. 2020.
+
+> 注：[5][6][7] 为课题相关文献，卷期以课题资料为准；标准 [1][2] 以最新现行版为准。其余为本领域经典/权威文献。
