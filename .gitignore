@@ -18,14 +18,6 @@ slprj/
 *.autosave
 codegen/
 
-# ── Papers & images (do not commit binary blobs) ────────────────────────────────
-*.pdf
-*.png
-*.jpg
-*.jpeg
-*.docx
-*.xlsx
-
 # ── OS / editor ─────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

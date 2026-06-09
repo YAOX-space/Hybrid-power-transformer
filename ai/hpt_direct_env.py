@@ -8,7 +8,7 @@ the PI loops, controlling the two VSCs at the most fundamental level:
     a[0]  m_sh  ∈ [0.0, 0.9]   shunt VSC active-power command
                                  → active d-axis current  I_sh_d = (m_sh/0.9)·I_sh_max
                                  → DC charging power       P_sh = 1.5·V2_d·I_sh_d
-                                 (monotonic: m_sh↑ ⇒ Vdc↑, matches Simulink Mode 9)
+                                 (monotonic: m_sh↑ ⇒ Vdc↑, matches Simulink SAC直接调制)
     a[1]  m_se_d ∈ [-0.3, 0.3] series VSC d-axis modulation
                                  → V_se_d = m_se_d × V_dc/2 / Tse_ratio
     a[2]  m_se_q ∈ [-0.3, 0.3] series VSC q-axis modulation
@@ -299,7 +299,7 @@ def _ode_direct(t: float, x: np.ndarray, params: dict) -> np.ndarray:
     # Active power into the DC link:  P_sh = 1.5 · V2_d · I_sh_d.
     # Because power scales with the ACTUAL bus voltage V2_d, a sagging bus limits the
     # extractable power (physically correct), and m_sh↑ ⇒ I_sh_d↑ ⇒ P_sh↑ ⇒ Vdc↑ —
-    # the monotonic sign confirmed empirically in Simulink Mode 9
+    # the monotonic sign confirmed empirically in Simulink SAC直接调制
     # (m_sh 0.40/0.60/0.817/0.90 → Vdc 750/760/876/913 V).
     I_sh_d = np.clip((m_sh / M_SH_MAX) * I_SH_MAX, 0.0, I_SH_MAX)
 

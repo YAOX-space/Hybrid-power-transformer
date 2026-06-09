@@ -1,22 +1,22 @@
 """
-validate_sac_simulink.py  —  Validate trained SAC on real Simulink Mode 9.
+validate_sac_simulink.py  —  Validate trained SAC on real Simulink SAC直接调制.
 
 For each of the 350 fixed scenarios, the SAC neural network observes the
 scenario features and selects continuous actions [m_sh, m_se_d, m_se_q].
-These are applied to Simulink Mode 9 (direct SPWM control).
+These are applied to Simulink SAC直接调制 (direct SPWM control).
 
 Two validation modes:
   --scenario-level  : SAC observes initial features → picks one action per scenario.
                       Simulink runs with fixed {m_sh, m_se_d, m_se_q} throughout.
-                      Fast (same speed as Mode 9 batch, ~23 min for 350 scenarios).
+                      Fast (same speed as SAC直接调制 batch, ~23 min for 350 scenarios).
 
   --online          : SAC observes state every STEP_MS milliseconds during fault.
                       Simulink steps via MATLAB MCP, SAC re-queries at each step.
                       Slower but truly adaptive (~5× longer).
 
 Comparison output:
-  - dq baseline (Mode 4): existing 64.00 %
-  - Fixed Mode 9 (m_sh=0.90): existing 96.57 %
+  - dq baseline (dq双环PI): existing 64.00 %
+  - 固定SAC直接调制 (m_sh=0.90): existing 96.57 %
   - SAC scenario-level: new result
   - SAC online (if --online): new result
 """
@@ -50,9 +50,12 @@ VDC_NOM = 800.0
 I2_NOM  = 400e3 / (np.sqrt(3) * V2_LL)
 I2_NOM_PK = I2_NOM * np.sqrt(2)               # 816.5 A
 
-# SAC action bounds (Mode 9 interface)
+# SAC action bounds (SAC-direct control interface)
 M_SH_MAX    = 0.90
 M_SE_BOUND  = 0.30
+# Controller-selector interface code for SAC-direct control. The compiled .slx branches
+# on this integer — it is an interface code, not a label.
+CTRL_SAC_DIRECT = 9
 
 # ── Observation builder ────────────────────────────────────────────────────────
 
@@ -121,7 +124,7 @@ def state_obs(
 
 # ── MATLAB/Simulink helpers ────────────────────────────────────────────────────
 
-def configure_scenario(eng, model: str, row: pd.Series, mode: int = 9):
+def configure_scenario(eng, model: str, row: pd.Series, mode: int = CTRL_SAC_DIRECT):
     """Configure Simulink block parameters for one scenario."""
     sc_id = int(row.sc_id)
     eng.set_param(f'{model}/Sc_id',          'Value', str(sc_id),           nargout=0)
@@ -159,7 +162,7 @@ def configure_scenario(eng, model: str, row: pd.Series, mode: int = 9):
     eng.set_param(model, 'StopTime', str(float(row.T_sim)),                 nargout=0)
 
 
-def set_mode9_action(eng, model: str, m_sh: float, m_se_d: float, m_se_q: float):
+def set_sac_action(eng, model: str, m_sh: float, m_se_d: float, m_se_q: float):
     eng.set_param(f'{model}/RL_Energy_Bias',   'Value', str(np.clip(m_sh,   0, M_SH_MAX)),   nargout=0)
     eng.set_param(f'{model}/RL_Reg_Bias',      'Value', str(np.clip(m_se_d, -M_SE_BOUND, M_SE_BOUND)), nargout=0)
     eng.set_param(f'{model}/RL_Current_Bias',  'Value', str(np.clip(m_se_q, -M_SE_BOUND, M_SE_BOUND)), nargout=0)
@@ -189,7 +192,7 @@ def extract_lvrt(eng_out, t_fault: float, f_s: float = 20000) -> dict:
 
 def validate_scenario_level(sac: SAC, checkpoint_path: str) -> dict:
     """SAC picks one action per scenario using initial features; Simulink runs fixed."""
-    print('\n=== Scenario-level SAC validation (Mode 9) ===')
+    print('\n=== Scenario-level SAC validation (SAC直接调制) ===')
     print('SAC observes scenario features → picks [m_sh, m_se_d, m_se_q] once per scenario')
     print('Simulink runs with those fixed parameters throughout.\n')
 
@@ -216,8 +219,8 @@ def validate_scenario_level(sac: SAC, checkpoint_path: str) -> dict:
 
         # Configure and run Simulink
         eng.set_param(model, 'FastRestart', 'off', nargout=0)
-        configure_scenario(eng, model, row, mode=9)
-        set_mode9_action(eng, model, m_sh, m_se_d, m_se_q)
+        configure_scenario(eng, model, row, mode=CTRL_SAC_DIRECT)
+        set_sac_action(eng, model, m_sh, m_se_d, m_se_q)
 
         in_obj = eng.Simulink.SimulationInput(model)
         in_obj = eng.setModelParameter(in_obj, 'FastRestart', 'on')
@@ -247,7 +250,7 @@ def validate_scenario_level(sac: SAC, checkpoint_path: str) -> dict:
     # Summarise
     passes = sum(r['lvrt_pass'] for r in results)
     rate   = 100.0 * passes / len(results)
-    print(f'\n  SAC scenario-level LVRT: {rate:.2f}%  (dq=64.00%  fixed-Mode9=96.57%)')
+    print(f'\n  SAC scenario-level LVRT: {rate:.2f}%  (dq=64.00%  固定SAC直接调制=96.57%)')
 
     # Per-class
     for sc in sorted(SC_NAMES):
@@ -256,11 +259,11 @@ def validate_scenario_level(sac: SAC, checkpoint_path: str) -> dict:
             pr = 100*sum(g['lvrt_pass'] for g in grp)/len(grp)
             print(f'    {SC_NAMES[sc]:12s}: {pr:.1f}%')
 
-    out_path = RESULTS_DIR / 'sac_mode9_scenario_level.json'
+    out_path = RESULTS_DIR / 'sac_direct_scenario_level.json'
     out_path.write_text(json.dumps({
         'lvrt_pass_pct': round(rate,2),
         'dq_baseline': 64.00,
-        'fixed_mode9': 96.57,
+        'fixed_sac_direct': 96.57,
         'results': results,
     }, indent=2), encoding='utf-8')
     print(f'\nSaved → {out_path}')
@@ -276,7 +279,7 @@ def validate_online(sac: SAC, step_ms: float = 5.0) -> dict:
     StopTime advancing step by step.
     NOTE: This approach compiles once (FastRestart) then re-runs short segments.
     """
-    print(f'\n=== Online SAC validation (Mode 9, step={step_ms}ms) ===')
+    print(f'\n=== Online SAC validation (SAC直接调制, step={step_ms}ms) ===')
     print('SAC re-queries state every 5ms during fault window.\n')
 
     scen = pd.read_csv(SCEN_CSV).reset_index(drop=True)
@@ -302,8 +305,8 @@ def validate_online(sac: SAC, step_ms: float = 5.0) -> dict:
 
         # Run pre-fault segment (0 → t_fault)
         eng.set_param(model, 'FastRestart', 'off', nargout=0)
-        configure_scenario(eng, model, row, mode=9)
-        set_mode9_action(eng, model, m_sh, m_se_d, m_se_q)
+        configure_scenario(eng, model, row, mode=CTRL_SAC_DIRECT)
+        set_sac_action(eng, model, m_sh, m_se_d, m_se_q)
         eng.set_param(model, 'StopTime', str(round(t_f, 6)), nargout=0)
 
         in_pre = eng.Simulink.SimulationInput(model)
@@ -331,7 +334,7 @@ def validate_online(sac: SAC, step_ms: float = 5.0) -> dict:
             last_action = np.array([m_sh, m_se_d, m_se_q], dtype=np.float32)
 
             # Apply action and advance one step
-            set_mode9_action(eng, model, m_sh, m_se_d, m_se_q)
+            set_sac_action(eng, model, m_sh, m_se_d, m_se_q)
             eng.set_param(model, 'StopTime', str(round(t_next, 6)), nargout=0)
 
             in_k = eng.Simulink.SimulationInput(model)
@@ -369,7 +372,7 @@ def validate_online(sac: SAC, step_ms: float = 5.0) -> dict:
     passes = sum(r['lvrt_pass'] for r in results)
     rate   = 100.0 * passes / len(results)
     print(f'\nOnline SAC LVRT: {rate:.2f}%')
-    out_path = RESULTS_DIR / 'sac_mode9_online.json'
+    out_path = RESULTS_DIR / 'sac_direct_online.json'
     out_path.write_text(json.dumps({'lvrt_pass_pct':round(rate,2),
                                     'results':results},indent=2),encoding='utf-8')
     print(f'Saved → {out_path}')

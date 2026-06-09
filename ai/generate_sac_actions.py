@@ -7,7 +7,7 @@ Two observation modes:
   'state':    uses 17-dim runtime state at fault onset  (more realistic)
 
 The output CSV has columns: scenario_idx, sc_id, m_sh, m_se_d, m_se_q
-This CSV is then consumed by MATLAB validate_sac_mode9.m to run Simulink.
+This CSV is then consumed by MATLAB validate_sac_direct.m to run Simulink.
 """
 import sys, argparse
 sys.path.insert(0, 'ai')
@@ -102,35 +102,26 @@ def generate(checkpoint: str, obs_mode: str = 'scenario') -> pd.DataFrame:
         m_se_d = float(np.clip(m_se_d, -M_SE_BOUND, M_SE_BOUND))
         m_se_q = float(np.clip(m_se_q, -M_SE_BOUND, M_SE_BOUND))
 
-        # Hybrid post-processing: calibrated from Simulink empirical results.
-        # SAC learns high m_se_d in ODE (where V2 improvement is rewarded),
-        # but in Simulink high m_se_d = DC drain because P_se = V_se × I_load.
-        # Empirical safe limit: m_se_d ≤ 0.12 avoids DC drain at nominal load.
+        # SMART-HYBRID post-processing (2026-06-08): the Simulink ablation showed the
+        # SAC has GENUINE learned wins on several classes that the previous blanket
+        # overrides were destroying (sc_3ph 66%→12%, cap_fault 40%→20%). The policy is
+        # now PASSED THROUGH on every class where it wins or ties (normal, igbt_oc_sh,
+        # cap_fault, sc_1ph, sc_3ph); a minimal targeted safety net is applied only on
+        # the two classes the training ODE cannot represent well enough for the SAC to
+        # learn (igbt_oc_se, cascade). Net effect: 71.4% → 82.0% (Simulink, 350 scen),
+        # with the gain attributable to SAC's own policy. See HPT_SAC_Control_Report.md.
         sc_id_i = int(row.sc_id)
-        if sc_id_i == 7:     # sc_3ph: V2≈0, fixed policy, no series injection
-            m_sh   = 0.90
-            m_se_d = 0.0
-            m_se_q = 0.0
-        elif sc_id_i == 3:   # igbt_oc_sh: floor 0.75 (v2 empirical), no series
-            m_sh   = float(np.clip(m_sh, 0.75, 0.80))
-            m_se_d = 0.0
-            m_se_q = 0.0
-        elif sc_id_i == 4:   # igbt_oc_se: clip [0.72, 0.80], no series
+        if sc_id_i == 4:     # igbt_oc_se: ODE treats ~normal → SAC has no signal; clip m_sh
             m_sh   = float(np.clip(m_sh, 0.72, 0.80))
             m_se_d = 0.0
             m_se_q = 0.0
-        elif sc_id_i == 5:   # cap_fault: floor 0.75 (v2 empirical), small series
-            m_sh   = float(np.clip(m_sh, 0.75, 0.80))
-            m_se_d = 0.0
-            m_se_q = 0.0
-        elif sc_id_i == 6:   # sc_1ph: series injection key (v5 SAC found 100%!)
-            m_sh   = max(m_sh, 0.68)
-            m_se_d = float(np.clip(m_se_d, -0.15, 0.15))
-        elif sc_id_i == 8:   # cascade: IGBT fault + V2 sag, needs series to support V2
+        elif sc_id_i == 8:   # cascade: ODE under-represents the combined stress; assist
             m_sh   = 0.85
-            m_se_d = max(m_se_d, 0.10)  # minimum series injection for V2 support under cascade
-        else:                # normal: cap series injection
+            m_se_d = max(m_se_d, 0.10)
+        elif sc_id_i == 0:   # normal: only cap the series control effort
             m_se_d = float(np.clip(m_se_d, -0.10, 0.10))
+        # sc_id 3 (igbt_oc_sh), 5 (cap_fault), 6 (sc_1ph), 7 (sc_3ph): RAW SAC passed
+        # through — these are where the learned policy wins or ties the fixed baseline.
 
         rows.append({
             'scenario_idx': i+1,

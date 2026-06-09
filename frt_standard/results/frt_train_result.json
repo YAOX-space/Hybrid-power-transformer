@@ -1,0 +1,8 @@
+{
+  "connect": 87.5,
+  "reactive": 25.0,
+  "limit": 100.0,
+  "recover": 87.5,
+  "survive": 3.4,
+  "frt_pass": 1.9
+}

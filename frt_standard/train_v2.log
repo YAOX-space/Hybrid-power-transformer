@@ -1,0 +1,26 @@
+Loaded 320 FRT scenarios
+  step= 25,000  FRT=0%  (connect=96 react=44 recover=96 survive=0)  best=0%  2min
+  step= 50,000  FRT=9%  (connect=99 react=68 recover=99 survive=32)  best=9%  4min
+  step= 75,000  FRT=0%  (connect=100 react=65 recover=86 survive=0)  best=9%  6min
+  step=100,000  FRT=0%  (connect=100 react=90 recover=100 survive=0)  best=9%  8min
+  step=125,000  FRT=0%  (connect=96 react=69 recover=82 survive=4)  best=9%  10min
+  step=150,000  FRT=40%  (connect=96 react=79 recover=96 survive=50)  best=40%  12min
+  step=175,000  FRT=0%  (connect=100 react=78 recover=100 survive=0)  best=40%  14min
+  step=200,000  FRT=0%  (connect=96 react=82 recover=96 survive=0)  best=40%  16min
+  step=225,000  FRT=24%  (connect=96 react=76 recover=82 survive=36)  best=40%  19min
+  step=250,000  FRT=0%  (connect=96 react=76 recover=96 survive=4)  best=40%  21min
+  step=275,000  FRT=0%  (connect=96 react=84 recover=96 survive=0)  best=40%  23min
+  step=300,000  FRT=0%  (connect=100 react=88 recover=100 survive=0)  best=40%  25min
+  step=325,000  FRT=8%  (connect=100 react=75 recover=86 survive=8)  best=40%  28min
+  step=350,000  FRT=0%  (connect=100 react=75 recover=100 survive=0)  best=40%  30min
+  step=375,000  FRT=0%  (connect=100 react=76 recover=100 survive=0)  best=40%  32min
+  step=400,000  FRT=0%  (connect=100 react=89 recover=100 survive=0)  best=40%  34min
+  step=425,000  FRT=24%  (connect=100 react=72 recover=100 survive=34)  best=40%  37min
+  step=450,000  FRT=0%  (connect=100 react=81 recover=100 survive=0)  best=40%  39min
+  step=475,000  FRT=0%  (connect=100 react=59 recover=100 survive=0)  best=40%  41min
+  step=500,000  FRT=0%  (connect=100 react=46 recover=100 survive=0)  best=40%  44min
+  step=525,000  FRT=0%  (connect=99 react=46 recover=99 survive=0)  best=40%  46min
+  step=550,000  FRT=0%  (connect=100 react=48 recover=100 survive=0)  best=40%  48min
+  step=575,000  FRT=0%  (connect=96 react=46 recover=96 survive=0)  best=40%  51min
+  step=600,000  FRT=0%  (connect=100 react=52 recover=100 survive=0)  best=40%  53min
+FINAL: {'connect': 99.7, 'reactive': 56.6, 'limit': 100.0, 'recover': 99.7, 'survive': 0.0, 'frt_pass': 0.0}

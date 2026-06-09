@@ -2,7 +2,7 @@ function [m_energy, m_reg] = dnn_frt_policy(vdc_pu, vpu, ipu, in_fault, sc_id)
 %DNN_FRT_POLICY  Stub replacement for the deleted DNN-FRT imitation model.
 %
 % Original file was deleted during project cleanup (2026-06-03) because
-% Mode 3 (DNN imitation FRT) was superseded by FAHC (Mode 7) and SAC (Mode 9).
+% Mode 3 (DNN imitation FRT) was superseded by FAHC (Mode 7) and SAC (SAC直接调制).
 %
 % This stub returns standard modulation indices so the model compiles.
 % It is ONLY called when ControllerMode == 3, which is not used in any

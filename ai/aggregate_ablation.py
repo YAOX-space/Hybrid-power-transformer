@@ -1,4 +1,4 @@
-"""aggregate_ablation.py — summarise ablate_mode9 per-scenario result CSVs (#9)."""
+"""aggregate_ablation.py — summarise ablate_sac_direct per-scenario result CSVs (#9)."""
 import sys
 from pathlib import Path
 import pandas as pd

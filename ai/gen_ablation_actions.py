@@ -1,13 +1,13 @@
 """
 gen_ablation_actions.py  —  generate action CSVs for the SAC attribution ablation (#9).
 
-Produces, on the SAME 350-scenario table, four action sources for ablate_mode9.m:
+Produces, on the SAME 350-scenario table, four action sources for ablate_sac_direct.m:
   fixed_082.csv      m_sh=0.82 (pre-fault balance), no series  — isolates protection floors
   fixed_090.csv      m_sh=0.90 (max),               no series  — isolates protection floors
   raw_sac.csv        raw SAC actions, NO per-class overrides   — net SAC contribution
   sac_overrides.csv  SAC + the published hand-coded overrides  — the published pipeline
 
-Comparing the four on identical footing (all run under Mode 9, no cascade->Mode4 swap)
+Comparing the four on identical footing (all run under SAC直接调制, no cascade->dq双环PI swap)
 isolates what the SAC actually adds beyond fixed commands + in-binary protection floors.
 """
 import sys

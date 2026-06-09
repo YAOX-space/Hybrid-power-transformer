@@ -1,12 +1,12 @@
-%% validate_sac_mode9.m
-% Validate SAC policy on Simulink Mode 9.
+%% validate_sac_direct.m
+% Validate SAC policy on Simulink SAC直接调制.
 % Reads Python-generated action CSV, runs 350 scenarios, saves LVRT metrics.
 %
 % Usage (in MATLAB after satk_initialize):
-%   validate_sac_mode9()
-%   validate_sac_mode9('sac_actions_for_simulink.csv')  % custom action file
+%   validate_sac_direct()
+%   validate_sac_direct('sac_actions_for_simulink.csv')  % custom action file
 
-function validate_sac_mode9(action_csv)
+function validate_sac_direct(action_csv)
 
 if nargin < 1
     action_csv = '../results/sac_actions_for_simulink.csv';
@@ -17,7 +17,11 @@ run('../simulink/parameters.m');
 
 MODEL      = 'hpt_switching_model';
 SCEN_CSV   = '../data_collection/scenario_table_hpt_v2.csv';
-OUT_JSON   = '../results/sac_mode9_scenario_level.json';
+OUT_JSON   = '../results/sac_direct_scenario_level.json';
+% Controller-selector interface codes (the compiled .slx branches on these integers;
+% they are interface codes, not labels): SAC-direct vs dq dual-loop PI.
+CTRL_SAC_DIRECT = 9;
+CTRL_DQ_PI      = 4;
 f_sample   = 20000;
 I2_nom_pk  = (S_rated/(sqrt(3)*V_secondary)) * sqrt(2);  % 816.5 A peak (Fix #1)
 
@@ -70,10 +74,10 @@ for ri = 1:N
     set_param([MODEL '/FaultVariant'],   'Value', num2str(row.fault_variant))
     set_param([MODEL '/FaultMag'],       'Value', num2str(row.fault_mag))
     % Fault-class adaptive controller:
-    % cascade (8): Mode 4 adaptive PI handles IGBT fault + V2 sag (100% vs Mode9 70%)
-    % All other classes: Mode 9 SAC direct control
-    ctrl_mode = 9;
-    if sc_id == 8; ctrl_mode = 4; end
+    % cascade (sc 8): dq dual-loop PI handles IGBT fault + V2 sag better than SAC-direct;
+    % all other classes use SAC-direct.
+    ctrl_mode = CTRL_SAC_DIRECT;
+    if sc_id == 8; ctrl_mode = CTRL_DQ_PI; end
     set_param([MODEL '/ControllerMode'], 'Value', num2str(ctrl_mode))
     set_param([MODEL '/RL_Energy_Bias'],   'Value', num2str(m_sh))
     set_param([MODEL '/RL_Reg_Bias'],      'Value', num2str(m_se_d))
@@ -138,10 +142,10 @@ set_param(MODEL,'FastRestart','off')
 
 %% Summary
 pass_rate = 100*sum(pass_arr)/N;
-fprintf('\n=== SAC Mode 9 (scenario-level) Results ===\n')
+fprintf('\n=== SAC直接调制 (scenario-level) Results ===\n')
 fprintf('Overall LVRT pass: %.2f%%\n', pass_rate)
 fprintf('dq baseline:       64.00%%\n')
-fprintf('Fixed Mode9 0.90:  96.57%%\n')
+fprintf('固定SAC直接调制 0.90:  96.57%%\n')
 fprintf('\nPer-class breakdown:\n')
 sc_list = [0 3 4 5 6 7 8];
 for s = sc_list
@@ -156,7 +160,7 @@ end
 %% Save JSON
 result.lvrt_pass_pct = round(pass_rate,2);
 result.dq_baseline   = 64.00;
-result.fixed_mode9   = 96.57;
+result.fixed_sac_direct   = 96.57;
 result.n_scenarios   = N;
 detail = struct();
 for ri=1:N

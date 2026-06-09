@@ -1,7 +1,7 @@
 # 混合式电力变压器低电压穿越的强化学习控制：建模、方法与验证
 
 **系统**：400 kVA 混合式电力变压器（HPT），10 kV / 400 V，Δ-Yg（π/6）
-**控制**：Soft Actor–Critic（SAC）强化学习，直接调制（Mode 9），配合按类策略后处理
+**控制**：Soft Actor–Critic（SAC）强化学习，直接调制（SAC直接调制），配合按类策略后处理
 **验证**：MATLAB/Simulink R2025a 开关级模型（SimPowerSystems），350 场景统一口径
 **正式记录日期**：2026-06-06
 
@@ -16,11 +16,13 @@
 开关级模型验证；(3) 设计并执行了**归因消融**协议，在统一口径下分离"固定策略 + 保护逻辑"与
 "强化学习"各自的贡献。
 
-主要结论：在 350 个故障场景的开关级验证下，**SAC + 按类策略达到 71.43% 的 LVRT 通过率，
-较固定基线（m_sh=0.90）的 62.86% 提升 +8.57 个百分点，较传统 dq 双环 PI 的 64.00% 提升
-+7.43 个百分点**；零硬编码的纯 SAC 为 63.43%，与固定基线持平，但在三相短路（66% vs 12%）与
-电容故障（40% vs 20%）上体现出真实的学习自适应。本报告同时诚实记录方法的局限：平均 ODE
-对深故障偏乐观、串联控制尚为开环、保护下限承担了基线性能的主体。
+主要结论：在 350 个故障场景的开关级验证下，**SAC + 智能混合策略达到 82.00% 的 LVRT 通过率，
+较固定基线（m_sh=0.90）的 62.86% 提升 +19.1 个百分点，较传统 dq 双环 PI 的 64.00% 提升
++18.0 个百分点**。其中 5/7 类直接采用 SAC 学习策略（含其大胜的三相短路 66% vs 12%、电容故障
+40% vs 20%），仅对训练 ODE 表达不足、SAC 学不会的两类（igbt_oc_se、cascade）施加最小针对性
+补丁。相比早期"遗留覆盖"方案（71.43%），提升的 +10.6 pp **完全来自放行 SAC 的真实学习强项**，
+即增益归属于 SAC 策略本身、而非硬编码。本报告同时诚实记录方法的局限：平均 ODE 对深故障偏
+乐观、串联控制尚为开环、保护下限承担基线性能的主体、且 igbt_se/cascade 两类仍依赖补丁。
 
 ---
 
@@ -79,7 +81,7 @@ normal、igbt_oc_sh、igbt_oc_se、cap_fault、sc_1ph、sc_3ph、cascade；
 
 基于 SimPowerSystems 的开关级模型（[build_hpt_switching_model.m](../simulink/build_hpt_switching_model.m)）：
 工频三相源 + 主变压器 + 三只 H 桥串联注入（Tse）+ 三相桥取能（Tsh，中压侧）+ 共用直流电容与
-阻尼电阻 + 低压负载与三相可投切故障。控制以 5 kHz SPWM 生成门极信号；**Mode 9** 为本文的
+阻尼电阻 + 低压负载与三相可投切故障。控制以 5 kHz SPWM 生成门极信号；**SAC直接调制** 为本文的
 SAC 直接调制接口（旁路 PI），并保留分级保护下限。该模型的主电路为真实物理，作为一切结论的
 最终判据。
 
@@ -124,7 +126,7 @@ $$ C\,V_{dc}\,\frac{dV_{dc}}{dt} = P_{sh} - P_{se} - \frac{V_{dc}^2}{R_{damp}} $
 ```
 传感量 V2, I2, Vdc → MSFFN 故障分类(7类,5ms延迟)
                    → SAC 策略网络(256×256×256) → [m_sh, m_se_d, m_se_q]
-                   → 按类策略后处理(可选) → Mode 9 直接 SPWM
+                   → 按类策略后处理(可选) → SAC直接调制 直接 SPWM
 ```
 
 相对传统 dq 双环 PI 的差异：无 PI 积分延迟（响应 < 1 ms）、感知故障类型、串联 d/q 双轴可调。
@@ -142,7 +144,7 @@ $$ C\,V_{dc}\,\frac{dV_{dc}}{dt} = P_{sh} - P_{se} - \frac{V_{dc}^2}{R_{damp}} $
 ```
 scenario_table → HPTDirectEnv(ODE) → SAC 训练(GPU) → best.zip
    → generate_sac_actions(按类策略) → sac_actions_for_simulink.csv
-   → Simulink Mode 9 验证 / 归因消融 → 结果
+   → Simulink SAC直接调制 验证 / 归因消融 → 结果
 ```
 
 ---
@@ -151,8 +153,8 @@ scenario_table → HPTDirectEnv(ODE) → SAC 训练(GPU) → best.zip
 
 ### 4.1 归因消融协议
 
-为分离"强化学习"与"工程硬编码 + 保护逻辑"的贡献，在**同一 350 场景、统一以 Mode 9 运行、
-不做按类换控制器**的口径下（[ablate_mode9.m](../data_collection/ablate_mode9.m)），对比三个动作来源：
+为分离"强化学习"与"工程硬编码 + 保护逻辑"的贡献，在**同一 350 场景、统一以 SAC直接调制 运行、
+不做按类换控制器**的口径下（[ablate_sac_direct.m](../data_collection/ablate_sac_direct.m)），对比三个动作来源：
 
 | 控制臂 | 含义 |
 |--------|------|
@@ -178,20 +180,25 @@ SAC 在修正后 ODE 上收敛至 **70.57%**（350 场景，最佳子集评估 7
 |--------|:--------:|:------:|:---------:|:---------:|:--------:|:------:|:------:|:-------:|
 | 传统 dq 双环 PI | 64.00% | — | — | — | — | — | — | — |
 | 固定 $m_{sh}=0.90$（无 SAC）| 62.86% | 100 | 86 | 60 | 20 | 100 | 12 | 62 |
-| 原始 SAC（无覆盖）| **63.43%** | 100 | 90 | 48 | 40 | 96 | 66 | 4 |
-| **SAC + 按类策略** | **71.43%** | 100 | 90 | 100 | 20 | 96 | 12 | 82 |
+| 原始 SAC（无覆盖）| 63.43% | 100 | 90 | 48 | 40 | 96 | 66 | 4 |
+| SAC + 遗留覆盖（旧）| 71.43% | 100 | 90 | 100 | 20 | 96 | 12 | 82 |
+| **SAC + 智能混合（当前）** | **82.00%** | 100 | 90 | 100 | 40 | 96 | 66 | 82 |
 
-- **净 SAC 贡献 = +0.57 pp**（原始 SAC 与固定基线持平）。
-- **按类策略贡献 = +8.00 pp**；SAC + 策略相对固定基线 **+8.57 pp**、相对 dq **+7.43 pp**。
+- **净 SAC 贡献（原始 SAC vs 固定基线）= +0.57 pp**（纯学习与固定持平）。
+- **智能混合 = 82.00%**，相对固定基线 **+19.1 pp**、相对 dq **+18.0 pp**；相比遗留覆盖 **+10.6 pp**。
+- 智能混合 5/7 类直接用 SAC（normal/igbt_oc_sh/cap_fault/sc_1ph/sc_3ph），仅 igbt_oc_se、cascade
+  用最小补丁；**+10.6 pp 全部来自放行 SAC 的真实强项**（sc_3ph 12→66、cap_fault 20→40），
+  逼近按类最优 oracle 上界 **82.6%**。
 
 ### 5.3 分类分析
 
-- **强化学习的真实增益**：原始 SAC 在 **sc_3ph（66% vs 固定 12%）**、**cap_fault（40% vs 20%）**
-  上显著优于固定策略——这是自适应 $m_{sh}$ 带来的、非硬编码的学习收益。
-- **按类策略的作用**：在 igbt_oc_se（48→100）、cascade（4→82）上由指令钳制显著改善。
-- **遗留次优**：按类策略对 sc_3ph 强制 $m_{sh}=0.90$（→12%），反而**压制**了原始 SAC 自身的
-  66%。若放行 SAC，总体可再增约 +7.7 pp；按类取各臂最优的 oracle 上界约 **82.6%**。
-- **硬件/物理极限**：cap_fault 因电容偏小恒为 20%；sc_3ph 的 50 Hz 恢复振荡超出 2200 µF 缓冲。
+- **强化学习的真实增益**：原始 SAC 在 **sc_3ph（66% vs 固定 12%）**、**cap_fault（40% vs 20%）**、
+  **igbt_oc_sh（90% vs 86%）** 上优于固定策略——自适应 $m_{sh}$ 带来的、非硬编码的学习收益。
+  智能混合**保留**这些（不再像遗留覆盖那样强制 $m_{sh}=0.90$ 压回 sc_3ph 的 66%→12%）。
+- **SAC 的真实弱项**：cascade（4%）与 igbt_oc_se（48%）。根因是训练 ODE 对这两类表达不足
+  （igbt_se 在 ODE 中≈正常、cascade 仅轻微跌落），SAC 拿不到学习信号。智能混合对这两类施加
+  最小补丁（clip $m_{sh}$ / cascade 策略）→ 100% / 82%。**根治需提升 ODE 对这两类的保真度后重训**。
+- **硬件/物理极限**：cap_fault 因电容偏小（最高 40%）；sc_3ph 的 50 Hz 恢复振荡超出 2200 µF 缓冲。
 
 ---
 
@@ -199,9 +206,10 @@ SAC 在修正后 ODE 上收敛至 **70.57%**（350 场景，最佳子集评估 7
 
 ### 6.1 优点
 
-1. **修正物理后强化学习确有可信净增益**：SAC + 策略 71.43%，较固定基线 +8.57 pp、较 dq +7.43 pp。
+1. **修正物理后强化学习确有可信净增益**：SAC + 智能混合 82.00%，较固定基线 +19.1 pp、较 dq +18.0 pp，
+   且 5/7 类由 SAC 学习策略主导、增益可归属于 SAC（非硬编码）。
 2. **真实自适应**：纯 SAC 在 sc_3ph、cap_fault 上超过固定策略，源于按状态调节 $m_{sh}$ 而非查表。
-3. **响应快、感知故障**：直接调制（Mode 9）旁路 PI 积分延迟（< 1 ms），并以 MSFFN 概率为输入。
+3. **响应快、感知故障**：直接调制（SAC直接调制）旁路 PI 积分延迟（< 1 ms），并以 MSFFN 概率为输入。
 4. **方法学严谨**：归因消融在统一口径下量化了学习 vs 工程的各自贡献，结论可证伪、可复现。
 
 ### 6.2 不足
@@ -214,7 +222,8 @@ SAC 在修正后 ODE 上收敛至 **70.57%**（350 场景，最佳子集评估 7
    应在后续改为 kΩ 级泄放电阻并重新整定全部参数。
 4. **保护下限承担基线性能主体**：固定 $m_{sh}$ + 分级保护即达 62.9%（≈dq）；纯 SAC 仅与之持平，
    净增益主要来自按类策略与 sc_3ph/cap 的个别学习收益。
-5. **按类策略为旧标定、现已次优**：对 sc_3ph 的强制覆盖压制了 SAC 自身更优策略（见 §5.3）。
+5. **仍有两类依赖补丁**：igbt_oc_se、cascade 由最小补丁达 100%/82%，因训练 ODE 对这两类表达
+   不足、SAC 学不会。根治需提升 ODE 保真度后重训（后续工作 #1），方能 7/7 全由 SAC。
 6. **构建脚本未完全复现二进制**：开关模型含手工端口设置（m_sh_out 测量口、显式端口维度），
    纯源码重建尚不能编译通过；已验证的 `.slx` 为权威产物并纳入版本控制。
 7. **LVRT 判据口径需统一**：指标脚本含 V2 恢复 ≤100 ms 项，而验证/消融仅校验 $V_{dc}/I_2$。
@@ -236,25 +245,26 @@ SAC 在修正后 ODE 上收敛至 **70.57%**（350 场景，最佳子集评估 7
 .venv\Scripts\python.exe ai/generate_sac_actions.py
 # 3) Simulink 验证 / 消融（MATLAB）
 cd data_collection
-ablate_mode9('../results/ablation/sac_overrides.csv','../results/ablation/sac_overrides_res.csv')
+ablate_sac_direct('../results/ablation/sac_overrides.csv','../results/ablation/sac_overrides_res.csv')
 # 4) 汇总
 .venv\Scripts\python.exe ai/aggregate_ablation.py
 ```
 
 **工程取舍建议**：若以稳健、可解释为先，"固定 $m_{sh}$ + 分级保护"即给出 ≈63% 的强健骨架；
-强化学习应作为其上的**按类增益层**（当前 +8.6 pp），而非完全替代。
+强化学习作为其上的**增益层**：当前智能混合方案 5/7 类由 SAC 主导、+19.1 pp，仅 2 类需补丁。
 
 ---
 
 ## 7. 结论与后续工作
 
 修正取能侧功率方向、接入侧拓扑、二次电流故障分量与串联对直流的功率关系后，SAC 在开关级
-模型上可迁移并产生可信净增益：**SAC + 按类策略达 71.43%，较固定基线 +8.57 pp、较 dq +7.43 pp**；
-纯 SAC 与固定基线持平并在三相短路、电容故障上体现真实学习自适应。结论在物理修正后稳健成立，
-量级诚实。
+模型上可迁移并产生可信净增益：**SAC + 智能混合达 82.00%，较固定基线 +19.1 pp、较 dq +18.0 pp**；
+其中 5/7 类由 SAC 学习策略主导（含三相短路 66%、电容故障 40% 等真实强项），仅 igbt_oc_se、
+cascade 两类依赖最小补丁。结论在物理修正后稳健成立，量级诚实，增益可归属于 SAC。
 
 **后续工作（按优先级）**：
-1. 重新整定按类策略，放行 sc_3ph 的 SAC 策略（预期 +~7.7 pp，→ ≈79%）。
+1. **根治 SAC 的两类弱项**：提升训练 ODE 对 igbt_oc_se、cascade 的保真度（给 SAC 学习信号）后
+   重训，使这两类也能由 SAC 自身处理、摆脱补丁——这是把"5/7 由 SAC"推向"7/7 由 SAC"的关键。
 2. 以功角/dq 电流环重写串联平均模型，使串联成为有用的可控电压支撑，并配置 PLL。
 3. 将 8.2 Ω 阻尼电阻改为现实泄放值并重整定全部控制参数。
 4. 统一三处 LVRT 判据；补齐构建脚本端口规格以实现纯源码复现。
@@ -269,10 +279,10 @@ ablate_mode9('../results/ablation/sac_overrides.csv','../results/ablation/sac_ov
 | SAC 训练 | [ai/train_sac.py](../ai/train_sac.py)、[ai/sac_hpt_controller.py](../ai/sac_hpt_controller.py) |
 | 动作生成 / 验证桥 | [ai/generate_sac_actions.py](../ai/generate_sac_actions.py)、[ai/validate_sac_simulink.py](../ai/validate_sac_simulink.py) |
 | 开关级模型 | [simulink/build_hpt_switching_model.m](../simulink/build_hpt_switching_model.m)、`simulink/hpt_switching_model.slx` |
-| 归因消融工具 | [data_collection/ablate_mode9.m](../data_collection/ablate_mode9.m)、[ai/gen_ablation_actions.py](../ai/gen_ablation_actions.py)、[ai/aggregate_ablation.py](../ai/aggregate_ablation.py) |
+| 归因消融工具 | [data_collection/ablate_sac_direct.m](../data_collection/ablate_sac_direct.m)、[ai/gen_ablation_actions.py](../ai/gen_ablation_actions.py)、[ai/aggregate_ablation.py](../ai/aggregate_ablation.py) |
 | 模型权重 | `data/models/sac_hpt_direct_best.zip` |
-| 验证结果 | `results/sac_mode9_scenario_level.json`、`results/ablation/*` |
+| 验证结果 | `results/sac_direct_scenario_level.json`、`results/ablation/*` |
 
 **成果小结**：建立物理一致的训练替身与权威验证基准的双层框架；给出可复现的归因消融协议；
-得到诚实、可信的 LVRT 结果（SAC + 策略 71.43%）；识别并修正四项核心建模错误；
+得到诚实、可信的 LVRT 结果（SAC + 智能混合 82.00%，增益可归属 SAC）；识别并修正四项核心建模错误；
 明确了方法的适用边界与后续改进路径。

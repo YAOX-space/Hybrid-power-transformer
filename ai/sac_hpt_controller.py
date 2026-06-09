@@ -139,7 +139,7 @@ def train(
     print(f'\nLoaded {len(scenarios)} scenarios from scenario table.')
 
     # Dq baseline reference (from existing results)
-    print(f'dq baseline LVRT: 64.00%  (Mode 4, from existing data)')
+    print(f'dq baseline LVRT: 64.00%  (dq双环PI, from existing data)')
     print(f'Oracle upper:     66.86%  (best strategy per scenario, real Simulink)\n')
 
     # Build vectorised environment

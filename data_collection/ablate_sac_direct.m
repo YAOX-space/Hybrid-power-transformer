@@ -1,8 +1,8 @@
-%% ablate_mode9.m
-% Flexible Mode-9 LVRT validation for SAC attribution ablation (#9, 2026-06-06).
+%% ablate_sac_direct.m
+% Flexible SAC-direct LVRT validation for SAC attribution ablation (#9, 2026-06-06).
 %
-% Unlike validate_sac_mode9.m, this:
-%   - ALWAYS uses ControllerMode = 9 (no per-class controller swap to Mode 4),
+% Unlike validate_sac_direct.m, this:
+%   - ALWAYS uses the SAC-direct controller (no per-class controller swap to dq-PI),
 %   - applies whatever (m_sh, m_se_d, m_se_q) the action CSV specifies,
 % so different action sources can be compared on identical footing:
 %   * fixed-command baselines (no SAC)   -> isolates protection floors
@@ -13,11 +13,11 @@
 % run in timeout-safe chunks; aggregate with ai/aggregate_ablation.py.
 %
 % Usage (MATLAB):
-%   ablate_mode9('../results/ablation/fixed_090.csv', '../results/ablation/fixed_090_res.csv')
-%   ablate_mode9(csv, out_csv, 120, 1)    % first 120
-%   ablate_mode9(csv, out_csv, 120, 121)  % next 120 (appends)
+%   ablate_sac_direct('../results/ablation/fixed_090.csv', '../results/ablation/fixed_090_res.csv')
+%   ablate_sac_direct(csv, out_csv, 120, 1)    % first 120
+%   ablate_sac_direct(csv, out_csv, 120, 121)  % next 120 (appends)
 
-function ablate_mode9(action_csv, out_csv, n_max, i0)
+function ablate_sac_direct(action_csv, out_csv, n_max, i0)
 
 if nargin < 3 || isempty(n_max); n_max = inf; end
 if nargin < 4 || isempty(i0);    i0 = 1; end
@@ -27,6 +27,9 @@ run('../simulink/parameters.m');
 
 MODEL    = 'hpt_switching_model';
 SCEN_CSV = '../data_collection/scenario_table_hpt_v2.csv';
+% Controller-selector interface code for the SAC-direct controller. This integer is
+% the contract the compiled .slx branches on — it is an interface code, not a label.
+CTRL_SAC_DIRECT = 9;
 f_sample = 20000;
 I2_nom_pk = (S_rated/(sqrt(3)*V_secondary)) * sqrt(2);   % 816.5 A peak
 
@@ -59,7 +62,7 @@ for ri = i0:i_end
     set_param([MODEL '/T_fault'],'Value',num2str(t_f))
     set_param([MODEL '/FaultVariant'],'Value',num2str(row.fault_variant))
     set_param([MODEL '/FaultMag'],'Value',num2str(row.fault_mag))
-    set_param([MODEL '/ControllerMode'],'Value','9')      % ALWAYS Mode 9 (no swap)
+    set_param([MODEL '/ControllerMode'],'Value',num2str(CTRL_SAC_DIRECT))   % SAC-direct, no swap
     set_param([MODEL '/RL_Energy_Bias'],'Value',num2str(m_sh))
     set_param([MODEL '/RL_Reg_Bias'],'Value',num2str(m_se_d))
     set_param([MODEL '/RL_Current_Bias'],'Value',num2str(m_se_q))
