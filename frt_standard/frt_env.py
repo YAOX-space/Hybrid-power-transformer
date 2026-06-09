@@ -23,7 +23,7 @@ from gymnasium import spaces
 
 # ── per-unit constants ──────────────────────────────────────────────────────────
 VDC_NOM   = 1.0                 # DC bus pu (nominal)
-I_Q_MAX   = 0.25                # reactive cmd cap (v3: 0.30→0.25, leaves margin vs 0.35 limit for 2ω peaks on asymmetric faults)
+I_Q_MAX   = 0.30                # reactive current cap (PE 120 kVA ≈ 0.3 pu) [FRT_SPEC §2] (v1 baseline for experts)
 I_CONV_MAX= 0.35                # total shunt converter current limit, pu (reactive priority)
 V_SE_MAX  = 0.20                # series injection ±20% [task book / Shang]
 # DC damping-resistor load as a pu power coefficient: P_load = Vdc_pu² · K_DC,
@@ -36,8 +36,8 @@ TAU_V2    = 0.010              # terminal-voltage first-order lag (s)
 #   ⇒ K_q ≈ 0.073 at SCR=3, i.e. K_Q_BASE = 0.073·3 ≈ 0.22 (was 1.0 = ~4.5× too optimistic).
 # Series m_se_d=0.10 → LV +4.7% ⇒ effective gain ≈ 0.47 (was 1.0 = ~2× too optimistic).
 # This closes the ODE→Simulink optimism gap so the policy learns realistic actuator authority.
-K_Q_BASE  = 0.22              # reactive→voltage gain (Simulink-calibrated; weak grid → larger)
-SE_GAIN   = 0.47              # series-injection voltage effectiveness (Simulink-calibrated)
+K_Q_BASE  = 1.0               # reactive→voltage gain (v1 baseline; weak grid → larger)
+SE_GAIN   = 1.0               # series-injection voltage effectiveness (v1 baseline)
 
 FRT_FAULTS = ['normal', 'sym3ph', '1ph_g', '2ph', '2ph_g', 'swell']  # state fault classes
 F2I = {f: i for i, f in enumerate(FRT_FAULTS)}
@@ -188,7 +188,7 @@ class HPTFRTEnv(gym.Env):
         # ── reward (FRT_SPEC §1 五条判据) ─────────────────────────────────────────
         iq_ref = self._iq_ref()
         r_connect = -20.0 if self.tripped else 0.0
-        r_reactive = -5.0 * abs(iq_ref - i_sh_q)   # v3: balanced (-3 orig → -8 overshot → -5)
+        r_reactive = -3.0 * abs(iq_ref - i_sh_q)   # v1 baseline weight
         r_limit = -5.0 * max(0.0, math.hypot(i_sh_d, i_sh_q) - I_CONV_MAX)
         r_v2 = -5.0 * abs(1.0 - self.V2p) - 3.0 * self.V2n
         r_vdc = -10.0 * max(0.0, 0.75 - self.Vdc) - 5.0 * max(0.0, self.Vdc - 1.25)

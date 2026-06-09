@@ -1,6 +1,7 @@
-function validate_frt_full(nmax, srcfile)
+function validate_frt_full(nmax, srcfile, ftypes)
 if nargin<1 || isempty(nmax), nmax=inf; end
 if nargin<2 || isempty(srcfile), srcfile='../sac_frt_actions.csv'; end
+if nargin<3, ftypes={}; end   % optional cell of fault_type to keep (e.g. {'sym3ph'} or {'1ph_g','2ph','2ph_g'})
 % validate_frt_full.m — standard grid-FRT comparison: dq (mode 4) vs closed-loop SAC (mode 11)
 % on the COMPLETE HPT switching model (hpt_frt_full.slx). Pass srcfile='../frt_scenarios.csv'
 % to run the full scenario set (LVRT rows). Results saved incrementally.
@@ -11,6 +12,9 @@ M = 'hpt_frt_full'; set_param(M,'SimulationMode','normal');
 A = readtable(srcfile,'TextType','string');
 if any(strcmp(A.Properties.VariableNames,'category'))   % full scenario file: keep LVRT only
     A = A(A.category=="LVRT",:);
+end
+if ~isempty(ftypes)   % optional fault-type filter (for per-expert routing)
+    A = A(ismember(string(A.fault_type), string(ftypes)),:);
 end
 N = min(height(A), nmax);
 Vlv_pk_nom = 400*sqrt(2)/sqrt(3);      % 326.6 V

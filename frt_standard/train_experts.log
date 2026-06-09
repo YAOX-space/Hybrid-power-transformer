@@ -1,0 +1,17 @@
+
+=== expert "sym": 60 scenarios ===
+  [sym] step= 25,000 FRT=0% (con=0 rea=33 lim=100 rec=0 sur=83) best=0% 2min
+  [sym] step= 50,000 FRT=0% (con=35 rea=0 lim=100 rec=35 sur=33) best=0% 4min
+  [sym] step= 75,000 FRT=0% (con=2 rea=93 lim=100 rec=95 sur=93) best=0% 5min
+  [sym] step=100,000 FRT=3% (con=67 rea=45 lim=100 rec=53 sur=33) best=3% 7min
+  [sym] step=125,000 FRT=20% (con=67 rea=30 lim=100 rec=67 sur=23) best=20% 9min
+  [sym] step=150,000 FRT=33% (con=67 rea=33 lim=100 rec=67 sur=38) best=33% 11min
+  [sym] step=175,000 FRT=0% (con=67 rea=35 lim=100 rec=67 sur=0) best=33% 13min
+  [sym] step=200,000 FRT=2% (con=67 rea=42 lim=100 rec=67 sur=2) best=33% 15min
+  [sym] step=225,000 FRT=8% (con=83 rea=35 lim=100 rec=83 sur=12) best=33% 17min
+  [sym] step=250,000 FRT=0% (con=67 rea=67 lim=100 rec=67 sur=0) best=33% 19min
+  [sym] step=275,000 FRT=2% (con=67 rea=60 lim=100 rec=67 sur=2) best=33% 21min
+  [sym] step=300,000 FRT=2% (con=67 rea=65 lim=100 rec=67 sur=2) best=33% 23min
+
+=== expert "asym": 180 scenarios ===
+  [asym] step= 25,000 FRT=68% (con=100 rea=100 lim=100 rec=100 sur=68) best=68% 2min

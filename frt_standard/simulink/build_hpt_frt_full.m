@@ -1,4 +1,4 @@
-function build_hpt_frt_full(stage)
+function build_hpt_frt_full(stage, gridmode)
 % build_hpt_frt_full.m  — reproducible, from-scratch FULL HPT switching model for
 % standard grid FRT (GB/T), built up in stages and validated at each step.
 %
@@ -11,6 +11,7 @@ function build_hpt_frt_full(stage)
 % Reuses the debugged shunt control (PLL + dq current loop + reactive priority +
 % Vdc outer loop + anti-windup) from build_frt_statcom.m.
 if nargin<1, stage=1; end
+if nargin<2, gridmode='fault'; end   % 'fault'=LVRT (3φ source + fault) ; 'swell'=HVRT (programmable source + series Z)
 M='hpt_frt_full';
 if bdIsLoaded(M), close_system(M,0); end
 new_system(M); load_system(M);
@@ -27,12 +28,22 @@ pos=@(x,y,w,h)[x y x+w y+h];
 add_block('powerlib/powergui',[M '/powergui'],'Position',pos(20,20,70,40));
 set_param([M '/powergui'],'SimulationMode','Discrete','SampleTime',num2str(Ts));
 
-% ---- MV weak grid ----
-add_block('powerlib/Electrical Sources/Three-Phase Source',[M '/Grid'],'Position',pos(120,120,60,90));
-% EMF boosted ~12.5% so pre-fault LV ~ 1.0 pu despite weak-grid droop (calibrate per SCR)
-set_param([M '/Grid'],'Voltage',num2str(Vmv*1.125),'Frequency',num2str(f0),'PhaseAngle','0', ...
-    'InternalConnection','Yg','SpecifyImpedance','off', ...
-    'Resistance',num2str(Rg),'Inductance',num2str(Lg));
+% ---- MV grid ----
+if strcmp(gridmode,'swell')
+    % HVRT: ideal Programmable Voltage Source (amplitude table → swell) + external series Z (weak grid)
+    add_block('powerlib/Electrical Sources/Three-Phase Programmable Voltage Source',[M '/Grid'],'Position',pos(60,120,70,90));
+    set_param([M '/Grid'],'PositiveSequence',['[' num2str(Vmv*1.125) ' 0 ' num2str(f0) ']'], ...
+        'VariationEntity','None');   % amplitude table set per-scenario by the harness
+    add_block('powerlib/Elements/Three-Phase Series RLC Branch',[M '/Zg'],'Position',pos(160,120,50,70));
+    set_param([M '/Zg'],'BranchType','RL','Resistance',num2str(Rg),'Inductance',num2str(Lg));
+else
+    % LVRT: 3φ source with internal impedance; fault block creates the sag
+    add_block('powerlib/Electrical Sources/Three-Phase Source',[M '/Grid'],'Position',pos(120,120,60,90));
+    % EMF boosted ~12.5% so pre-fault LV ~ 1.0 pu despite weak-grid droop (calibrate per SCR)
+    set_param([M '/Grid'],'Voltage',num2str(Vmv*1.125),'Frequency',num2str(f0),'PhaseAngle','0', ...
+        'InternalConnection','Yg','SpecifyImpedance','off', ...
+        'Resistance',num2str(Rg),'Inductance',num2str(Lg));
+end
 
 % ---- MV bus measurement ----
 add_block('powerlib/Measurements/Three-Phase V-I Measurement',[M '/MeasMV'],'Position',pos(240,120,70,90));
@@ -66,7 +77,12 @@ end
 
 % ---- electrical wiring (backbone) ----
 for k=1:3
-  add_line(M, ph([M '/Grid'],'RConn',k),   ph([M '/MeasMV'],'LConn',k),'autorouting','on');
+  if strcmp(gridmode,'swell')
+    add_line(M, ph([M '/Grid'],'RConn',k), ph([M '/Zg'],'LConn',k),'autorouting','on');   % source -> series Z
+    add_line(M, ph([M '/Zg'],'RConn',k),   ph([M '/MeasMV'],'LConn',k),'autorouting','on'); % Z -> MV bus
+  else
+    add_line(M, ph([M '/Grid'],'RConn',k), ph([M '/MeasMV'],'LConn',k),'autorouting','on');
+  end
   add_line(M, ph([M '/MeasMV'],'RConn',k),  ph([M '/GridFault'],'LConn',k),'autorouting','on');
   add_line(M, ph([M '/MeasMV'],'RConn',k),  ph([M '/Main_Tx'],'LConn',k),'autorouting','on');     % MV->primary(Delta)
   add_line(M, ph([M '/Main_Tx'],'RConn',k), ph([M '/MeasLV'],'LConn',k),'autorouting','on');       % secondary(Yg)->LV
