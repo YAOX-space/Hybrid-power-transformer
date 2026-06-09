@@ -20,6 +20,10 @@
 
 **3 个同构 SAC 专家**（对称-LVRT / 不对称-LVRT / HVRT，同 256³ 网络、同 ODE 环境，仅训练子集不同）+ **物理门控**（按端电压 V 与负序 V2n 实时路由，无需分类网络）。专家化把全 320 通过率从单一 SAC 的 25% 提升到 **44.1%**，反超 dq 的 27.5%。
 
+![3专家对比](results/figs/fig_experts_bar.png)
+
+> 仿真波形对比见报告：[不对称 LVRT 机理（dq 无功 2ω 超限 vs SAC 平滑）](results/figs/fig_cmp_lvrt_asym.png)、[HVRT 骤升吸无功](results/figs/fig_cmp_hvrt.png)。
+
 ### 演进过程（单一策略 → 分层）
 
 | 阶段 | LVRT 240 | HVRT 80 | 全 320 | 说明 |
