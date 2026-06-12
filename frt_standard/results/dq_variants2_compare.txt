@@ -1,0 +1,10 @@
+
+=== dq baseline variants (subset 24 LVRT + 8 HVRT) ===
+criterion     dq-Song+cap0.27 SAC-mode12-current connect      LV  87.5% HV  75.0%   LV  83.3% HV 100.0%
+reactive     LV  75.0% HV 100.0%   LV 100.0% HV  75.0%
+limit        LV  95.8% HV  87.5%   LV  95.8% HV 100.0%
+recover      LV 100.0% HV 100.0%   LV 100.0% HV 100.0%
+survive      LV 100.0% HV 100.0%   LV 100.0% HV 100.0%
+frt          LV  62.5% HV  75.0%   LV  83.3% HV  75.0%
+dq-Song+cap0.27        LVRT  62.5%  HVRT  75.0%  ALL-32  65.6%
+SAC-mode12-current     LVRT  83.3%  HVRT  75.0%  ALL-32  81.2%

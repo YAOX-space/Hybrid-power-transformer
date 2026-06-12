@@ -1,6 +1,6 @@
 function validate_frt_full(nmax, srcfile, ftypes)
 if nargin<1 || isempty(nmax), nmax=inf; end
-if nargin<2 || isempty(srcfile), srcfile='../sac_frt_actions.csv'; end
+if nargin<2 || isempty(srcfile), srcfile='../frt_scenarios.csv'; end
 if nargin<3, ftypes={}; end   % optional cell of fault_type to keep (e.g. {'sym3ph'} or {'1ph_g','2ph','2ph_g'})
 % validate_frt_full.m — standard grid-FRT comparison: dq (mode 4) vs closed-loop SAC (mode 11)
 % on the COMPLETE HPT switching model (hpt_frt_full.slx). Pass srcfile='../frt_scenarios.csv'
@@ -55,7 +55,7 @@ for i = 1:N
   set_param([M '/t_fault'],'Value',num2str(t_f));
   set_param([M '/iq_ref'],'Value','0'); set_param([M '/mse_d'],'Value','0'); set_param([M '/mse_q'],'Value','0');
   out = struct();
-  for md = [4 11]    % 4 = dq-traditional, 11 = closed-loop SAC (policy runs in-model)
+  for md = [4 12]    % 4 = dq-traditional, 12 = closed-loop SAC 4-expert (real-time gated by V2p/V2n)
     set_param([M '/mode'],'Value',num2str(md));
     set_fault(M, cfg, Rf, t_f, t_f+dur);
     o = sim(M);
@@ -100,6 +100,7 @@ end
 
 function Rf = calib_rfault(M, ft, tV, t_f, Tsim, Vnom)
   cfg = ftcfg(ft);
+  set_param([M '/mode'],'Value','4');   % FIX: calibration must NOT inherit the previous scenario's controller
   set_param(M,'StopTime',num2str(min(Tsim,t_f+0.2)));
   cand = [2 5 12 30 80 200];
   best = 30; berr = 9;

@@ -1,0 +1,72 @@
+{
+ "load": {
+  "solo": {
+   "strict": 57.15762273901809,
+   "tol": 86.4857881136951
+  },
+  "pool": {
+   "strict": 61.13695090439276,
+   "tol": 87.41602067183463
+  },
+  "pool_smart": {
+   "strict": 65.83979328165374,
+   "tol": 88.08785529715763
+  },
+  "pool_opt": {
+   "strict": 65.83979328165374,
+   "tol": 88.13953488372093
+  }
+ },
+ "motor": {
+  "25_1.0_pool": {
+   "trip_%": 4.5,
+   "fidvr_s": 0.0,
+   "n_stall": 1
+  },
+  "25_1.0_pool_smart": {
+   "trip_%": 4.5,
+   "fidvr_s": 0.0,
+   "n_stall": 1
+  },
+  "30_2.0_pool": {
+   "trip_%": 8.6,
+   "fidvr_s": 0.2,
+   "n_stall": 6
+  },
+  "30_2.0_pool_smart": {
+   "trip_%": 8.6,
+   "fidvr_s": 0.2,
+   "n_stall": 6
+  },
+  "12_5.0_pool": {
+   "trip_%": 7.3,
+   "fidvr_s": 3.8,
+   "n_stall": 10
+  },
+  "12_5.0_pool_smart": {
+   "trip_%": 7.3,
+   "fidvr_s": 3.8,
+   "n_stall": 10
+  },
+  "6_8.0_pool": {
+   "trip_%": 0.0,
+   "fidvr_s": 0.0,
+   "n_stall": 0
+  },
+  "6_8.0_pool_smart": {
+   "trip_%": 0.0,
+   "fidvr_s": 0.0,
+   "n_stall": 0
+  },
+  "18_8.0_pool": {
+   "trip_%": 4.8,
+   "fidvr_s": 3.8,
+   "n_stall": 6
+  },
+  "18_8.0_pool_smart": {
+   "trip_%": 4.8,
+   "fidvr_s": 3.8,
+   "n_stall": 6
+  }
+ }
+}

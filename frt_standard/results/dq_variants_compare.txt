@@ -1,0 +1,13 @@
+
+=== dq baseline variants (subset 24 LVRT + 8 HVRT) ===
+criterion           dq-legacy dq-Song(no-series) dq-Jia(Vdc-derate)
+connect      LV  95.8% HV 100.0%   LV  87.5% HV  75.0%   LV  95.8% HV 100.0%
+reactive     LV  83.3% HV 100.0%   LV  75.0% HV 100.0%   LV  83.3% HV 100.0%
+limit        LV  41.7% HV  75.0%   LV  66.7% HV  75.0%   LV  58.3% HV  75.0%
+recover      LV 100.0% HV 100.0%   LV 100.0% HV 100.0%   LV 100.0% HV 100.0%
+survive      LV  50.0% HV 100.0%   LV 100.0% HV 100.0%   LV 100.0% HV 100.0%
+frt          LV   4.2% HV  75.0%   LV  45.8% HV  75.0%   LV  41.7% HV  75.0%
+dq-legacy              LVRT   4.2%  HVRT  75.0%  ALL-32  21.9%
+dq-Song(no-series)     LVRT  45.8%  HVRT  75.0%  ALL-32  53.1%
+dq-Jia(Vdc-derate)     LVRT  41.7%  HVRT  75.0%  ALL-32  50.0%
+SAC 4-expert mode-12   LVRT  45.8%  HVRT  75.0%  ALL-32  53.1%   (from prior subset run)

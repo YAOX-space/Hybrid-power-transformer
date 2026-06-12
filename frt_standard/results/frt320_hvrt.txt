@@ -1,0 +1,9 @@
+
+=== HVRT (80 scenarios): SAC vs dq ===
+criterion       dq      SAC
+connect     100.0%   100.0%
+reactive    100.0%    75.0%
+limit        81.2%   100.0%
+recover     100.0%   100.0%
+survive     100.0%   100.0%
+frt          81.2%    75.0%

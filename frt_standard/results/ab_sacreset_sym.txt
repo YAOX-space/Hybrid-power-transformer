@@ -1,0 +1,8 @@
+
+=== mode 12, sym3ph (60 scenarios) ===
+connect     38.3%
+reactive   100.0%
+limit       95.0%
+recover    100.0%
+survive    100.0%
+frt         38.3%

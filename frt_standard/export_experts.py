@@ -1,11 +1,14 @@
-"""Export the 3 specialist SAC actors' weights to sac_{name}_weights.mat for Simulink closed-loop."""
+"""Export the 4 specialist SAC actors' weights to sac_{name}_weights.mat for Simulink closed-loop."""
+import os
+os.environ.setdefault('KMP_DUPLICATE_LIB_OK', 'TRUE')
+os.environ.setdefault('MKL_THREADING_LAYER', 'SEQUENTIAL')
 from pathlib import Path
 import numpy as np, scipy.io as sio
 from stable_baselines3 import SAC
 
 ROOT = Path(__file__).resolve().parent
 MODELS = ROOT.parent / 'data' / 'models'
-for name in ['sym', 'asym', 'hvrt']:
+for name in ['sym', 'asym', 'hvrt_sym', 'hvrt_asym']:
     m = SAC.load(str(MODELS / f'sac_{name}_best.zip'), device='cpu')
     sd = m.policy.actor.state_dict()
     W = {k.replace('.', '_'): v.cpu().numpy().astype('float64')

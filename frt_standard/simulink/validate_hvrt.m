@@ -1,13 +1,14 @@
-function validate_hvrt(nmax)
+function validate_hvrt(nmax, srcfile)
 % validate_hvrt.m — HVRT (voltage-swell ride-through) comparison dq vs closed-loop SAC
 % on the COMPLETE HPT model built with gridmode='swell' (programmable source + series Z).
 % Swell imposed at target 1.2/1.3 pu; 3φ = balanced amplitude step, 1ph = phase-A only.
 % HVRT criteria: connect / reactive(absorb) / limit / recover / survive(Vdc≤1.25 binding).
 if nargin<1, nmax=inf; end
+if nargin<2 || isempty(srcfile), srcfile='../frt_scenarios.csv'; end
 here=fileparts(mfilename('fullpath')); cd(here);
 build_hpt_frt_full(4,'swell');
 M='hpt_frt_full'; set_param(M,'SimulationMode','normal');
-A=readtable('../frt_scenarios.csv','TextType','string');
+A=readtable(srcfile,'TextType','string');
 A=A(A.category=="HVRT",:);
 N=min(height(A),nmax); Vnom=400*sqrt(2)/sqrt(3);
 base=containers.Map('KeyType','double','ValueType','double');   % per-SCR EMF base amplitude
@@ -29,7 +30,7 @@ for i=1:N
   set_param([M '/iq_ref'],'Value','0'); set_param([M '/mse_d'],'Value','0'); set_param([M '/mse_q'],'Value','0');
   set_param(M,'StopTime',num2str(Tsim));
   out=struct();
-  for md=[4 11]
+  for md=[4 12]   % 12 = real-time gated 4-expert SAC (hvrt_sym / hvrt_asym auto-routed by V2n)
     set_param([M '/mode'],'Value',num2str(md));
     o=sim(M); c=hvrt_criteria(o,Tsim,t_f,dur,tV,Vnom);
     if md==4, out.dq=c; else, out.sac=c; end

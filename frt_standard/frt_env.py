@@ -23,7 +23,9 @@ from gymnasium import spaces
 
 # ── per-unit constants ──────────────────────────────────────────────────────────
 VDC_NOM   = 1.0                 # DC bus pu (nominal)
-I_Q_MAX   = 0.30                # reactive current cap (PE 120 kVA ≈ 0.3 pu) [FRT_SPEC §2] (v1 baseline for experts)
+I_Q_MAX   = 0.30                # reactive current cap (PE 120 kVA ≈ 0.3 pu) [FRT_SPEC §2] (criterion/droop def)
+I_Q_ACT   = 0.27                # ACTION bound for iq (< I_Q_MAX): leave transient headroom so measured
+                                # peaks stay ≤0.35 in Simulink (limit criterion); fix for limit=58.3%
 I_CONV_MAX= 0.35                # total shunt converter current limit, pu (reactive priority)
 V_SE_MAX  = 0.20                # series injection ±20% [task book / Shang]
 # DC damping-resistor load as a pu power coefficient: P_load = Vdc_pu² · K_DC,
@@ -36,8 +38,14 @@ TAU_V2    = 0.010              # terminal-voltage first-order lag (s)
 #   ⇒ K_q ≈ 0.073 at SCR=3, i.e. K_Q_BASE = 0.073·3 ≈ 0.22 (was 1.0 = ~4.5× too optimistic).
 # Series m_se_d=0.10 → LV +4.7% ⇒ effective gain ≈ 0.47 (was 1.0 = ~2× too optimistic).
 # This closes the ODE→Simulink optimism gap so the policy learns realistic actuator authority.
-K_Q_BASE  = 1.0               # reactive→voltage gain (v1 baseline; weak grid → larger)
-SE_GAIN   = 1.0               # series-injection voltage effectiveness (v1 baseline)
+K_Q_BASE  = 0.22             # reactive→voltage gain (Simulink-calibrated; was 1.0 = ~4.5× optimistic)
+SE_GAIN   = 0.47             # series-injection voltage effectiveness (Simulink-calibrated; was 1.0)
+# ── DC bus faithfulness (2026-06-10): shunt active current is NOT a free Vdc lever (a[0] discarded
+# in Simulink); it is auto-regulated by a Vdc PI loop but CAPPED by reactive-priority headroom AND
+# the depressed grid voltage during the fault → single-port "starvation" (Vdc must sag on deep faults).
+KP_VDC    = 0.6              # Vdc-restore PI demand gain (pu power per pu Vdc error)
+SE_DRAIN  = 1.0              # series H-bridge DC-drain coefficient (P_se = SE_DRAIN·|V_se|)
+VDC_CHOP  = 1.20             # chopper clamp (matches Simulink Vdc>1.20 bleeder)
 
 FRT_FAULTS = ['normal', 'sym3ph', '1ph_g', '2ph', '2ph_g', 'swell']  # state fault classes
 F2I = {f: i for i, f in enumerate(FRT_FAULTS)}
@@ -76,8 +84,8 @@ class HPTFRTEnv(gym.Env):
         self.rng = np.random.default_rng(seed)
         self.train_mode = train_mode
         self.action_space = spaces.Box(
-            low=np.array([0.0, -I_Q_MAX, -V_SE_MAX, -V_SE_MAX], np.float32),
-            high=np.array([I_CONV_MAX, I_Q_MAX, V_SE_MAX, V_SE_MAX], np.float32))
+            low=np.array([0.0, -I_Q_ACT, -V_SE_MAX, -V_SE_MAX], np.float32),
+            high=np.array([I_CONV_MAX, I_Q_ACT, V_SE_MAX, V_SE_MAX], np.float32))
         self.observation_space = spaces.Box(-5, 5, shape=(21,), dtype=np.float32)
         self._i = 0
 
@@ -156,20 +164,25 @@ class HPTFRTEnv(gym.Env):
         V2p_ss = Vg_p + SE_GAIN * V_se_d + self.K_q * i_sh_q
         V2p_ss = max(0.0, V2p_ss)
         self.V2p += (V2p_ss - self.V2p) * (DT / TAU_V2)
-        # ── negative-seq: grid neg-seq, reduced by series q-axis (neg-seq compensation) ──
-        V2n_ss = max(0.0, Vg_n - abs(V_se_q))
+        # ── negative-seq: imposed by the grid; series injection CANNOT cancel it (Simulink series
+        # modulation is generated at the positive-seq PLL angle → pos-seq only; confirmed
+        # ctrl_series_code L318). The old "−|V_se_q|" cancellation was a fake channel — removed.
+        V2n_ss = Vg_n
         self.V2n += (V2n_ss - self.V2n) * (DT / TAU_V2)
 
-        # ── DC bus: active in (shunt, MV-fed) − series drain − damping load ──
-        # Sub-stepped (the ~3.5 ms cap is stiff vs the 2 ms control step) + clamped.
-        P_sh = Vg_p * i_sh_d                               # shunt on MV side → uses grid-seq voltage
-        P_se = 0.5 * math.hypot(V_se_d, V_se_q)            # series H-bridge DC drain (pu)
+        # ── DC bus (Simulink-CALIBRATED, 2026-06-10): a[0]=i_sh_d is unused (discarded in Simulink; id
+        # is set by the shunt's own Vdc PI loop, which holds Vdc near 1.0). Vdc is dragged down only by
+        # (a) reactive current using converter headroom — MILD, worse at low voltage — and (b) SERIES
+        # voltage BOOST, which pulls active power from the bus — DOMINANT, ≈1.9× the boost. Calibrated to
+        # hpt_frt_full.slx mode-10 sweeps: no-series Vdc≈0.93–0.99 (all depths); series-boost 0.2→Vdc≈0.60.
+        sag_iq = 0.08 * abs(i_sh_q) / max(0.3, Vg_p)       # reactive-headroom cost (mild)
+        sag_se = 1.9 * max(0.0, V_se_d) + 0.5 * abs(V_se_q)  # series DC drain: d-boost dominant + mild q (Simulink-cal)
+        Vdc_eq = min(VDC_CHOP, max(0.05, 1.0 - sag_iq - sag_se))
         nsub = 10
         hsub = DT / nsub
         for _ in range(nsub):
-            P_dc_load = self.Vdc**2 * K_DC                 # 8.2 Ω bleeder ≈ 0.195 pu
-            dVdc = (P_sh - P_se - P_dc_load) / (DC_TAU * max(0.2, self.Vdc))
-            self.Vdc = min(1.6, max(0.05, self.Vdc + dVdc * hsub))
+            self.Vdc += (Vdc_eq - self.Vdc) * (hsub / DC_TAU)
+            self.Vdc = min(VDC_CHOP, max(0.05, self.Vdc))
 
         self.t += DT
         self._last_a = a
@@ -188,10 +201,13 @@ class HPTFRTEnv(gym.Env):
         # ── reward (FRT_SPEC §1 五条判据) ─────────────────────────────────────────
         iq_ref = self._iq_ref()
         r_connect = -20.0 if self.tripped else 0.0
-        r_reactive = -3.0 * abs(iq_ref - i_sh_q)   # v1 baseline weight
+        r_reactive = -8.0 * abs(iq_ref - i_sh_q)   # strengthened (2026-06-10): force GB/T reactive injection,
+        # decouple from V2p-raising (else agent uses cheap series V_se_d which drains Vdc in Simulink; see asym bug)
         r_limit = -5.0 * max(0.0, math.hypot(i_sh_d, i_sh_q) - I_CONV_MAX)
         r_v2 = -5.0 * abs(1.0 - self.V2p) - 3.0 * self.V2n
-        r_vdc = -10.0 * max(0.0, 0.75 - self.Vdc) - 5.0 * max(0.0, self.Vdc - 1.25)
+        r_vdc = -10.0 * max(0.0, 0.82 - self.Vdc) - 5.0 * max(0.0, self.Vdc - 1.25)
+        # 0.82 (not the 0.75 criterion line): safety margin so the policy doesn't ride the cliff edge
+        # — Simulink ripple/transients sank 0.72-cases that ODE put exactly at 0.75
         reward = r_connect + r_reactive + r_limit + r_v2 + r_vdc + 1.0  # +1 alive
 
         done = self.t >= float(s['T_sim']) * TSCALE or self.tripped

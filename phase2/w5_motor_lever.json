@@ -1,0 +1,107 @@
+{
+ "6_1.0_none": {
+  "trip_%": 22.12651413189771,
+  "stuck_%": 0.0,
+  "fidvr_s": 3.800000000000001,
+  "n_stalled_init": 21,
+  "mean_reacc_s": 0.2190476190476191
+ },
+ "6_1.0_droop": {
+  "trip_%": 22.12651413189771,
+  "stuck_%": 0.0,
+  "fidvr_s": 3.800000000000001,
+  "n_stalled_init": 21,
+  "mean_reacc_s": 0.20000000000000004
+ },
+ "6_1.0_allmax": {
+  "trip_%": 22.12651413189771,
+  "stuck_%": 0.0,
+  "fidvr_s": 3.800000000000001,
+  "n_stalled_init": 21,
+  "mean_reacc_s": 0.20000000000000004
+ },
+ "12_1.0_none": {
+  "trip_%": 9.421265141318978,
+  "stuck_%": 0.0,
+  "fidvr_s": 3.800000000000001,
+  "n_stalled_init": 11,
+  "mean_reacc_s": 0.2
+ },
+ "12_1.0_droop": {
+  "trip_%": 9.421265141318978,
+  "stuck_%": 0.0,
+  "fidvr_s": 3.800000000000001,
+  "n_stalled_init": 11,
+  "mean_reacc_s": 0.2
+ },
+ "12_1.0_allmax": {
+  "trip_%": 9.421265141318978,
+  "stuck_%": 0.0,
+  "fidvr_s": 3.800000000000001,
+  "n_stalled_init": 11,
+  "mean_reacc_s": 0.2
+ },
+ "25_1.0_none": {
+  "trip_%": 9.044414535666219,
+  "stuck_%": 0.0,
+  "fidvr_s": 0.2,
+  "n_stalled_init": 2,
+  "mean_reacc_s": 0.2
+ },
+ "25_1.0_droop": {
+  "trip_%": 9.044414535666219,
+  "stuck_%": 0.0,
+  "fidvr_s": 0.0,
+  "n_stalled_init": 2,
+  "mean_reacc_s": 0.2
+ },
+ "25_1.0_allmax": {
+  "trip_%": 9.044414535666219,
+  "stuck_%": 0.0,
+  "fidvr_s": 0.0,
+  "n_stalled_init": 2,
+  "mean_reacc_s": 0.2
+ },
+ "30_2.0_none": {
+  "trip_%": 8.613728129205922,
+  "stuck_%": 0.0,
+  "fidvr_s": 3.800000000000001,
+  "n_stalled_init": 6,
+  "mean_reacc_s": 0.19999999999999998
+ },
+ "30_2.0_droop": {
+  "trip_%": 8.613728129205922,
+  "stuck_%": 0.0,
+  "fidvr_s": 3.800000000000001,
+  "n_stalled_init": 6,
+  "mean_reacc_s": 0.19999999999999998
+ },
+ "30_2.0_allmax": {
+  "trip_%": 8.613728129205922,
+  "stuck_%": 0.0,
+  "fidvr_s": 0.2,
+  "n_stalled_init": 6,
+  "mean_reacc_s": 0.19999999999999998
+ },
+ "3_3.0_none": {
+  "trip_%": 0.0,
+  "stuck_%": 0.0,
+  "fidvr_s": 0.0,
+  "n_stalled_init": 0,
+  "mean_reacc_s": 0.0
+ },
+ "3_3.0_droop": {
+  "trip_%": 0.0,
+  "stuck_%": 0.0,
+  "fidvr_s": 0.0,
+  "n_stalled_init": 0,
+  "mean_reacc_s": 0.0
+ },
+ "3_3.0_allmax": {
+  "trip_%": 0.0,
+  "stuck_%": 0.0,
+  "fidvr_s": 0.0,
+  "n_stalled_init": 0,
+  "mean_reacc_s": 0.0
+ }
+}

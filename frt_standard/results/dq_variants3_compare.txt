@@ -1,0 +1,9 @@
+
+=== dq baseline variants (subset 24 LVRT + 8 HVRT) ===
+criterion           MPC-mode8 connect      LV  95.8% HV 100.0%
+reactive     LV  79.2% HV 100.0%
+limit        LV 100.0% HV  87.5%
+recover      LV 100.0% HV 100.0%
+survive      LV 100.0% HV 100.0%
+frt          LV  75.0% HV  87.5%
+MPC-mode8              LVRT  75.0%  HVRT  87.5%  ALL-32  78.1%

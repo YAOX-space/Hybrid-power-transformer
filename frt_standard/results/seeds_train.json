@@ -1,0 +1,11 @@
+{
+  "sd7/sym": 100.0,
+  "sd7/asym": 86.2,
+  "sd7/hvrt_sym": 100.0,
+  "sd7/hvrt_asym": 100.0,
+  "sd123/sym": 98.3,
+  "sd123/asym": 100.0,
+  "sd123/hvrt_sym": 100.0,
+  "sd123/hvrt_asym": 100.0,
+  "ablation_single": 88.8
+}

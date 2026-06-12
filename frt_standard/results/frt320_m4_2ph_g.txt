@@ -1,0 +1,8 @@
+
+=== mode 4, 2ph_g (60 scenarios) ===
+connect    100.0%
+reactive   100.0%
+limit       21.7%
+recover    100.0%
+survive      0.0%
+frt          0.0%

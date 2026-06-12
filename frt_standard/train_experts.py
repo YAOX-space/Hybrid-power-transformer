@@ -9,6 +9,9 @@ for a hierarchical "classify → specialist" controller gated by (V, V2n):
 Each specialist trains on the SAME upgraded ODE env (frt_env.py, v1 baseline gains),
 only the scenario subset differs.  Saves data/models/sac_{name}_best.zip.
 """
+import os
+os.environ.setdefault('KMP_DUPLICATE_LIB_OK', 'TRUE')        # avoid libiomp double-load hard crash
+os.environ.setdefault('MKL_THREADING_LAYER', 'SEQUENTIAL')   # numpy/MKL single-thread (torch stays MT)
 import sys, time, json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -23,9 +26,10 @@ SCEN   = ROOT / 'frt_scenarios.csv'
 MODELS = ROOT.parent / 'data' / 'models'; MODELS.mkdir(parents=True, exist_ok=True)
 
 EXPERTS = {
-    'sym':  lambda s: s['category']=='LVRT' and s['fault_type']=='sym3ph',
-    'asym': lambda s: s['category']=='LVRT' and s['fault_type'] in ('1ph_g','2ph','2ph_g'),
-    'hvrt': lambda s: s['category']=='HVRT',
+    'sym':       lambda s: s['category']=='LVRT' and s['fault_type']=='sym3ph',
+    'asym':      lambda s: s['category']=='LVRT' and s['fault_type'] in ('1ph_g','2ph','2ph_g'),
+    'hvrt_sym':  lambda s: s['category']=='HVRT' and s['fault_type']=='swell_3ph',
+    'hvrt_asym': lambda s: s['category']=='HVRT' and s['fault_type']=='swell_1ph',
 }
 
 def train_one(name, filt, total_steps=300_000, n_envs=8, eval_freq=25_000):
