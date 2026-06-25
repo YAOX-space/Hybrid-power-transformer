@@ -1,0 +1,15 @@
+
+=== sd_7_asym (seed 7): 140 train / 40 val (HPTFRTEnvV2) run=p3par_20260623_015450 ===
+  [sd_7_asym] step= 25,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=20 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50%@25000 4min
+  [sd_7_asym] step= 50,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 7min
+  [sd_7_asym] step= 75,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 11min
+  [sd_7_asym] step=100,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 14min
+  [sd_7_asym] step=125,000 proxy=75% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail10 unev0] (con=100 rea=50 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 18min
+  [sd_7_asym] step=150,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=19 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 22min
+  [sd_7_asym] step=175,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=20 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=100%@50000 26min
+  [sd_7_asym] step=200,000 proxy=42% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail23 unev0] (con=100 rea=12 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 29min
+  [sd_7_asym] step=225,000 proxy=22% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail31 unev0] (con=100 rea=3 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 33min
+  [sd_7_asym] step=250,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 37min
+  [sd_7_asym] step=275,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=12 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 42min
+  [sd_7_asym] step=300,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 53min
+JOB DONE kind=seed_expert name=asym seed=7 -> 100.0

@@ -1,0 +1,9 @@
+scn_id,fault_bus,fault_type,r_fault,minV,iters,resid_final,oscillation,wrong_sign,classification,iq_min,iq_max
+3,25,2ph,18.317,0.864,20,8.12,1,0,reactive-coupling-limit-cycle,0.012,0.044
+25,22,2ph_g,4.866,0.718,20,57.2,1,0,reactive-coupling-limit-cycle,0.013,0.228
+55,19,2ph_g,1.45,0.89,20,56.73,1,0,reactive-coupling-limit-cycle,0.013,0.226
+66,14,1ph_g,18.164,0.813,20,56.54,1,0,reactive-coupling-limit-cycle,0.013,0.148
+73,31,1ph_g,28.97,0.863,20,22.52,1,0,reactive-coupling-limit-cycle,0.013,0.23
+116,24,2ph,14.772,0.869,20,72.65,1,0,reactive-coupling-limit-cycle,0.013,0.075
+134,27,2ph_g,22.607,0.89,20,56.61,1,0,reactive-coupling-limit-cycle,0.012,0.231
+176,19,2ph,1.603,0.868,20,27.09,1,0,reactive-coupling-limit-cycle,0.013,0.234

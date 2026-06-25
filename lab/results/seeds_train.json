@@ -1,0 +1,24 @@
+{
+  "_metadata": {
+    "metrics_version": "frt-v2",
+    "env_contract": "frt-v2",
+    "env_class": "HPTFRTEnvV2",
+    "observation_dim": 20,
+    "action_dim": 3,
+    "seed": "multi[7, 31, 42, 123, 2024]",
+    "scenario_split": "per-expert held-out family split + single-all-320 ablation",
+    "legacy_run": false,
+    "training_status": "ODE-proxy training; Simulink frt-v2 certification (P1/full-320) PENDING (proxy is NOT a certified pass rate)",
+    "seeds": [
+      7,
+      31,
+      42,
+      123,
+      2024
+    ],
+    "n_seeds": 5,
+    "run_id": "p3fix_20260622_220413"
+  },
+  "sd7/sym": 0.0,
+  "sd7/asym": 100.0
+}

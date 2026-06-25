@@ -1,8 +1,0 @@
-
-=== mode 4, sym3ph (60 scenarios) ===
-connect     83.3%
-reactive   100.0%
-limit       65.0%
-recover    100.0%
-survive      0.0%
-frt          0.0%

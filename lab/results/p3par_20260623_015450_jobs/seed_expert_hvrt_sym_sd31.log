@@ -1,0 +1,15 @@
+
+=== sd_31_hvrt_sym (seed 31): 30 train / 10 val (HPTFRTEnvV2) run=p3par_20260623_015450 ===
+  [sd_31_hvrt_sym] step= 25,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0%@25000 4min
+  [sd_31_hvrt_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0%@25000 9min
+  [sd_31_hvrt_sym] step= 75,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0%@25000 13min
+  [sd_31_hvrt_sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0%@25000 18min
+  [sd_31_hvrt_sym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@125000 22min
+  [sd_31_hvrt_sym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@125000 27min
+  [sd_31_hvrt_sym] step=175,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@125000 31min
+  [sd_31_hvrt_sym] step=200,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@125000 36min
+  [sd_31_hvrt_sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@125000 41min
+  [sd_31_hvrt_sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@125000 45min
+  [sd_31_hvrt_sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@125000 50min
+  [sd_31_hvrt_sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@125000 55min
+JOB DONE kind=seed_expert name=hvrt_sym seed=31 -> 100.0

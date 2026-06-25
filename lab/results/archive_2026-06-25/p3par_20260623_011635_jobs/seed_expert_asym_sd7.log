@@ -1,0 +1,4 @@
+
+=== sd_7_asym (seed 7): 140 train / 40 val (HPTFRTEnvV2) run=p3par_20260623_011635 ===
+  [sd_7_asym] step= 25,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=20 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50%@25000 8min
+  [sd_7_asym] step= 50,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@50000 16min

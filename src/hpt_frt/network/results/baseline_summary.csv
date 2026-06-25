@@ -1,0 +1,5 @@
+baseline,frt_pass_pct,survive_pct,reactive_pct,load_strict_pct,load_tol_pct,convergence_pct,oscillation_pct,wrong_sign_scn_pct,minV_mean
+B1_no_hpt,97.873,100.000,100.000,37.241,78.076,98.750,0.000,0.000,0.630
+B2_fixed_law,98.523,100.000,100.000,52.850,83.912,96.500,0.000,0.000,0.640
+B3_mode5_sac,90.248,99.945,91.956,38.540,78.292,90.750,6.250,0.000,0.631
+B4_mode6_resid_48,99.348,100.000,100.000,55.435,85.217,95.833,0.000,0.000,0.652

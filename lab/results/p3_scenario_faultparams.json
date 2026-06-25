@@ -1,0 +1,2882 @@
+{
+ "1": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.5692
+ },
+ "2": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.3161
+ },
+ "3": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.3058
+ },
+ "4": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.1528
+ },
+ "5": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.2429
+ },
+ "6": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.5852
+ },
+ "7": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.2058
+ },
+ "8": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.622
+ },
+ "9": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.2727
+ },
+ "10": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 4.9834,
+  "fault_dur": 0.3548
+ },
+ "11": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.4018
+ },
+ "12": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.3647
+ },
+ "13": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.4188
+ },
+ "14": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.3007
+ },
+ "15": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.5617
+ },
+ "16": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.5684
+ },
+ "17": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.1626
+ },
+ "18": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.1832
+ },
+ "19": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.5388
+ },
+ "20": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.2,
+  "fault_param": 17.493,
+  "fault_dur": 0.5242
+ },
+ "21": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.4467
+ },
+ "22": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.1519
+ },
+ "23": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.3525
+ },
+ "24": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.3031
+ },
+ "25": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.4171
+ },
+ "26": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.6005
+ },
+ "27": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.5168
+ },
+ "28": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.2211
+ },
+ "29": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.6199
+ },
+ "30": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 16.4852,
+  "fault_dur": 0.33
+ },
+ "31": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.5085
+ },
+ "32": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.3786
+ },
+ "33": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.5379
+ },
+ "34": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.491
+ },
+ "35": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.1555
+ },
+ "36": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.3546
+ },
+ "37": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.5937
+ },
+ "38": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.5364
+ },
+ "39": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.5496
+ },
+ "40": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.5,
+  "fault_param": 66.1508,
+  "fault_dur": 0.5293
+ },
+ "41": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.2547
+ },
+ "42": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.3902
+ },
+ "43": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.535
+ },
+ "44": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.2943
+ },
+ "45": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.3637
+ },
+ "46": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.5362
+ },
+ "47": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.6085
+ },
+ "48": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.2119
+ },
+ "49": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.5815
+ },
+ "50": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 37.3944,
+  "fault_dur": 0.5809
+ },
+ "51": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.4872
+ },
+ "52": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.1956
+ },
+ "53": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.4567
+ },
+ "54": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.4243
+ },
+ "55": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.5321
+ },
+ "56": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.4701
+ },
+ "57": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.3752
+ },
+ "58": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.6112
+ },
+ "59": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.3997
+ },
+ "60": {
+  "fault_type": "sym3ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.75,
+  "fault_param": 181.817,
+  "fault_dur": 0.2457
+ },
+ "61": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.6205
+ },
+ "62": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.1699
+ },
+ "63": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.3946
+ },
+ "64": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.5777
+ },
+ "65": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.2016
+ },
+ "66": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.5493
+ },
+ "67": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.3232
+ },
+ "68": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.1663
+ },
+ "69": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.2581
+ },
+ "70": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 2.7777,
+  "fault_dur": 0.3098
+ },
+ "71": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.491
+ },
+ "72": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.367
+ },
+ "73": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.4316
+ },
+ "74": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.3743
+ },
+ "75": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.3305
+ },
+ "76": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.3484
+ },
+ "77": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.4735
+ },
+ "78": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.4406
+ },
+ "79": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.5842
+ },
+ "80": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.7333,
+  "fault_param": 38.6754,
+  "fault_dur": 0.4802
+ },
+ "81": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.5291
+ },
+ "82": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.359
+ },
+ "83": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.3166
+ },
+ "84": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.4636
+ },
+ "85": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.6146
+ },
+ "86": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.2943
+ },
+ "87": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.3598
+ },
+ "88": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.2819
+ },
+ "89": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.3627
+ },
+ "90": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 15.2334,
+  "fault_dur": 0.2651
+ },
+ "91": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.2885
+ },
+ "92": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.4297
+ },
+ "93": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.3804
+ },
+ "94": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.2887
+ },
+ "95": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.1667
+ },
+ "96": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.1545
+ },
+ "97": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.4485
+ },
+ "98": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.3892
+ },
+ "99": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.2279
+ },
+ "100": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.8333,
+  "fault_param": 116.4609,
+  "fault_dur": 0.5514
+ },
+ "101": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.5525
+ },
+ "102": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.21
+ },
+ "103": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.5974
+ },
+ "104": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.2588
+ },
+ "105": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.2478
+ },
+ "106": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.5687
+ },
+ "107": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.409
+ },
+ "108": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.1957
+ },
+ "109": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.3831
+ },
+ "110": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 31.5186,
+  "fault_dur": 0.4856
+ },
+ "111": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.4024
+ },
+ "112": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.5492
+ },
+ "113": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.3402
+ },
+ "114": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.4604
+ },
+ "115": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.6094
+ },
+ "116": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.4062
+ },
+ "117": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.155
+ },
+ "118": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.2198
+ },
+ "119": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.4563
+ },
+ "120": {
+  "fault_type": "1ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.9167,
+  "fault_param": 384.389,
+  "fault_dur": 0.4058
+ },
+ "121": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.2543
+ },
+ "122": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.3525
+ },
+ "123": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.3222
+ },
+ "124": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.568
+ },
+ "125": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.5581
+ },
+ "126": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.3362
+ },
+ "127": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.2979
+ },
+ "128": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.3691
+ },
+ "129": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.5565
+ },
+ "130": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 5.3209,
+  "fault_dur": 0.2078
+ },
+ "131": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.5596
+ },
+ "132": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.37
+ },
+ "133": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.4864
+ },
+ "134": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.2291
+ },
+ "135": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.2597
+ },
+ "136": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.312
+ },
+ "137": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.2389
+ },
+ "138": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.4305
+ },
+ "139": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.4131
+ },
+ "140": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.6,
+  "fault_param": 29.7989,
+  "fault_dur": 0.2248
+ },
+ "141": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.6153
+ },
+ "142": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.2237
+ },
+ "143": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.2758
+ },
+ "144": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.3021
+ },
+ "145": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.5457
+ },
+ "146": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.4561
+ },
+ "147": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.2052
+ },
+ "148": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.1905
+ },
+ "149": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.4936
+ },
+ "150": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 17.1162,
+  "fault_dur": 0.4439
+ },
+ "151": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.4819
+ },
+ "152": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.4458
+ },
+ "153": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.1898
+ },
+ "154": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.2324
+ },
+ "155": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.2493
+ },
+ "156": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.3995
+ },
+ "157": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.4453
+ },
+ "158": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.3096
+ },
+ "159": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.2061
+ },
+ "160": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.75,
+  "fault_param": 85.7079,
+  "fault_dur": 0.2143
+ },
+ "161": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.4044
+ },
+ "162": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.4955
+ },
+ "163": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.4962
+ },
+ "164": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.1914
+ },
+ "165": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.2143
+ },
+ "166": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.4883
+ },
+ "167": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.3026
+ },
+ "168": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.15
+ },
+ "169": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.5951
+ },
+ "170": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 35.5024,
+  "fault_dur": 0.5522
+ },
+ "171": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.5778
+ },
+ "172": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.3317
+ },
+ "173": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.2857
+ },
+ "174": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.4206
+ },
+ "175": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.3596
+ },
+ "176": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.4973
+ },
+ "177": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.1988
+ },
+ "178": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.4144
+ },
+ "179": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.6125
+ },
+ "180": {
+  "fault_type": "2ph",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.875,
+  "fault_param": 282.4794,
+  "fault_dur": 0.3757
+ },
+ "181": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.2828
+ },
+ "182": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.2817
+ },
+ "183": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.1969
+ },
+ "184": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.5694
+ },
+ "185": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.6015
+ },
+ "186": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.529
+ },
+ "187": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.3279
+ },
+ "188": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.1862
+ },
+ "189": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.2413
+ },
+ "190": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 6.1881,
+  "fault_dur": 0.614
+ },
+ "191": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.3006
+ },
+ "192": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.2249
+ },
+ "193": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.2138
+ },
+ "194": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.4347
+ },
+ "195": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.4757
+ },
+ "196": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.3617
+ },
+ "197": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.4229
+ },
+ "198": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.5373
+ },
+ "199": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.2729
+ },
+ "200": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.2,
+  "Vg_p": 0.4667,
+  "fault_param": 26.0369,
+  "fault_dur": 0.2148
+ },
+ "201": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.2786
+ },
+ "202": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.6027
+ },
+ "203": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.3329
+ },
+ "204": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.3473
+ },
+ "205": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.2428
+ },
+ "206": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.4226
+ },
+ "207": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.4529
+ },
+ "208": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.2261
+ },
+ "209": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.3168
+ },
+ "210": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 18.0036,
+  "fault_dur": 0.3659
+ },
+ "211": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.4768
+ },
+ "212": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.233
+ },
+ "213": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.4118
+ },
+ "214": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.2661
+ },
+ "215": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.391
+ },
+ "216": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.2907
+ },
+ "217": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.3384
+ },
+ "218": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.2859
+ },
+ "219": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.1569
+ },
+ "220": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.5,
+  "Vg_p": 0.6667,
+  "fault_param": 80.7865,
+  "fault_dur": 0.6065
+ },
+ "221": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.2208
+ },
+ "222": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.3252
+ },
+ "223": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.2548
+ },
+ "224": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.6139
+ },
+ "225": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.1622
+ },
+ "226": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.2402
+ },
+ "227": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.493
+ },
+ "228": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.2961
+ },
+ "229": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.2616
+ },
+ "230": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 10,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 37.6645,
+  "fault_dur": 0.3551
+ },
+ "231": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.3071
+ },
+ "232": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.3794
+ },
+ "233": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.2499
+ },
+ "234": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.5248
+ },
+ "235": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.4169
+ },
+ "236": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.1536
+ },
+ "237": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.2523
+ },
+ "238": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.4759
+ },
+ "239": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.3258
+ },
+ "240": {
+  "fault_type": "2ph_g",
+  "category": "LVRT",
+  "scr": 3,
+  "target_V_pu": 0.75,
+  "Vg_p": 0.8333,
+  "fault_param": 236.9961,
+  "fault_dur": 0.4304
+ },
+ "241": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "242": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "243": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "244": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "245": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "246": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "247": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "248": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "249": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "250": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.1248,
+  "fault_dur": 1.0
+ },
+ "251": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "252": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "253": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "254": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "255": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "256": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "257": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "258": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "259": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "260": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.2,
+  "fault_param": 1.2582,
+  "fault_dur": 1.0
+ },
+ "261": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "262": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "263": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "264": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "265": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "266": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "267": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "268": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "269": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "270": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.2185,
+  "fault_dur": 0.5
+ },
+ "271": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "272": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "273": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "274": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "275": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "276": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "277": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "278": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "279": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "280": {
+  "fault_type": "swell_3ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.3,
+  "fault_param": 1.3629,
+  "fault_dur": 0.5
+ },
+ "281": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "282": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "283": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "284": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "285": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "286": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "287": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "288": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "289": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "290": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.1,
+  "fault_dur": 1.0
+ },
+ "291": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "292": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "293": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "294": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "295": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "296": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "297": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "298": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "299": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "300": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.2,
+  "Vg_p": 1.0667,
+  "fault_param": 1.3557,
+  "fault_dur": 1.0
+ },
+ "301": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "302": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "303": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "304": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "305": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "306": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "307": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "308": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "309": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "310": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 10,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.1,
+  "fault_dur": 0.5
+ },
+ "311": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ },
+ "312": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ },
+ "313": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ },
+ "314": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ },
+ "315": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ },
+ "316": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ },
+ "317": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ },
+ "318": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ },
+ "319": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ },
+ "320": {
+  "fault_type": "swell_1ph",
+  "category": "HVRT",
+  "scr": 3,
+  "target_V_pu": 1.3,
+  "Vg_p": 1.1,
+  "fault_param": 1.4602,
+  "fault_dur": 0.5
+ }
+}

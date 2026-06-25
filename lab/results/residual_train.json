@@ -1,0 +1,16 @@
+{
+  "metrics_version": "frt-v2",
+  "env_contract": "frt-v2",
+  "env_class": "HPTFRTResidualEnvV2",
+  "observation_dim": 20,
+  "action_dim": 3,
+  "seed": 42,
+  "scenario_split": "held-out family split: 260 train / 60 val (#7)",
+  "legacy_run": false,
+  "training_status": "ODE-proxy training; Simulink frt-v2 certification (P1/full-320) PENDING (proxy is NOT a certified pass rate)",
+  "run_id": "p3par_20260623_015450",
+  "best_raw": 83.3,
+  "best_raw_step": 25000,
+  "best_ema": 85.0,
+  "best_ema_step": 200000
+}

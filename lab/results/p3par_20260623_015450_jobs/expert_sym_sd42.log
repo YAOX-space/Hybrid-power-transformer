@@ -1,0 +1,15 @@
+
+=== expert "sym": 50 train / 10 val (HPTFRTEnvV2) run=p3par_20260623_015450 ===
+  [sym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 5min
+  [sym] step= 50,000 proxy=90% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail1 unev0] (con=90 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 11min
+  [sym] step= 75,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 17min
+  [sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 23min
+  [sym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 29min
+  [sym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 36min
+  [sym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 41min
+  [sym] step=200,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 47min
+  [sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 52min
+  [sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 58min
+  [sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=100%@25000 70min
+  [sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 83min
+JOB DONE kind=expert name=sym seed=42 -> 100.0

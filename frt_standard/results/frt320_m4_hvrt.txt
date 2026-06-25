@@ -1,8 +1,0 @@
-
-=== mode 4, hvrt (80 scenarios) ===
-connect    100.0%
-reactive   100.0%
-limit       81.2%
-recover    100.0%
-survive    100.0%
-frt         81.2%

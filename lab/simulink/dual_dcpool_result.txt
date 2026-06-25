@@ -1,0 +1,17 @@
+Dual-HPT DC-interlink pool validation (stage-1, DC-circuit level)
+Model: hpt_dual_dcpool (build_dual_dcpool.m) | Ts=20us | Cdc=2200uF init 800V
+Scenario: Bus A deep sag Vt=0.30, series boost b=0.18 (deficit); Bus B healthy Vt=1.00, idle.
+Physical DC model: shunt = Vdc regulator to 800V saturated by sag-limited available import
+(Imax = Vt*0.28*Pb/Vdc); series = constant DC-current drain (b*1.9*Pb/Vref).
+
+config            Vdc_A(pu)  Vdc_B(pu)  Ilink(A)   verdict
+no link (solo)      0.246      1.062       -0.0     A collapses
+link R=2.0 ohm      0.713      0.993     -112.1     A collapses (marginal)
+link R=0.5 ohm      0.914      0.992     -125.1     A SURVIVES
+link R=0.1 ohm      0.976      0.992     -128.0     A SURVIVES
+
+Conclusion: a healthy HPT holds up a sagged, series-draining HPT through the DC interlink.
+Solo collapses to 0.246 pu; with a realistic interlink (R=0.5 ohm) Vdc_A is lifted to 0.914 pu
+(survives), the link delivering ~125 A (~100 kW) B->A, exactly covering A's deficit. This
+validates the calibrated pool model's core assumption (Phase-2 report Section 5) at the
+DC-circuit / switching-adjacent level. Stage 2 (real switching converters) is the follow-up.

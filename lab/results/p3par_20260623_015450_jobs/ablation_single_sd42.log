@@ -1,0 +1,15 @@
+
+=== ablation_single (seed 42): 260 train / 60 val (HPTFRTEnvV2) run=p3par_20260623_015450 ===
+  [ablation_single] step= 25,000 proxy=82% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail11 unev0] (con=100 rea=54 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=82%@25000 3min
+  [ablation_single] step= 50,000 proxy=63% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail22 unev0] (con=83 rea=29 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=82%@25000 7min
+  [ablation_single] step= 75,000 proxy=38% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail37 unev0] (con=83 rea=16 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=82%@25000 11min
+  [ablation_single] step=100,000 proxy=50% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail30 unev0] (con=83 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=82%@25000 16min
+  [ablation_single] step=125,000 proxy=52% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail29 unev0] (con=85 rea=20 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=82%@25000 20min
+  [ablation_single] step=150,000 proxy=67% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail20 unev0] (con=100 rea=31 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=82%@25000 25min
+  [ablation_single] step=175,000 proxy=70% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail18 unev0] (con=100 rea=38 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=82%@25000 30min
+  [ablation_single] step=200,000 proxy=72% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail17 unev0] (con=100 rea=39 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=82%@25000 36min
+  [ablation_single] step=225,000 proxy=50% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=82%@25000 47min
+  [ablation_single] step=250,000 proxy=83% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail10 unev0] (con=100 rea=58 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=83%@250000 55min
+  [ablation_single] step=275,000 proxy=67% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail20 unev0] (con=100 rea=33 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=83%@250000 59min
+  [ablation_single] step=300,000 proxy=52% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail29 unev0] (con=100 rea=3 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=83%@250000 63min
+JOB DONE kind=ablation name= seed=42 -> 83.3

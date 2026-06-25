@@ -1,0 +1,31 @@
+
+=== sd_31_hvrt_asym (seed 31): 30 train / 10 val (HPTFRTEnvV2) run=p3par_20260623_010704 ===
+fatal   : Memory allocation failure
+Traceback (most recent call last):
+  File "C:\Users\m1391\AppData\Local\Programs\Python\Python38\lib\runpy.py", line 194, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "C:\Users\m1391\AppData\Local\Programs\Python\Python38\lib\runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "E:\research_space\Hybrid-power-transformer\src\hpt_frt\device\train_single.py", line 38, in <module>
+    main()
+  File "E:\research_space\Hybrid-power-transformer\src\hpt_frt\device\train_single.py", line 29, in main
+    r = seed_train_one(f'sd_{a.seed}_{a.name}', EXPERTS[a.name], a.seed, total_steps=a.steps)
+  File "E:\research_space\Hybrid-power-transformer\src\hpt_frt\device\train_seeds.py", line 57, in train_one
+    sac.learn(total_timesteps=chunk, reset_num_timesteps=False); step += chunk
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\stable_baselines3\sac\sac.py", line 307, in learn
+    return super().learn(
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\stable_baselines3\common\off_policy_algorithm.py", line 347, in learn
+    self.train(batch_size=self.batch_size, gradient_steps=gradient_steps)
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\stable_baselines3\sac\sac.py", line 249, in train
+    next_q_values = th.cat(self.critic_target(replay_data.next_observations, next_actions), dim=1)
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\torch\nn\modules\module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\torch\nn\modules\module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\stable_baselines3\common\policies.py", line 976, in forward
+    qvalue_input = th.cat([features, actions], dim=1)
+RuntimeError: CUDA error: unknown error
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+

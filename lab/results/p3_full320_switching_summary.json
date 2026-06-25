@@ -1,0 +1,25 @@
+{
+ "metrics_version": "frt-v2",
+ "layer": "switching",
+ "calibrated": true,
+ "n": 320,
+ "note": "Faithful switching full-320: each fault calibrated so open-loop V+ = ODE Vg_p=fault_sequence(ft,target_V_pu). frt=True: all 5 criteria evaluated AND passed. None: a criterion NOT_EVALUATED (shallow fault / no reactive demand), no FAIL. False: >=1 criterion FAILED. SAC=deployed residual mi=14; dq=fixed-law mi=7 (same peak base).",
+ "SAC": {
+  "true": 170,
+  "false": 34,
+  "none": 116,
+  "strict_pass_pct": 53.1,
+  "no_fail_pct": 89.4,
+  "fail_pct": 10.6,
+  "pass_among_determinable_pct": 83.3
+ },
+ "dq": {
+  "true": 127,
+  "false": 102,
+  "none": 91,
+  "strict_pass_pct": 39.7,
+  "no_fail_pct": 68.1,
+  "fail_pct": 31.9,
+  "pass_among_determinable_pct": 55.5
+ }
+}

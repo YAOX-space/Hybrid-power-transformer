@@ -1,0 +1,178 @@
+"""frt_metrics.py — frt-v2 ADAPTER for the device (ODE) evaluation pipeline.
+
+The legacy scalar criteria (its own Vdc/iq bool formulas) are REMOVED; all evaluation now flows
+through `hpt_frt.common.frt_v2.evaluate` (the single versioned definition).
+
+IMPORTANT — what the averaged-ODE training env can and cannot measure:
+  provides : real time t, V1 (=V2p), V2 (=V2n), Vdc, reactive current iq.
+  MISSING  : combined/total converter current (id is not modelled) and the negative-seq current I2.
+Per the frt-v2 contract these missing MANDATORY measurements are passed as None (NEVER inferred as
+zero), so the `limit` and `survive` criteria come back NOT_EVALUATED and `frt_pass` is None
+(incomplete) for ODE rollouts. Full FRT certification therefore requires the SWITCHING (Simulink)
+harness, not the training ODE. For checkpoint selection during ODE training we expose a clearly
+labelled PARTIAL proxy over the AVAILABLE criteria — it is NOT an FRT pass rate and incomplete
+scenarios are never counted as certified passes.
+"""
+from __future__ import annotations
+import numpy as np
+from hpt_frt.common import frt_v2 as FV2
+from .frt_env import TSCALE
+
+CRITERIA = ('connect', 'reactive', 'limit', 'recover', 'survive')
+
+
+def run_episode(model, env):
+    """Roll out one scenario; record REAL time + the measurements the env actually provides.
+    Missing measurements (combined current, I2) stay None — they are NOT inferred as zero."""
+    obs, _ = env.reset()
+    t, V1, V2, Vdc, iq = [], [], [], [], []
+    done = False
+    while not done:
+        a, _ = model.predict(obs, deterministic=True)
+        obs, r, term, trunc, info = env.step(a)
+        t.append(info['t']); V1.append(info['V2p']); V2.append(info['V2n'])
+        Vdc.append(info['Vdc']); iq.append(info['iq'])
+        done = term or trunc
+    return dict(t=np.asarray(t, float), V1=np.asarray(V1, float), V2=np.asarray(V2, float),
+                Vdc=np.asarray(Vdc, float), iq=np.asarray(iq, float),
+                i_peak=None, idq_mag=None, i2=None)   # current/I2 not measurable in the averaged ODE
+
+
+def evaluate_scenario(model, env_cls, scenario):
+    """Evaluate one scenario through frt_v2. Returns a CLASSIFICATION dict — never a silent None:
+      {'kind': 'rollout_failed'}                          rollout produced < 2 samples
+      {'kind': 'unevaluable', 'error': <msg>}             frt_v2.evaluate raised ValueError (structural)
+      {'kind': 'evaluated', 'res': <frt_v2 result>}       a full 5-criteria verdict
+    ValueError is captured WITH its message (not swallowed), so unevaluable scenarios are visible."""
+    env = env_cls([scenario], seed=42, train_mode=False)
+    tr = run_episode(model, env)
+    if tr['t'].size < 2:
+        return {'kind': 'rollout_failed', 'error': f'rollout produced {tr["t"].size} samples'}
+    t_fault = float(scenario['t_fault'])
+    dur = float(scenario['fault_dur']) * TSCALE        # the env compresses the fault duration by TSCALE
+    residual = float(scenario['target_V_pu'])
+    try:
+        res = FV2.evaluate(tr['t'], tr['V1'], scenario['category'], residual,
+                           t_fault, dur, V2=tr['V2'], Vdc=tr['Vdc'], iq=tr['iq'],
+                           i_peak=tr['i_peak'], idq_mag=tr['idq_mag'], i2=tr['i2'])
+    except ValueError as e:
+        return {'kind': 'unevaluable', 'error': str(e)}
+    res['response'] = _response_of(tr, t_fault, residual)   # SEPARATE 5 ms metric (never in frt_pass)
+    return {'kind': 'evaluated', 'res': res}
+
+
+def _response_of(tr, t_fault, residual):
+    """5 ms reactive-current response: time for measured iq to reach the EXPLICIT droop reference at
+    the fault residual (NOT a whole-window median). NOT_EVALUATED when iq is missing, the reference is
+    ~0 (no event), or the sampling is too coarse. Kept entirely separate from frt_pass (audit F)."""
+    iq = tr['iq']
+    if iq is None:
+        return {'response_status': 'NOT_EVALUATED', 'reason': 'iq not measured',
+                'rise_time_ms': None, 'settling_time_ms': None, 'meets_5ms': None}
+    target = FV2.iq_ref_droop(residual)                     # explicit reference (command), not median
+    if abs(target) < FV2.RESP_BAND:
+        return {'response_status': 'NOT_EVALUATED', 'reason': 'no reactive event (ref ~ 0)',
+                'rise_time_ms': None, 'settling_time_ms': None, 'meets_5ms': None}
+    r = FV2.response_metrics(tr['t'], iq, t_fault, target=target)
+    if r['status'] == 'insufficient_resolution':
+        return {'response_status': 'NOT_EVALUATED', 'reason': 'insufficient time resolution',
+                'rise_time_ms': None, 'settling_time_ms': None, 'meets_5ms': None}
+    return {'response_status': r['status'], 'rise_time_ms': r['rise_time_ms'],
+            'settling_time_ms': r['settling_time_ms'], 'meets_5ms': r['meets_5ms']}
+
+
+def _evaluation_complete(res):
+    """True iff ALL five mandatory criteria were actually evaluated (none NOT_EVALUATED)."""
+    return all(res[c]['status'] != FV2.NOT_EVALUATED for c in CRITERIA)
+
+
+def evaluate_frt(model, scenarios, env_cls, n_eval=None):
+    """Aggregate frt-v2 evaluation with HONEST completeness semantics (audit round-4 D).
+
+    A scenario is `complete` ONLY if all five mandatory criteria were evaluated. A scenario with a
+    FAIL *and* a NOT_EVALUATED criterion is `decided_fail` (frt_pass False) AND `incomplete` — it is
+    NOT counted as complete. `frt_pass_pct` is computed ONLY over complete scenarios (None if zero).
+    `partial_proxy_pct` is a CHECKPOINT-SELECTION proxy (NOT an FRT rate); its denominator is ALL
+    rolled-out scenarios so unevaluable ones count against it. Unevaluable scenarios are reported
+    explicitly (count + reasons). Always carries metrics_version='frt-v2'.
+
+    Counts: n_requested, n_rollout_ok (rolled out >=2 samples), n_rollout_failed, n_unevaluable
+    (rolled out but evaluate raised), n_evaluated, n_complete, n_incomplete, n_decided_fail."""
+    rng = np.random.default_rng(0)
+    scen = list(scenarios)
+    idx = (list(range(len(scen))) if n_eval is None
+           else rng.choice(len(scen), min(n_eval, len(scen)), replace=False))
+    classified = [evaluate_scenario(model, env_cls, scen[int(i)]) for i in idx]
+    n_requested = len(classified)
+    rollout_failed = [c for c in classified if c['kind'] == 'rollout_failed']
+    unevaluable = [c for c in classified if c['kind'] == 'unevaluable']
+    evaluated = [c['res'] for c in classified if c['kind'] == 'evaluated']
+    rolled = [c for c in classified if c['kind'] in ('unevaluable', 'evaluated')]   # >=2 samples
+    n_rolled = len(rolled)
+
+    out = {'metrics_version': FV2.METRICS_VERSION,
+           'n_requested': n_requested, 'n_rollout_ok': n_rolled,
+           'n_rollout_failed': len(rollout_failed), 'n_unevaluable': len(unevaluable),
+           'n_evaluated': len(evaluated),
+           'unevaluable_reasons': [c['error'] for c in (rollout_failed + unevaluable)][:20]}
+
+    for c in CRITERIA:
+        ev = [r[c] for r in evaluated if r[c]['status'] != FV2.NOT_EVALUATED]
+        out[c] = round(100.0 * np.mean([x['status'] == FV2.PASS for x in ev]), 1) if ev else None
+        out[c + '_not_eval_pct'] = round(100.0 * np.mean([r[c]['status'] == FV2.NOT_EVALUATED
+                                          for r in evaluated]), 1) if evaluated else None
+
+    complete = [r for r in evaluated if _evaluation_complete(r)]
+    decided_fail = [r for r in evaluated if r['frt_pass'] is False]
+    out['n_complete'] = len(complete)
+    out['n_incomplete'] = len(evaluated) - len(complete)
+    out['n_decided_fail'] = len(decided_fail)
+    # frt_pass over COMPLETE only (a complete scenario has frt_pass in {True, False})
+    out['frt_pass_pct'] = round(100.0 * np.mean([1.0 if r['frt_pass'] else 0.0 for r in complete]), 1) \
+        if complete else None
+
+    def available_all_pass(res):
+        ev = [res[c]['status'] for c in CRITERIA if res[c]['status'] != FV2.NOT_EVALUATED]
+        return bool(ev) and all(s == FV2.PASS for s in ev)
+    # denominator = ALL rolled-out scenarios; unevaluable ones are NOT passes
+    n_proxy_pass = sum(1 for r in evaluated if available_all_pass(r))
+    out['partial_proxy_pct'] = round(100.0 * n_proxy_pass / n_rolled, 1) if n_rolled else 0.0
+    # PROXY HONESTY (audit #8): the proxy ignores NOT_EVALUATED criteria, so a high % can mean
+    # "the few evaluable criteria passed", NOT "FRT passed". Report how many of the 5 mandatory
+    # criteria were actually evaluable per scenario, and FLAG saturation (a proxy resting on < 3/5
+    # criteria must not be read as a pass rate).
+    n_crit_eval = [sum(1 for c in CRITERIA if r[c]['status'] != FV2.NOT_EVALUATED) for r in evaluated]
+    out['proxy_criteria_evaluated_mean'] = round(float(np.mean(n_crit_eval)), 2) if n_crit_eval else None
+    out['proxy_saturated'] = bool(n_crit_eval and np.mean(n_crit_eval) < 3.0)
+    out['proxy_note'] = ('partial_proxy_pct ignores NOT_EVALUATED criteria — '
+                         f'only {out["proxy_criteria_evaluated_mean"]}/5 mandatory criteria evaluable '
+                         f'on average; NOT an FRT pass rate' + (' [SATURATED]' if out['proxy_saturated'] else ''))
+
+    # ── 5 ms response — SEPARATE block, NEVER folded into frt_pass / partial_proxy ──
+    resp = [r['response'] for r in evaluated if 'response' in r]
+    resp_eval = [x for x in resp if x['response_status'] != 'NOT_EVALUATED']
+    out['response'] = {
+        'n_evaluated': len(resp_eval),
+        'n_not_evaluated': len(resp) - len(resp_eval),
+        'meets_5ms_pct': round(100.0 * np.mean([1.0 if x['meets_5ms'] else 0.0 for x in resp_eval]), 1)
+                         if resp_eval else None,
+        'median_settling_ms': round(float(np.median([x['settling_time_ms'] for x in resp_eval
+                                                     if x['settling_time_ms'] is not None])), 3)
+                              if any(x['settling_time_ms'] is not None for x in resp_eval) else None,
+    }
+    return out
+
+
+def fmt_summary(m):
+    """None-safe one-line training-log summary. Reports the PARTIAL proxy used for selection, the
+    certified frt_pass rate over COMPLETE scenarios (n/a in the ODE), and per-criterion PASS rates
+    (n/e where NOT_EVALUATED). Never prints a misleading 'FRT=' for the proxy."""
+    def g(k):
+        v = m.get(k)
+        return 'n/e' if v is None else f'{v:.0f}'
+    frt = 'n/a' if m.get('frt_pass_pct') is None else f"{m['frt_pass_pct']:.0f}%"
+    return (f"proxy={m['partial_proxy_pct']:.0f}% frt_pass={frt} "
+            f"[req{m['n_requested']} ok{m['n_rollout_ok']} cmpl{m['n_complete']} "
+            f"incmpl{m['n_incomplete']} fail{m['n_decided_fail']} unev{m['n_unevaluable']}] "
+            f"(con={g('connect')} rea={g('reactive')} lim={g('limit')} rec={g('recover')} "
+            f"sur={g('survive')}) [{m['metrics_version']}]")

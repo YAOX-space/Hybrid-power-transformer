@@ -1,0 +1,38 @@
+{
+  "_metadata": {
+    "metrics_version": "frt-v2",
+    "env_contract": "frt-v2",
+    "env_class": "HPTFRTEnvV2",
+    "observation_dim": 20,
+    "action_dim": 3,
+    "seed": "multi[7, 31, 42, 123, 2024]",
+    "scenario_split": "per-expert + single-all-320 ablation (P5)",
+    "legacy_run": false,
+    "training_status": "ODE-proxy training; Simulink frt-v2 certification (P1/full-320) PENDING (proxy is NOT a certified pass rate)",
+    "seeds": [
+      7,
+      31,
+      42,
+      123,
+      2024
+    ],
+    "n_seeds": 5
+  },
+  "sd7/sym": 0.0,
+  "sd7/asym": 100.0,
+  "sd7/hvrt_sym": 100.0,
+  "sd7/hvrt_asym": 100.0,
+  "sd123/sym": 0.0,
+  "sd123/asym": 100.0,
+  "sd123/hvrt_sym": 100.0,
+  "sd123/hvrt_asym": 100.0,
+  "sd2024/sym": 0.0,
+  "sd2024/asym": 100.0,
+  "sd2024/hvrt_sym": 100.0,
+  "sd2024/hvrt_asym": 100.0,
+  "sd31/sym": 60.0,
+  "sd31/asym": 100.0,
+  "sd31/hvrt_sym": 100.0,
+  "sd31/hvrt_asym": 100.0,
+  "ablation_single": 53.3
+}

@@ -1,0 +1,11 @@
+label,category,hpt_bus,fault_bus,fault_type,r_fault,recovery,minV,dur,Vp_min,Vn_max,iq_cmd_max,vdc_surrogate_min,iq_peak_measured,ripple_2w,Vdc_min_sw,Vdc_max_sw,connect_sw,reactive_sw,limit_sw,recover_sw,survive_sw,frt_pass_sw,L1_status
+D1_superdeep_sym,super-deep sag,7,6,sym3ph,0.3,instant,0.11,0.15,0.11,0.0,0.27,0.763,,,,,,,,,,,PENDING_SWITCHING_RUN
+D2_superdeep_sym2,super-deep sag,14,2,sym3ph,0.3,instant,0.643,0.625,0.65,0.0,0.27,0.76,,,,,,,,,,,PENDING_SWITCHING_RUN
+D3_asym_1ph,asymmetric prop.,25,25,1ph_g,0.4,instant,0.682,0.625,0.677,0.296,0.24,0.902,,,,,,,,,,,PENDING_SWITCHING_RUN
+D4_asym_2ph,asymmetric prop.,30,30,2ph,0.4,instant,0.619,0.625,0.478,0.455,0.261,0.841,,,,,,,,,,,PENDING_SWITCHING_RUN
+D5_asym_2phg,asymmetric prop.,14,14,2ph_g,0.4,instant,0.332,0.3,0.328,0.3,0.27,0.822,,,,,,,,,,,PENDING_SWITCHING_RUN
+D6_coupling_dense,strong coupling,10,6,sym3ph,0.4,instant,0.141,0.15,0.159,0.0,0.27,0.774,,,,,,,,,,,PENDING_SWITCHING_RUN
+D7_slow_recovery,slow recovery,7,6,sym3ph,0.4,slow,0.141,0.15,0.141,0.0,0.27,0.761,,,,,,,,,,,PENDING_SWITCHING_RUN
+D8_slow_recovery_a,slow recovery,25,25,1ph_g,0.4,slow,0.682,0.625,0.663,0.296,0.24,0.789,,,,,,,,,,,PENDING_SWITCHING_RUN
+D9_boundary_pass,criteria boundary,30,12,sym3ph,1.8,instant,0.181,0.15,0.678,0.0,0.27,0.758,,,,,,,,,,,PENDING_SWITCHING_RUN
+D10_boundary_fail,criteria boundary,7,3,sym3ph,0.3,instant,0.319,0.3,0.322,0.0,0.27,0.799,,,,,,,,,,,PENDING_SWITCHING_RUN

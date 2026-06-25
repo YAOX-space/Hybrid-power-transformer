@@ -1,0 +1,6 @@
+RESUME run=p3par_20260623_015450: 20 jobs already done, 2 remaining
+P3 PARALLEL run=p3par_20260623_015450 | 2 jobs | 2 workers | CPU | stagger=5.0s | seeds=[7, 31, 42, 123, 2024] | steps=300000 | logs=E:\research_space\Hybrid-power-transformer\lab\results\p3par_20260623_015450_jobs
+  [ 1/2] seed_expert_sym_sd2024           rc=0   54min
+  [ 2/2] seed_expert_asym_sd2024          rc=0   55min
+
+PARALLEL SWEEP DONE run=p3par_20260623_015450: 2/2 ok, 0 failed, wall=55min

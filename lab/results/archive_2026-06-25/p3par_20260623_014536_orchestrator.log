@@ -1,0 +1,1 @@
+P3 PARALLEL run=p3par_20260623_014536 | 22 jobs | 4 workers | CPU | stagger=4.0s | seeds=[7, 31, 42, 123, 2024] | steps=300000 | logs=E:\research_space\Hybrid-power-transformer\lab\results\p3par_20260623_014536_jobs

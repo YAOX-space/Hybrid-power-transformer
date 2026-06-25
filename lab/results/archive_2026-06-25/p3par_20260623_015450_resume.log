@@ -1,0 +1,16 @@
+RESUME run=p3par_20260623_015450: 12 jobs already done, 10 remaining
+P3 PARALLEL run=p3par_20260623_015450 | 10 jobs | 2 workers | CPU | stagger=5.0s | seeds=[7, 31, 42, 123, 2024] | steps=300000 | logs=E:\research_space\Hybrid-power-transformer\lab\results\p3par_20260623_015450_jobs
+  [ 1/10] ablation_single_sd42             rc=0   63min
+  [ 2/10] seed_expert_sym_sd2024           rc=1    0min
+  [ 3/10] seed_expert_asym_sd2024          rc=1    0min
+  [ 4/10] residual_single_sd42             rc=0   65min
+  [ 5/10] seed_expert_hvrt_sym_sd2024      rc=0   47min
+  [ 6/10] seed_expert_hvrt_asym_sd2024     rc=0   48min
+  [ 7/10] seed_expert_sym_sd31             rc=0   55min
+  [ 8/10] seed_expert_asym_sd31            rc=0   56min
+  [ 9/10] seed_expert_hvrt_sym_sd31        rc=0   55min
+  [10/10] seed_expert_hvrt_asym_sd31       rc=0   55min
+
+PARALLEL SWEEP DONE run=p3par_20260623_015450: 8/10 ok, 2 failed, wall=224min
+  FAILED: seed_expert_sym_sd2024 (see E:\research_space\Hybrid-power-transformer\lab\results\p3par_20260623_015450_jobs\seed_expert_sym_sd2024.log)
+  FAILED: seed_expert_asym_sd2024 (see E:\research_space\Hybrid-power-transformer\lab\results\p3par_20260623_015450_jobs\seed_expert_asym_sd2024.log)

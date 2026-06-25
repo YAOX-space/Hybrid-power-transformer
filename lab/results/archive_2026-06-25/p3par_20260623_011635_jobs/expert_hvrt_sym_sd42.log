@@ -1,0 +1,4 @@
+
+=== expert "hvrt_sym": 30 train / 10 val (HPTFRTEnvV2) run=p3par_20260623_011635 ===
+  [hvrt_sym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@25000 8min
+  [hvrt_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100%@25000 16min

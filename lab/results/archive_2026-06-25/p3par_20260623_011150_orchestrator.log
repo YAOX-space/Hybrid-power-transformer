@@ -1,0 +1,2 @@
+P3 PARALLEL run=p3par_20260623_011150 | 22 jobs | 6 workers | seeds=[7, 31, 42, 123, 2024] | steps=300000 | logs=E:\research_space\Hybrid-power-transformer\lab\results\p3par_20260623_011150_jobs
+  [ 1/22] seed_expert_asym_sd7             rc=1    0min

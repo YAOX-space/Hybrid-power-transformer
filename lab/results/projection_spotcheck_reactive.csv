@@ -1,0 +1,9 @@
+sid,fault_type,category,scr,Vg_p,base_frt,proj_frt,base_reactive,proj_reactive,base_wrong_sign,proj_wrong_sign,reactive_fixed,new_fail_criteria,iq_base_med,iq_proj_med,base_connect,proj_connect,base_limit,proj_limit,base_recover,proj_recover,base_survive,proj_survive
+171,2ph,LVRT,3,0.8750,False,False,FAIL,FAIL,1,1,0,,0.0031,0.0031,PASS,PASS,PASS,PASS,PASS,PASS,PASS,PASS
+174,2ph,LVRT,3,0.8750,False,False,FAIL,FAIL,1,1,0,,0.0047,0.0047,PASS,PASS,PASS,PASS,PASS,PASS,PASS,PASS
+161,2ph,LVRT,10,0.8750,False,None,FAIL,NOT_EVALUATED,1,0,1,,0.0035,0.0035,PASS,PASS,PASS,PASS,PASS,PASS,PASS,PASS
+162,2ph,LVRT,10,0.8750,False,None,FAIL,NOT_EVALUATED,1,0,1,,0.0019,0.0019,PASS,PASS,PASS,PASS,PASS,PASS,PASS,PASS
+224,2ph_g,LVRT,10,0.8333,False,False,FAIL,FAIL,1,1,0,,0.0036,0.0036,PASS,PASS,PASS,PASS,PASS,PASS,PASS,PASS
+227,2ph_g,LVRT,10,0.8333,False,False,FAIL,FAIL,1,1,0,,0.0037,0.0037,PASS,PASS,PASS,PASS,PASS,PASS,PASS,PASS
+311,swell_1ph,HVRT,3,1.1000,False,False,FAIL,FAIL,1,1,0,,-0.0051,-0.0054,PASS,PASS,PASS,PASS,PASS,PASS,PASS,PASS
+312,swell_1ph,HVRT,3,1.1000,False,False,FAIL,FAIL,1,1,0,,-0.0051,-0.0054,PASS,PASS,PASS,PASS,PASS,PASS,PASS,PASS

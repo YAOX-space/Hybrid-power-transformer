@@ -1,0 +1,13 @@
+=== reward-logging retrain: residual seed=42 steps=100000 eval=10000 n_envs=4 -> reward_logging_seed42_100k ===
+[ODE training diagnostics only; not certified switching frt-v2 pass rate]
+  step= 10,000 success_proxy=100% con=100.0 rea=100.0 rec=100.0 n_fail=0 incmpl=60 3min
+  step= 20,000 success_proxy=83% con=100.0 rea=58.3 rec=100.0 n_fail=10 incmpl=60 6min
+  step= 30,000 success_proxy=72% con=100.0 rea=45.2 rec=100.0 n_fail=17 incmpl=60 9min
+  step= 40,000 success_proxy=100% con=100.0 rea=100.0 rec=100.0 n_fail=0 incmpl=60 14min
+  step= 50,000 success_proxy=87% con=100.0 rea=63.6 rec=100.0 n_fail=8 incmpl=60 20min
+  step= 60,000 success_proxy=80% con=100.0 rea=53.8 rec=100.0 n_fail=12 incmpl=60 25min
+  step= 70,000 success_proxy=88% con=100.0 rea=66.7 rec=100.0 n_fail=7 incmpl=60 30min
+  step= 80,000 success_proxy=100% con=100.0 rea=100.0 rec=100.0 n_fail=0 incmpl=60 35min
+  step= 90,000 success_proxy=100% con=100.0 rea=100.0 rec=100.0 n_fail=0 incmpl=60 41min
+  step=100,000 success_proxy=87% con=100.0 rea=63.6 rec=100.0 n_fail=8 incmpl=60 45min
+DONE -> E:\research_space\Hybrid-power-transformer\lab\results\reward_logging_seed42_100k

@@ -1,0 +1,18 @@
+P3 PARALLEL run=p3par_20260623_010704 | 22 jobs | 6 workers | seeds=[7, 31, 42, 123, 2024] | steps=300000 | logs=E:\research_space\Hybrid-power-transformer\src\lab\results\p3par_20260623_010704_jobs
+  [ 1/22] expert_sym_sd42                  rc=3221225477    0min
+  [ 2/22] seed_expert_sym_sd7              rc=3221225477    0min
+  [ 3/22] expert_hvrt_sym_sd42             rc=3221225477    0min
+  [ 4/22] expert_hvrt_asym_sd42            rc=3221225477    0min
+  [ 5/22] seed_expert_asym_sd7             rc=1    0min
+  [ 6/22] seed_expert_hvrt_sym_sd123       rc=3221225477    0min
+  [ 7/22] seed_expert_asym_sd123           rc=3221225477    0min
+  [ 8/22] seed_expert_hvrt_asym_sd123      rc=1    0min
+  [ 9/22] seed_expert_asym_sd2024          rc=3221225477    0min
+  [10/22] seed_expert_hvrt_sym_sd2024      rc=3221225477    0min
+  [11/22] seed_expert_hvrt_asym_sd2024     rc=3221225477    0min
+  [12/22] seed_expert_sym_sd31             rc=1    0min
+  [13/22] seed_expert_asym_sd31            rc=1    0min
+  [14/22] seed_expert_hvrt_sym_sd31        rc=1    0min
+  [15/22] seed_expert_hvrt_asym_sd31       rc=1    0min
+  [16/22] ablation_single_sd42             rc=3221225477    0min
+  [17/22] residual_single_sd42             rc=1    0min

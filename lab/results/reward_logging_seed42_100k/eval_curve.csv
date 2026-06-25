@@ -1,0 +1,11 @@
+step,success_proxy_pct,connect_pass_pct,reactive_pass_pct,recover_pass_pct,connect_violation_pct,reactive_violation_pct,recover_violation_pct,limit_status,survive_status,n_fail,n_incomplete,metric_note
+10000,100.0,100.0,100.0,100.0,0.0,0.0,0.0,NOT_EVALUATED,NOT_EVALUATED,0,60,ODE training diagnostics only; not certified switching frt-v2 pass rate
+20000,83.3,100.0,58.3,100.0,0.0,41.7,0.0,NOT_EVALUATED,NOT_EVALUATED,10,60,ODE training diagnostics only; not certified switching frt-v2 pass rate
+30000,71.7,100.0,45.2,100.0,0.0,54.8,0.0,NOT_EVALUATED,NOT_EVALUATED,17,60,ODE training diagnostics only; not certified switching frt-v2 pass rate
+40000,100.0,100.0,100.0,100.0,0.0,0.0,0.0,NOT_EVALUATED,NOT_EVALUATED,0,60,ODE training diagnostics only; not certified switching frt-v2 pass rate
+50000,86.7,100.0,63.6,100.0,0.0,36.4,0.0,NOT_EVALUATED,NOT_EVALUATED,8,60,ODE training diagnostics only; not certified switching frt-v2 pass rate
+60000,80.0,100.0,53.8,100.0,0.0,46.2,0.0,NOT_EVALUATED,NOT_EVALUATED,12,60,ODE training diagnostics only; not certified switching frt-v2 pass rate
+70000,88.3,100.0,66.7,100.0,0.0,33.3,0.0,NOT_EVALUATED,NOT_EVALUATED,7,60,ODE training diagnostics only; not certified switching frt-v2 pass rate
+80000,100.0,100.0,100.0,100.0,0.0,0.0,0.0,NOT_EVALUATED,NOT_EVALUATED,0,60,ODE training diagnostics only; not certified switching frt-v2 pass rate
+90000,100.0,100.0,100.0,100.0,0.0,0.0,0.0,NOT_EVALUATED,NOT_EVALUATED,0,60,ODE training diagnostics only; not certified switching frt-v2 pass rate
+100000,86.7,100.0,63.6,100.0,0.0,36.4,0.0,NOT_EVALUATED,NOT_EVALUATED,8,60,ODE training diagnostics only; not certified switching frt-v2 pass rate

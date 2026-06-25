@@ -1,0 +1,208 @@
+=== P3 FULL SWEEP START Mon Jun 22 03:15:54     2026 ===
+env: frt-v2 HPTFRTEnvV2/HPTFRTResidualEnvV2 (20D/3D); GPU=RTX3070Ti; 320 scenarios
+
+>>> [1/3] train_experts (4 experts, seed 42, 300k each)
+
+=== expert "sym": 60 scenarios (HPTFRTEnvV2) ===
+  [sym] step= 25,000 proxy=67% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail20 unev0] (con=67 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 3min
+  [sym] step= 50,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 6min
+  [sym] step= 75,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 8min
+  [sym] step=100,000 proxy=13% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail52 unev0] (con=33 rea=19 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 10min
+  [sym] step=125,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=43 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 11min
+  [sym] step=150,000 proxy=13% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail52 unev0] (con=33 rea=29 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 12min
+  [sym] step=175,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 13min
+  [sym] step=200,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=27 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 14min
+  [sym] step=225,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=33 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 17min
+  [sym] step=250,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=33 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 21min
+  [sym] step=275,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=33 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 24min
+  [sym] step=300,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=67% 25min
+
+=== expert "asym": 180 scenarios (HPTFRTEnvV2) ===
+  [asym] step= 25,000 proxy=100% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 1min
+  [asym] step= 50,000 proxy=100% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 2min
+  [asym] step= 75,000 proxy=78% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail18 unev0] (con=100 rea=58 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 4min
+  [asym] step=100,000 proxy=94% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail5 unev0] (con=100 rea=85 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [asym] step=125,000 proxy=2% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail78 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 8min
+  [asym] step=150,000 proxy=35% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail52 unev0] (con=100 rea=7 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [asym] step=175,000 proxy=26% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail59 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [asym] step=200,000 proxy=11% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail71 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 16min
+  [asym] step=225,000 proxy=34% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail53 unev0] (con=100 rea=9 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 19min
+  [asym] step=250,000 proxy=99% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail1 unev0] (con=100 rea=96 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 22min
+  [asym] step=275,000 proxy=92% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail6 unev0] (con=100 rea=81 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 26min
+  [asym] step=300,000 proxy=60% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail32 unev0] (con=100 rea=29 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 28min
+
+=== expert "hvrt_sym": 40 scenarios (HPTFRTEnvV2) ===
+  [hvrt_sym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 3min
+  [hvrt_sym] step= 50,000 proxy=90% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail4 unev0] (con=100 rea=83 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 5min
+  [hvrt_sym] step= 75,000 proxy=12% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail35 unev0] (con=100 rea=12 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 8min
+  [hvrt_sym] step=100,000 proxy=58% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail17 unev0] (con=100 rea=37 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 11min
+  [hvrt_sym] step=125,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 14min
+  [hvrt_sym] step=150,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 16min
+  [hvrt_sym] step=175,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 19min
+  [hvrt_sym] step=200,000 proxy=18% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail33 unev0] (con=100 rea=13 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 22min
+  [hvrt_sym] step=225,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 24min
+  [hvrt_sym] step=250,000 proxy=45% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail22 unev0] (con=100 rea=12 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 27min
+  [hvrt_sym] step=275,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 30min
+  [hvrt_sym] step=300,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 32min
+
+=== expert "hvrt_asym": 40 scenarios (HPTFRTEnvV2) ===
+  [hvrt_asym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 2min
+  [hvrt_asym] step= 50,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [hvrt_asym] step= 75,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 4min
+  [hvrt_asym] step=100,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 5min
+  [hvrt_asym] step=125,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [hvrt_asym] step=150,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 8min
+  [hvrt_asym] step=175,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [hvrt_asym] step=200,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [hvrt_asym] step=225,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 11min
+  [hvrt_asym] step=250,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 12min
+  [hvrt_asym] step=275,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [hvrt_asym] step=300,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+
+ALL EXPERTS DONE: {'_metadata': {'metrics_version': 'frt-v2', 'env_contract': 'frt-v2', 'env_class': 'HPTFRTEnvV2', 'observation_dim': 20, 'action_dim': 3, 'seed': 42, 'scenario_split': 'per-expert filter (no OOD split; P5)', 'legacy_run': False, 'training_status': 'PENDING (P3 retrain not run; this run is smoke/partial only)'}, 'sym': 66.7, 'asym': 100.0, 'hvrt_sym': 100.0, 'hvrt_asym': 100.0}
+>>> [2/3] train_seeds (4 experts x seeds {7,123} + single-SAC ablation, 300k each)
+
+=== sd_7_sym (seed 7): 60 scenarios (HPTFRTEnvV2) ===
+  [sd_7_sym] step= 25,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=22 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0% 3min
+  [sd_7_sym] step= 50,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=37 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0% 6min
+  [sd_7_sym] step= 75,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 8min
+  [sd_7_sym] step=100,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=33 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 11min
+  [sd_7_sym] step=125,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=33 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 14min
+  [sd_7_sym] step=150,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=68 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 17min
+  [sd_7_sym] step=175,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=33 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 20min
+  [sd_7_sym] step=200,000 proxy=3% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail58 unev0] (con=33 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 23min
+  [sd_7_sym] step=225,000 proxy=10% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail54 unev0] (con=33 rea=8 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 26min
+  [sd_7_sym] step=250,000 proxy=18% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail49 unev0] (con=33 rea=24 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 29min
+  [sd_7_sym] step=275,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=33 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 32min
+  [sd_7_sym] step=300,000 proxy=17% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail50 unev0] (con=33 rea=14 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=33% 35min
+
+=== sd_7_asym (seed 7): 180 scenarios (HPTFRTEnvV2) ===
+  [sd_7_asym] step= 25,000 proxy=65% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail28 unev0] (con=100 rea=24 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=65% 3min
+  [sd_7_asym] step= 50,000 proxy=100% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_7_asym] step= 75,000 proxy=76% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail19 unev0] (con=100 rea=65 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_7_asym] step=100,000 proxy=91% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail7 unev0] (con=100 rea=83 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_7_asym] step=125,000 proxy=62% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail30 unev0] (con=100 rea=50 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+  [sd_7_asym] step=150,000 proxy=90% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail8 unev0] (con=100 rea=83 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 18min
+  [sd_7_asym] step=175,000 proxy=45% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail44 unev0] (con=100 rea=14 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 21min
+  [sd_7_asym] step=200,000 proxy=42% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail46 unev0] (con=100 rea=8 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 24min
+  [sd_7_asym] step=225,000 proxy=69% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail25 unev0] (con=100 rea=34 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 27min
+  [sd_7_asym] step=250,000 proxy=75% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail20 unev0] (con=100 rea=49 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 30min
+  [sd_7_asym] step=275,000 proxy=76% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail19 unev0] (con=100 rea=58 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 33min
+  [sd_7_asym] step=300,000 proxy=82% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail14 unev0] (con=100 rea=72 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 37min
+
+=== sd_7_hvrt_sym (seed 7): 40 scenarios (HPTFRTEnvV2) ===
+  [sd_7_hvrt_sym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_7_hvrt_sym] step= 50,000 proxy=58% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail17 unev0] (con=100 rea=15 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_7_hvrt_sym] step= 75,000 proxy=92% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail3 unev0] (con=100 rea=85 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_7_hvrt_sym] step=100,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_7_hvrt_sym] step=125,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+  [sd_7_hvrt_sym] step=150,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 17min
+  [sd_7_hvrt_sym] step=175,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=50 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 20min
+  [sd_7_hvrt_sym] step=200,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=100% 24min
+  [sd_7_hvrt_sym] step=225,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=50 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 27min
+  [sd_7_hvrt_sym] step=250,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 30min
+  [sd_7_hvrt_sym] step=275,000 proxy=45% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail22 unev0] (con=100 rea=62 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=100% 33min
+  [sd_7_hvrt_sym] step=300,000 proxy=75% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail10 unev0] (con=100 rea=100 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=100% 36min
+
+=== sd_7_hvrt_asym (seed 7): 40 scenarios (HPTFRTEnvV2) ===
+  [sd_7_hvrt_asym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_7_hvrt_asym] step= 50,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_7_hvrt_asym] step= 75,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_7_hvrt_asym] step=100,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_7_hvrt_asym] step=125,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+  [sd_7_hvrt_asym] step=150,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 18min
+  [sd_7_hvrt_asym] step=175,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=100% 21min
+  [sd_7_hvrt_asym] step=200,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 24min
+  [sd_7_hvrt_asym] step=225,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 27min
+  [sd_7_hvrt_asym] step=250,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 30min
+  [sd_7_hvrt_asym] step=275,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 34min
+  [sd_7_hvrt_asym] step=300,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 37min
+
+=== sd_123_sym (seed 123): 60 scenarios (HPTFRTEnvV2) ===
+  [sd_123_sym] step= 25,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=47 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0% 3min
+  [sd_123_sym] step= 50,000 proxy=0% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail60 unev0] (con=33 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0% 6min
+  [sd_123_sym] step= 75,000 proxy=37% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail38 unev0] (con=37 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 8min
+  [sd_123_sym] step=100,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=43 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 11min
+  [sd_123_sym] step=125,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=27 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 14min
+  [sd_123_sym] step=150,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 17min
+  [sd_123_sym] step=175,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=43 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 20min
+  [sd_123_sym] step=200,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 23min
+  [sd_123_sym] step=225,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 26min
+  [sd_123_sym] step=250,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 29min
+  [sd_123_sym] step=275,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=43 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 32min
+  [sd_123_sym] step=300,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=33 rea=75 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=37% 36min
+
+=== sd_123_asym (seed 123): 180 scenarios (HPTFRTEnvV2) ===
+  [sd_123_asym] step= 25,000 proxy=100% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_123_asym] step= 50,000 proxy=31% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail55 unev0] (con=100 rea=14 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_123_asym] step= 75,000 proxy=26% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail59 unev0] (con=100 rea=11 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_123_asym] step=100,000 proxy=9% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail73 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_123_asym] step=125,000 proxy=41% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail47 unev0] (con=100 rea=24 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+  [sd_123_asym] step=150,000 proxy=90% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail8 unev0] (con=100 rea=72 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 18min
+  [sd_123_asym] step=175,000 proxy=22% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail62 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 21min
+  [sd_123_asym] step=200,000 proxy=64% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail29 unev0] (con=100 rea=43 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 24min
+  [sd_123_asym] step=225,000 proxy=89% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail9 unev0] (con=100 rea=73 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 27min
+  [sd_123_asym] step=250,000 proxy=91% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail7 unev0] (con=100 rea=76 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 30min
+  [sd_123_asym] step=275,000 proxy=81% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail15 unev0] (con=100 rea=57 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 34min
+  [sd_123_asym] step=300,000 proxy=68% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail26 unev0] (con=100 rea=30 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 37min
+
+=== sd_123_hvrt_sym (seed 123): 40 scenarios (HPTFRTEnvV2) ===
+  [sd_123_hvrt_sym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_123_hvrt_sym] step= 50,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_123_hvrt_sym] step= 75,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_123_hvrt_sym] step=100,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_123_hvrt_sym] step=125,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 15min
+  [sd_123_hvrt_sym] step=150,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 18min
+  [sd_123_hvrt_sym] step=175,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 20min
+  [sd_123_hvrt_sym] step=200,000 proxy=75% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail10 unev0] (con=100 rea=100 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=100% 24min
+  [sd_123_hvrt_sym] step=225,000 proxy=75% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail10 unev0] (con=100 rea=50 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 27min
+  [sd_123_hvrt_sym] step=250,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=50 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 30min
+  [sd_123_hvrt_sym] step=275,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 33min
+  [sd_123_hvrt_sym] step=300,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 36min
+
+=== sd_123_hvrt_asym (seed 123): 40 scenarios (HPTFRTEnvV2) ===
+  [sd_123_hvrt_asym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_123_hvrt_asym] step= 50,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_123_hvrt_asym] step= 75,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_123_hvrt_asym] step=100,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_123_hvrt_asym] step=125,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+  [sd_123_hvrt_asym] step=150,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 18min
+  [sd_123_hvrt_asym] step=175,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 21min
+  [sd_123_hvrt_asym] step=200,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 24min
+  [sd_123_hvrt_asym] step=225,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 27min
+  [sd_123_hvrt_asym] step=250,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 30min
+  [sd_123_hvrt_asym] step=275,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 33min
+  [sd_123_hvrt_asym] step=300,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 37min
+
+=== ablation_single (seed 42): 320 scenarios (HPTFRTEnvV2) ===
+  [ablation_single] step= 25,000 proxy=66% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail27 unev0] (con=81 rea=52 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=66% 3min
+  [ablation_single] step= 50,000 proxy=70% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail24 unev0] (con=84 rea=63 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=70% 6min
+  [ablation_single] step= 75,000 proxy=68% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail26 unev0] (con=81 rea=43 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=70% 9min
+  [ablation_single] step=100,000 proxy=41% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail47 unev0] (con=78 rea=24 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=70% 12min
+  [ablation_single] step=125,000 proxy=70% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail24 unev0] (con=84 rea=67 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=70% 15min
+  [ablation_single] step=150,000 proxy=56% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail35 unev0] (con=84 rea=26 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=70% 18min
+  [ablation_single] step=175,000 proxy=49% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail41 unev0] (con=91 rea=23 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=70% 21min
+  [ablation_single] step=200,000 proxy=59% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail33 unev0] (con=100 rea=38 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=70% 24min
+  [ablation_single] step=225,000 proxy=78% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail18 unev0] (con=100 rea=61 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=78% 27min
+  [ablation_single] step=250,000 proxy=91% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail7 unev0] (con=98 rea=87 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=91% 30min
+  [ablation_single] step=275,000 proxy=58% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail34 unev0] (con=91 rea=32 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=91% 34min
+  [ablation_single] step=300,000 proxy=75% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail20 unev0] (con=98 rea=59 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=91% 37min
+
+SEEDS+ABLATION DONE: {'_metadata': {'metrics_version': 'frt-v2', 'env_contract': 'frt-v2', 'env_class': 'HPTFRTEnvV2', 'observation_dim': 20, 'action_dim': 3, 'seed': 'multi(7,123,42)', 'scenario_split': 'per-expert + single-all-320 ablation (P5)', 'legacy_run': False, 'training_status': 'PENDING (P3 retrain not run; this run is smoke/partial only)'}, 'sd7/sym': 33.3, 'sd7/asym': 100.0, 'sd7/hvrt_sym': 100.0, 'sd7/hvrt_asym': 100.0, 'sd123/sym': 36.7, 'sd123/asym': 100.0, 'sd123/hvrt_sym': 100.0, 'sd123/hvrt_asym': 100.0, 'ablation_single': 91.2}
+>>> [3/3] train_residual (residual SAC, 300k)
+=== residual-SAC: 320 scenarios (HPTFRTResidualEnvV2) === {'metrics_version': 'frt-v2', 'env_contract': 'frt-v2', 'env_class': 'HPTFRTResidualEnvV2', 'observation_dim': 20, 'action_dim': 3, 'seed': 42, 'scenario_split': 'all-320 (single residual policy); P5', 'legacy_run': False, 'training_status': 'PENDING (P3 retrain not run; this run is smoke/partial only)'}
+  [res] step= 25,000 proxy=62% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail30 unev0] (con=100 rea=36 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=91% best_proxy=62/91% 3min
+  [res] step= 50,000 proxy=90% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail8 unev0] (con=100 rea=79 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=91% best_proxy=90/91% 6min
+  [res] step= 75,000 proxy=91% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail7 unev0] (con=100 rea=81 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=91% best_proxy=91/91% 9min
+  [res] step=100,000 proxy=91% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail7 unev0] (con=100 rea=81 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=91% best_proxy=91/91% 12min
+  [res] step=125,000 proxy=26% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail59 unev0] (con=100 rea=8 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=91% best_proxy=91/91% 15min
+  [res] step=150,000 proxy=84% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail13 unev0] (con=100 rea=67 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=86% best_proxy=91/91% 19min
+  [res] step=175,000 proxy=84% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail13 unev0] (con=100 rea=67 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=86% best_proxy=91/91% 22min
+  [res] step=200,000 proxy=55% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail36 unev0] (con=100 rea=36 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=91% best_proxy=91/91% 25min
+  [res] step=225,000 proxy=24% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail61 unev0] (con=100 rea=3 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=90% best_proxy=91/91% 28min
+  [res] step=250,000 proxy=34% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail53 unev0] (con=100 rea=12 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=95% best_proxy=91/95% 31min
+  [res] step=275,000 proxy=32% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail54 unev0] (con=100 rea=8 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=95% best_proxy=91/95% 35min
+  [res] step=300,000 proxy=38% frt_pass=n/a [req80 ok80 cmpl0 incmpl80 fail50 unev0] (con=100 rea=14 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=92% best_proxy=91/95% 38min
+RESIDUAL DONE best=91.2 ema=95.0
+
+=== P3 FULL SWEEP DONE Mon Jun 22 11:01:10     2026 ===

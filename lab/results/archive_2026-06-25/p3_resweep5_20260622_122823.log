@@ -1,0 +1,331 @@
+=== P3 RE-SWEEP (5 seeds, CORRECTED pipeline) START Mon Jun 22 12:28:23     2026 ===
+pipeline: held-out family val split | deterministic env seeds | GPU | proxy-honesty
+seeds: experts=42 ; train_seeds={7,123,2024,31} ; ablation+residual=42  => 5 distinct seeds
+
+>>> [1/3] train_experts (4 experts, seed 42, held-out val)
+
+=== expert "sym": 50 train / 10 val (HPTFRTEnvV2) ===
+  [sym] step= 25,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 1min
+  [sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 2min
+  [sym] step= 75,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 3min
+  [sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 5min
+  [sym] step=125,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 6min
+  [sym] step=150,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 7min
+  [sym] step=175,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 8min
+  [sym] step=200,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 9min
+  [sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 11min
+  [sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 12min
+  [sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 13min
+  [sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 14min
+
+=== expert "asym": 140 train / 40 val (HPTFRTEnvV2) ===
+  [asym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 1min
+  [asym] step= 50,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [asym] step= 75,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 4min
+  [asym] step=100,000 proxy=52% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail19 unev0] (con=100 rea=44 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [asym] step=125,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=43 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 7min
+  [asym] step=150,000 proxy=62% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail15 unev0] (con=100 rea=40 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [asym] step=175,000 proxy=68% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail13 unev0] (con=100 rea=44 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [asym] step=200,000 proxy=72% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail11 unev0] (con=100 rea=48 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 12min
+  [asym] step=225,000 proxy=80% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail8 unev0] (con=100 rea=68 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [asym] step=250,000 proxy=80% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail8 unev0] (con=100 rea=65 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+  [asym] step=275,000 proxy=60% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail16 unev0] (con=100 rea=38 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 17min
+  [asym] step=300,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=9 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 18min
+
+=== expert "hvrt_sym": 30 train / 10 val (HPTFRTEnvV2) ===
+  [hvrt_sym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 1min
+  [hvrt_sym] step= 50,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 4min
+  [hvrt_sym] step= 75,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 7min
+  [hvrt_sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 10min
+  [hvrt_sym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 13min
+  [hvrt_sym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 15min
+  [hvrt_sym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 18min
+  [hvrt_sym] step=200,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 21min
+  [hvrt_sym] step=225,000 proxy=80% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail2 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 24min
+  [hvrt_sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 27min
+  [hvrt_sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 29min
+  [hvrt_sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 32min
+
+=== expert "hvrt_asym": 30 train / 10 val (HPTFRTEnvV2) ===
+  [hvrt_asym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [hvrt_asym] step= 50,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 5min
+  [hvrt_asym] step= 75,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [hvrt_asym] step=100,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 7min
+  [hvrt_asym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [hvrt_asym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [hvrt_asym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 11min
+  [hvrt_asym] step=200,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [hvrt_asym] step=225,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+  [hvrt_asym] step=250,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 16min
+  [hvrt_asym] step=275,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 17min
+  [hvrt_asym] step=300,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 19min
+
+ALL EXPERTS DONE: {'_metadata': {'metrics_version': 'frt-v2', 'env_contract': 'frt-v2', 'env_class': 'HPTFRTEnvV2', 'observation_dim': 20, 'action_dim': 3, 'seed': 42, 'scenario_split': 'per-expert filter (no OOD split; P5)', 'legacy_run': False, 'training_status': 'ODE-proxy training; Simulink frt-v2 certification (P1/full-320) PENDING (proxy is NOT a certified pass rate)'}, 'sym': 0.0, 'asym': 100.0, 'hvrt_sym': 100.0, 'hvrt_asym': 100.0}
+>>> [2/3] train_seeds (4 experts x {7,123,2024,31} + single-SAC ablation, held-out val)
+
+=== sd_7_sym (seed 7): 50 train / 10 val (HPTFRTEnvV2) ===
+  [sd_7_sym] step= 25,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0% 1min
+  [sd_7_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0% 3min
+  [sd_7_sym] step= 75,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0% 4min
+  [sd_7_sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 5min
+  [sd_7_sym] step=125,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 6min
+  [sd_7_sym] step=150,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 8min
+  [sd_7_sym] step=175,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 9min
+  [sd_7_sym] step=200,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 10min
+  [sd_7_sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 12min
+  [sd_7_sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 13min
+  [sd_7_sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 15min
+  [sd_7_sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 19min
+
+=== sd_7_asym (seed 7): 140 train / 40 val (HPTFRTEnvV2) ===
+  [sd_7_asym] step= 25,000 proxy=98% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail1 unev0] (con=100 rea=86 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=98% 3min
+  [sd_7_asym] step= 50,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 7min
+  [sd_7_asym] step= 75,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [sd_7_asym] step=100,000 proxy=42% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail23 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [sd_7_asym] step=125,000 proxy=20% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail32 unev0] (con=90 rea=11 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 17min
+  [sd_7_asym] step=150,000 proxy=12% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail35 unev0] (con=88 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 20min
+  [sd_7_asym] step=175,000 proxy=18% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail33 unev0] (con=100 rea=11 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 23min
+  [sd_7_asym] step=200,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 26min
+  [sd_7_asym] step=225,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 29min
+  [sd_7_asym] step=250,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 32min
+  [sd_7_asym] step=275,000 proxy=0% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail40 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 35min
+  [sd_7_asym] step=300,000 proxy=8% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail37 unev0] (con=100 rea=5 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 38min
+
+=== sd_7_hvrt_sym (seed 7): 30 train / 10 val (HPTFRTEnvV2) ===
+  [sd_7_hvrt_sym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_7_hvrt_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 5min
+  [sd_7_hvrt_sym] step= 75,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 8min
+  [sd_7_hvrt_sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 11min
+  [sd_7_hvrt_sym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 13min
+  [sd_7_hvrt_sym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 16min
+  [sd_7_hvrt_sym] step=175,000 proxy=40% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail6 unev0] (con=100 rea=40 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 19min
+  [sd_7_hvrt_sym] step=200,000 proxy=30% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail7 unev0] (con=100 rea=30 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 21min
+  [sd_7_hvrt_sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 24min
+  [sd_7_hvrt_sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 27min
+  [sd_7_hvrt_sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 29min
+  [sd_7_hvrt_sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 32min
+
+=== sd_7_hvrt_asym (seed 7): 30 train / 10 val (HPTFRTEnvV2) ===
+  [sd_7_hvrt_asym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_7_hvrt_asym] step= 50,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_7_hvrt_asym] step= 75,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 8min
+  [sd_7_hvrt_asym] step=100,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 11min
+  [sd_7_hvrt_asym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_7_hvrt_asym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 17min
+  [sd_7_hvrt_asym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 20min
+  [sd_7_hvrt_asym] step=200,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 23min
+  [sd_7_hvrt_asym] step=225,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 25min
+  [sd_7_hvrt_asym] step=250,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 26min
+  [sd_7_hvrt_asym] step=275,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 28min
+  [sd_7_hvrt_asym] step=300,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 29min
+
+=== sd_123_sym (seed 123): 50 train / 10 val (HPTFRTEnvV2) ===
+  [sd_123_sym] step= 25,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 1min
+  [sd_123_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 2min
+  [sd_123_sym] step= 75,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 4min
+  [sd_123_sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 5min
+  [sd_123_sym] step=125,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 6min
+  [sd_123_sym] step=150,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 7min
+  [sd_123_sym] step=175,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 9min
+  [sd_123_sym] step=200,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 10min
+  [sd_123_sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 11min
+  [sd_123_sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 12min
+  [sd_123_sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 13min
+  [sd_123_sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 15min
+
+=== sd_123_asym (seed 123): 140 train / 40 val (HPTFRTEnvV2) ===
+  [sd_123_asym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 1min
+  [sd_123_asym] step= 50,000 proxy=88% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail5 unev0] (con=100 rea=58 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_123_asym] step= 75,000 proxy=55% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail18 unev0] (con=100 rea=22 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 4min
+  [sd_123_asym] step=100,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 5min
+  [sd_123_asym] step=125,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 7min
+  [sd_123_asym] step=150,000 proxy=2% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail39 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 8min
+  [sd_123_asym] step=175,000 proxy=2% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail39 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_123_asym] step=200,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=23 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [sd_123_asym] step=225,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=23 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_123_asym] step=250,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [sd_123_asym] step=275,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_123_asym] step=300,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 16min
+
+=== sd_123_hvrt_sym (seed 123): 30 train / 10 val (HPTFRTEnvV2) ===
+  [sd_123_hvrt_sym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 1min
+  [sd_123_hvrt_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 2min
+  [sd_123_hvrt_sym] step= 75,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 4min
+  [sd_123_hvrt_sym] step=100,000 proxy=70% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail3 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 5min
+  [sd_123_hvrt_sym] step=125,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_123_hvrt_sym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 7min
+  [sd_123_hvrt_sym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_123_hvrt_sym] step=200,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 10min
+  [sd_123_hvrt_sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 11min
+  [sd_123_hvrt_sym] step=250,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_123_hvrt_sym] step=275,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_123_hvrt_sym] step=300,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 15min
+
+=== sd_123_hvrt_asym (seed 123): 30 train / 10 val (HPTFRTEnvV2) ===
+  [sd_123_hvrt_asym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 1min
+  [sd_123_hvrt_asym] step= 50,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 2min
+  [sd_123_hvrt_asym] step= 75,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 4min
+  [sd_123_hvrt_asym] step=100,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 5min
+  [sd_123_hvrt_asym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_123_hvrt_asym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 7min
+  [sd_123_hvrt_asym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_123_hvrt_asym] step=200,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [sd_123_hvrt_asym] step=225,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 11min
+  [sd_123_hvrt_asym] step=250,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [sd_123_hvrt_asym] step=275,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_123_hvrt_asym] step=300,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+
+=== sd_2024_sym (seed 2024): 50 train / 10 val (HPTFRTEnvV2) ===
+  [sd_2024_sym] step= 25,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 1min
+  [sd_2024_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 2min
+  [sd_2024_sym] step= 75,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 4min
+  [sd_2024_sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 5min
+  [sd_2024_sym] step=125,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 6min
+  [sd_2024_sym] step=150,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 7min
+  [sd_2024_sym] step=175,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 9min
+  [sd_2024_sym] step=200,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 10min
+  [sd_2024_sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 11min
+  [sd_2024_sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 12min
+  [sd_2024_sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 13min
+  [sd_2024_sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=0% 15min
+
+=== sd_2024_asym (seed 2024): 140 train / 40 val (HPTFRTEnvV2) ===
+  [sd_2024_asym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 1min
+  [sd_2024_asym] step= 50,000 proxy=75% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail10 unev0] (con=100 rea=67 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_2024_asym] step= 75,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 4min
+  [sd_2024_asym] step=100,000 proxy=58% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail17 unev0] (con=100 rea=50 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 5min
+  [sd_2024_asym] step=125,000 proxy=75% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail10 unev0] (con=100 rea=69 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 7min
+  [sd_2024_asym] step=150,000 proxy=80% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail8 unev0] (con=100 rea=73 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 8min
+  [sd_2024_asym] step=175,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=43 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_2024_asym] step=200,000 proxy=60% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail16 unev0] (con=100 rea=45 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [sd_2024_asym] step=225,000 proxy=60% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail16 unev0] (con=100 rea=38 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_2024_asym] step=250,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [sd_2024_asym] step=275,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_2024_asym] step=300,000 proxy=42% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail23 unev0] (con=100 rea=30 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+
+=== sd_2024_hvrt_sym (seed 2024): 30 train / 10 val (HPTFRTEnvV2) ===
+  [sd_2024_hvrt_sym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 1min
+  [sd_2024_hvrt_sym] step= 50,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_2024_hvrt_sym] step= 75,000 proxy=90% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail1 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 4min
+  [sd_2024_hvrt_sym] step=100,000 proxy=30% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail7 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 5min
+  [sd_2024_hvrt_sym] step=125,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_2024_hvrt_sym] step=150,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 8min
+  [sd_2024_hvrt_sym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_2024_hvrt_sym] step=200,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 10min
+  [sd_2024_hvrt_sym] step=225,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_2024_hvrt_sym] step=250,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 13min
+  [sd_2024_hvrt_sym] step=275,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_2024_hvrt_sym] step=300,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 16min
+
+=== sd_2024_hvrt_asym (seed 2024): 30 train / 10 val (HPTFRTEnvV2) ===
+  [sd_2024_hvrt_asym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 1min
+  [sd_2024_hvrt_asym] step= 50,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_2024_hvrt_asym] step= 75,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 4min
+  [sd_2024_hvrt_asym] step=100,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 5min
+  [sd_2024_hvrt_asym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_2024_hvrt_asym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 8min
+  [sd_2024_hvrt_asym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_2024_hvrt_asym] step=200,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [sd_2024_hvrt_asym] step=225,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 12min
+  [sd_2024_hvrt_asym] step=250,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [sd_2024_hvrt_asym] step=275,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_2024_hvrt_asym] step=300,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+
+=== sd_31_sym (seed 31): 50 train / 10 val (HPTFRTEnvV2) ===
+  [sd_31_sym] step= 25,000 proxy=60% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail4 unev0] (con=100 rea=60 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=60% 1min
+  [sd_31_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 2min
+  [sd_31_sym] step= 75,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 4min
+  [sd_31_sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 5min
+  [sd_31_sym] step=125,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 6min
+  [sd_31_sym] step=150,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 7min
+  [sd_31_sym] step=175,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 9min
+  [sd_31_sym] step=200,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 10min
+  [sd_31_sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 11min
+  [sd_31_sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=n/e lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 13min
+  [sd_31_sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 14min
+  [sd_31_sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=0 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=60% 16min
+
+=== sd_31_asym (seed 31): 140 train / 40 val (HPTFRTEnvV2) ===
+  [sd_31_asym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 2min
+  [sd_31_asym] step= 50,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=43 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_31_asym] step= 75,000 proxy=52% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail19 unev0] (con=100 rea=44 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 4min
+  [sd_31_asym] step=100,000 proxy=72% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail11 unev0] (con=100 rea=62 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_31_asym] step=125,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=31 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 7min
+  [sd_31_asym] step=150,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=38 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_31_asym] step=175,000 proxy=80% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail8 unev0] (con=100 rea=65 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 10min
+  [sd_31_asym] step=200,000 proxy=95% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail2 unev0] (con=100 rea=92 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 11min
+  [sd_31_asym] step=225,000 proxy=98% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail1 unev0] (con=100 rea=96 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 13min
+  [sd_31_asym] step=250,000 proxy=88% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail5 unev0] (con=100 rea=79 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_31_asym] step=275,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=6 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 15min
+  [sd_31_asym] step=300,000 proxy=68% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail13 unev0] (con=100 rea=54 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 16min
+
+=== sd_31_hvrt_sym (seed 31): 30 train / 10 val (HPTFRTEnvV2) ===
+  [sd_31_hvrt_sym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 1min
+  [sd_31_hvrt_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 2min
+  [sd_31_hvrt_sym] step= 75,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 4min
+  [sd_31_hvrt_sym] step=100,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 5min
+  [sd_31_hvrt_sym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 6min
+  [sd_31_hvrt_sym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 8min
+  [sd_31_hvrt_sym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 9min
+  [sd_31_hvrt_sym] step=200,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 11min
+  [sd_31_hvrt_sym] step=225,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_31_hvrt_sym] step=250,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 17min
+  [sd_31_hvrt_sym] step=275,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=100 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 19min
+  [sd_31_hvrt_sym] step=300,000 proxy=80% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail2 unev0] (con=100 rea=80 lim=n/e rec=n/e sur=n/e) [frt-v2] best_proxy=100% 22min
+
+=== sd_31_hvrt_asym (seed 31): 30 train / 10 val (HPTFRTEnvV2) ===
+  [sd_31_hvrt_asym] step= 25,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 3min
+  [sd_31_hvrt_asym] step= 50,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 5min
+  [sd_31_hvrt_asym] step= 75,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 8min
+  [sd_31_hvrt_asym] step=100,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 11min
+  [sd_31_hvrt_asym] step=125,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 14min
+  [sd_31_hvrt_asym] step=150,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 16min
+  [sd_31_hvrt_asym] step=175,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 19min
+  [sd_31_hvrt_asym] step=200,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 22min
+  [sd_31_hvrt_asym] step=225,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 25min
+  [sd_31_hvrt_asym] step=250,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 28min
+  [sd_31_hvrt_asym] step=275,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 31min
+  [sd_31_hvrt_asym] step=300,000 proxy=100% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail0 unev0] (con=100 rea=n/e lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100% 34min
+
+=== ablation_single (seed 42): 260 train / 60 val (HPTFRTEnvV2) ===
+  [ablation_single] step= 25,000 proxy=40% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail36 unev0] (con=83 rea=18 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=40% 3min
+  [ablation_single] step= 50,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=83 rea=27 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=40% 6min
+  [ablation_single] step= 75,000 proxy=50% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail30 unev0] (con=67 rea=44 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50% 9min
+  [ablation_single] step=100,000 proxy=50% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail30 unev0] (con=67 rea=44 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50% 12min
+  [ablation_single] step=125,000 proxy=20% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail48 unev0] (con=83 rea=9 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50% 16min
+  [ablation_single] step=150,000 proxy=37% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail38 unev0] (con=83 rea=22 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50% 19min
+  [ablation_single] step=175,000 proxy=3% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail58 unev0] (con=83 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50% 22min
+  [ablation_single] step=200,000 proxy=18% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail49 unev0] (con=83 rea=9 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50% 26min
+  [ablation_single] step=225,000 proxy=50% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail30 unev0] (con=83 rea=35 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50% 29min
+  [ablation_single] step=250,000 proxy=20% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail48 unev0] (con=83 rea=9 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50% 32min
+  [ablation_single] step=275,000 proxy=43% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail34 unev0] (con=83 rea=31 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=50% 35min
+  [ablation_single] step=300,000 proxy=53% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail28 unev0] (con=83 rea=26 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=53% 38min
+
+SEEDS+ABLATION DONE: {'_metadata': {'metrics_version': 'frt-v2', 'env_contract': 'frt-v2', 'env_class': 'HPTFRTEnvV2', 'observation_dim': 20, 'action_dim': 3, 'seed': 'multi[7, 31, 42, 123, 2024]', 'scenario_split': 'per-expert + single-all-320 ablation (P5)', 'legacy_run': False, 'training_status': 'ODE-proxy training; Simulink frt-v2 certification (P1/full-320) PENDING (proxy is NOT a certified pass rate)', 'seeds': [7, 31, 42, 123, 2024], 'n_seeds': 5}, 'sd7/sym': 0.0, 'sd7/asym': 100.0, 'sd7/hvrt_sym': 100.0, 'sd7/hvrt_asym': 100.0, 'sd123/sym': 0.0, 'sd123/asym': 100.0, 'sd123/hvrt_sym': 100.0, 'sd123/hvrt_asym': 100.0, 'sd2024/sym': 0.0, 'sd2024/asym': 100.0, 'sd2024/hvrt_sym': 100.0, 'sd2024/hvrt_asym': 100.0, 'sd31/sym': 60.0, 'sd31/asym': 100.0, 'sd31/hvrt_sym': 100.0, 'sd31/hvrt_asym': 100.0, 'ablation_single': 53.3}
+>>> [3/3] train_residual (residual SAC, seed 42, held-out val)
+=== residual-SAC: 260 train / 60 val (HPTFRTResidualEnvV2) === {'metrics_version': 'frt-v2', 'env_contract': 'frt-v2', 'env_class': 'HPTFRTResidualEnvV2', 'observation_dim': 20, 'action_dim': 3, 'seed': 42, 'scenario_split': 'held-out family split: 260 train / 60 val (#7)', 'legacy_run': False, 'training_status': 'ODE-proxy training; Simulink frt-v2 certification (P1/full-320) PENDING (proxy is NOT a certified pass rate)'}
+  [res] step= 25,000 proxy=83% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail10 unev0] (con=100 rea=71 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=67% best_proxy=83/67% 4min
+  [res] step= 50,000 proxy=83% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail10 unev0] (con=100 rea=71 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=83% best_proxy=83/83% 8min
+  [res] step= 75,000 proxy=83% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail10 unev0] (con=100 rea=71 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=83% best_proxy=83/83% 12min
+  [res] step=100,000 proxy=33% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail40 unev0] (con=100 rea=22 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=83% best_proxy=83/83% 15min
+  [res] step=125,000 proxy=67% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail20 unev0] (con=100 rea=54 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=83% best_proxy=83/83% 19min
+  [res] step=150,000 proxy=67% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail20 unev0] (con=100 rea=47 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=83% best_proxy=83/83% 23min
+  [res] step=175,000 proxy=58% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail25 unev0] (con=100 rea=42 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=67% best_proxy=83/83% 27min
+  [res] step=200,000 proxy=83% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail10 unev0] (con=100 rea=74 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=67% best_proxy=83/83% 31min
+  [res] step=225,000 proxy=83% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail10 unev0] (con=100 rea=74 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=67% best_proxy=83/83% 35min
+  [res] step=250,000 proxy=67% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail20 unev0] (con=100 rea=54 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=83% best_proxy=83/83% 38min
+  [res] step=275,000 proxy=83% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail10 unev0] (con=100 rea=74 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=67% best_proxy=83/83% 42min
+  [res] step=300,000 proxy=100% frt_pass=n/a [req60 ok60 cmpl0 incmpl60 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] EMA_proxy=83% best_proxy=100/83% 45min
+RESIDUAL DONE best=100.0 ema=83.3
+
+>>> RE-EXPORT frt-v2 weights (single + 4 experts + residual) for Simulink/network
+promoted ablation_single_best.zip -> sac_frt_best.zip / sac_frt_final.zip (Mode 3 frt-v2)
+exported sac_frt_best.zip: n_obs=20 n_act=3 (frt-v2) -> E:\research_space\Hybrid-power-transformer\lab\sac_actor_weights.mat
+exported sac_sym_best.zip: n_obs=20 n_act=3 (frt-v2) -> E:\research_space\Hybrid-power-transformer\lab\sac_sym_weights.mat
+exported sac_asym_best.zip: n_obs=20 n_act=3 (frt-v2) -> E:\research_space\Hybrid-power-transformer\lab\sac_asym_weights.mat
+exported sac_hvrt_sym_best.zip: n_obs=20 n_act=3 (frt-v2) -> E:\research_space\Hybrid-power-transformer\lab\sac_hvrt_sym_weights.mat
+exported sac_hvrt_asym_best.zip: n_obs=20 n_act=3 (frt-v2) -> E:\research_space\Hybrid-power-transformer\lab\sac_hvrt_asym_weights.mat
+done ¡ª exported 4 expert weight files (frt-v2 20/3)
+exported sac_residual_best.zip: n_obs=20 n_act=3 (frt-v2) -> lab/sac_residual_weights.mat
+
+=== P3 RE-SWEEP DONE Mon Jun 22 20:41:49     2026 ===

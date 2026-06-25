@@ -1,0 +1,3 @@
+fault_bus,fault_type,r_fault,hpt_node,recovery,Vp_min,Vn_max,Vdc_min,iq_at_min,se_d_at_min,se_q_at_min,gate_at_min,iq_term,se_d_term,se_q_term,dominant_driver,series_overstrong,symmetric,slow_recovery,gate_switch_triggered,vdc_min_safetyproj,safetyproj_fixes,se_proj_max
+14,sym3ph,0.5,14,instant,0.044,0.0,0.749,0.27,0.041,-0.2,sym,0.072,0.079,0.1,se_q_term,False,True,False,False,0.803,1,0.04
+14,sym3ph,0.5,14,slow,0.044,0.0,0.749,0.27,0.041,-0.2,sym,0.072,0.079,0.1,se_q_term,False,True,True,False,0.785,1,0.04

@@ -1,0 +1,15 @@
+
+=== sd_7_sym (seed 7): 50 train / 10 val (HPTFRTEnvV2) run=p3par_20260623_015450 ===
+  [sd_7_sym] step= 25,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0%@25000 3min
+  [sd_7_sym] step= 50,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0%@25000 7min
+  [sd_7_sym] step= 75,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=0%@25000 11min
+  [sd_7_sym] step=100,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=60 sur=n/e) [frt-v2] best_proxy=0%@25000 14min
+  [sd_7_sym] step=125,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=0%@25000 18min
+  [sd_7_sym] step=150,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=50 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=0%@25000 21min
+  [sd_7_sym] step=175,000 proxy=20% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail8 unev0] (con=100 rea=11 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=20%@175000 25min
+  [sd_7_sym] step=200,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=20%@175000 29min
+  [sd_7_sym] step=225,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=20%@175000 32min
+  [sd_7_sym] step=250,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=20%@175000 36min
+  [sd_7_sym] step=275,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=22 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=20%@175000 40min
+  [sd_7_sym] step=300,000 proxy=0% frt_pass=n/a [req10 ok10 cmpl0 incmpl10 fail10 unev0] (con=100 rea=0 lim=n/e rec=0 sur=n/e) [frt-v2] best_proxy=20%@175000 48min
+JOB DONE kind=seed_expert name=sym seed=7 -> 20.0

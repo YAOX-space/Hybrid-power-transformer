@@ -1,0 +1,40 @@
+Dual-HPT + DC-interlink + dual mode-14 SAC (STAGE 3, full switching closed loop)
+Model: hpt_dual_hpt_sac (build_dual_hpt_sac.m) | Ts=20us | ode23tb
+Each HPT: LV 3-phase source (sag-scaled) -> node X -> 3x series-injection Tse in line -> node Y
+(protected load) ; shunt IGBT VSC taps X -> shared 2200uF DC bus <- series IGBT VSC -> Tse.
+Both HPTs run the REAL mode-14 residual SAC HLC (MPC prior + residual net, coder.load weights,
+asym iq cap). DC buses linked by Rlink + current meas. Single system ground, floating-Y sources.
+SEg = allocator-granted series-budget multiplier (1 = raw single-device SAC cap; >1 = cluster
+budget granted by the Section-5 allocator). HPT-B = healthy donor (sag 1.0, SEg=1).
+
+=== Finding 1: raw SAC -> pool idle (HPT-A sym sag, SEg=1) ===
+sag    Vy_SOLO  Vy_POOL  Vdc_SOLO Vdc_POOL  dVy
+0.30   0.354    0.353    1.007    0.996     -0.1pp
+0.20   0.250    0.249    1.018    0.996     -0.1pp
+0.12   0.169    0.169    0.997    0.996     +0.0pp
+The mode-14 SAC self-limits series boost to its single-device DC budget (~0.06 pu via (0.18-sgi)/1.9)
+and reactive injection does not drain DC -> the single-HPT DC bus stays ~1.0 pu even at sag 0.12 ->
+NOTHING for the pool to relieve. Neither SAC is pool-aware (never requests the shared resource),
+so dropping a DC link under two unmodified SACs changes load voltage by ~0 pp. (This is exactly why
+Section-5's HARDWARE pool alone is only +4.0 pp; the budget-aware SAC rarely drives a unit into deficit.)
+
+=== Finding 2: pool + allocator -> the synthesis (HPT-A sym sag 0.30) ===
+config                    Vy_A(pu)  Vdc_A(pu)  Ilink(A)
+raw SAC (G=1), SOLO       0.354     1.007        0.0
+raw SAC (G=1), POOLED     0.353     0.996       -7.6
+allocator G=5, SOLO       0.418     0.827       -0.0
+allocator G=5, POOLED     0.458     0.987      -27.3
+When the allocator GRANTS HPT-A extra series budget (G=5, pushing boost toward the 0.2 pu device
+rating), A now wants a big boost: SOLO it must source the DC itself -> the sag-limited shunt cannot,
+Vdc_A is dragged to 0.827 (below the 0.84 throttle, stressed). POOLED, healthy B feeds 27 A (~22 kW)
+through the DC link -> Vdc_A held at 0.987 -> the granted boost is SUSTAINED -> load voltage Vy_A
+rises 0.418 -> 0.458 (and Vdc health +16 pp). This is Section-5's value chain (hardware pool +4.0 +
+allocation intelligence +4.7) realized at the REAL switching level, and it pinpoints the mechanism:
+the allocator's role is to raise the per-device cap so the pool can be drawn on; the raw SAC will
+not exploit the pool by itself.
+
+Conclusion: at the real switching level, two HPTs each running the phase-1 SAC confirm BOTH halves
+of the Section-5 story -- (1) the hardware pool alone is marginal because the budget-aware SAC
+self-limits, and (2) a thin decision-layer allocator that raises the cap turns the neighbor's DC
+headroom into sustained deeper voltage support. The SAC's single-unit budget discipline is WHY the
+system layer is a modest hardware lever, not a learning problem -- consistent with the Phase-2 thesis.

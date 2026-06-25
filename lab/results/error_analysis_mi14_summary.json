@@ -1,0 +1,111 @@
+{
+ "analysis": "post-processing of existing MAT/JSON only \u2014 NO training / Simulink / re-run",
+ "metrics_version": "frt-v2",
+ "layer": "switching",
+ "certified_full320": {
+  "residual_SAC_mi14": {
+   "strict_pass_pct": 53.1,
+   "no_fail_effective_pct": 89.4,
+   "fail_pct": 10.6,
+   "true": 170,
+   "false": 34,
+   "none": 116
+  },
+  "dq_mi7": {
+   "strict_pass_pct": 39.7,
+   "no_fail_effective_pct": 68.1,
+   "fail_pct": 31.9,
+   "true": 127,
+   "false": 102,
+   "none": 91
+  }
+ },
+ "note": "strict_pass=all 5 criteria evaluated AND PASS; NOT_EVALUATED never counted as PASS; no-fail/effective is NOT a strict grid-code pass rate.",
+ "n_sac_fail": 34,
+ "fail_by_criterion": {
+  "reactive": 24,
+  "survive": 10
+ },
+ "multi_criterion_fail": {
+  "count": 0,
+  "sids": []
+ },
+ "fail_plus_not_evaluated": {
+  "count": 0,
+  "sids": []
+ },
+ "fail_by_fault_type": {
+  "2ph": 12,
+  "2ph_g": 2,
+  "swell_3ph": 10,
+  "swell_1ph": 10
+ },
+ "fail_by_scr": {
+  "10": 8,
+  "3": 26
+ },
+ "fail_by_category": {
+  "LVRT": 14,
+  "HVRT": 20
+ },
+ "fail_by_Vg_p": {
+  "0.833": 2,
+  "0.875": 12,
+  "1.1": 10,
+  "1.3": 10
+ },
+ "criterion_by_cat_scr": {
+  "reactive": {
+   "LVRT/scr10": 8,
+   "LVRT/scr3": 6,
+   "HVRT/scr3": 10
+  },
+  "survive": {
+   "HVRT/scr3": 10
+  }
+ },
+ "dq_also_fail": {
+  "count": 8,
+  "sids": [
+   161,
+   162,
+   163,
+   166,
+   169,
+   170,
+   224,
+   227
+  ]
+ },
+ "sac_only_fail": {
+  "count": 26,
+  "sids": [
+   171,
+   174,
+   176,
+   178,
+   179,
+   180,
+   271,
+   272,
+   273,
+   274,
+   275,
+   276,
+   277,
+   278,
+   279,
+   280,
+   311,
+   312,
+   313,
+   314,
+   315,
+   316,
+   317,
+   318,
+   319,
+   320
+  ]
+ }
+}

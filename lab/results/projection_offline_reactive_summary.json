@@ -1,0 +1,27 @@
+{
+ "analysis": "OFFLINE static predicate-equivalence check \u2014 post-processing only",
+ "disclaimer": "NO Simulink, NO full-320 re-run, NO result mutation. This checks that the projection would INTERCEPT the wrong-sign condition; it does NOT claim the switching pass rate is fixed (that needs a switching spotcheck of the projected controller). NOT_EVALUATED is never counted as PASS; no-fail/effective is not a strict grid-code pass rate.",
+ "certified_full320_unchanged": {
+  "residual_SAC_mi14": {
+   "strict_pass_pct": 53.1,
+   "no_fail_effective_pct": 89.4,
+   "fail_pct": 10.6,
+   "true": 170,
+   "false": 34,
+   "none": 116
+  }
+ },
+ "n_reactive_fail_scenarios": 24,
+ "n_would_be_intercepted": 24,
+ "intercept_rate": "24/24",
+ "by_region": {
+  "undervolt": 14,
+  "overvolt(boundary-crossing)": 10
+ },
+ "by_fault_type": {
+  "2ph": 12,
+  "2ph_g": 2,
+  "swell_1ph": 10
+ },
+ "survive_cluster_note": "the 10 survive/DC-bus-undershoot FAILs (scr3 + swell_3ph + Vg_p=1.30) are NOT addressed by this reactive projection \u2014 plan only, see the doc."
+}

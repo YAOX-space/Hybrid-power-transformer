@@ -1,0 +1,26 @@
+{
+  "purpose": "small ODE reward-logging retrain \u2014 TRAINING DIAGNOSTICS ONLY",
+  "banner": "ODE training diagnostics only; not certified switching frt-v2 pass rate",
+  "not_a_full320": true,
+  "certified_unchanged": true,
+  "certified_full320": {
+    "residual_SAC_mi14": {
+      "strict": 53.1,
+      "no_fail": 89.4,
+      "fail": 10.6
+    }
+  },
+  "controller": "residual",
+  "env_class": "HPTFRTResidualEnvV2",
+  "observation_dim": 20,
+  "action_dim": 3,
+  "seed": 42,
+  "total_steps": 100000,
+  "eval_freq": 10000,
+  "n_envs": 4,
+  "device": "cpu",
+  "split_seed": 777,
+  "n_train": 260,
+  "n_val": 60,
+  "started_at": "seed42_100k"
+}

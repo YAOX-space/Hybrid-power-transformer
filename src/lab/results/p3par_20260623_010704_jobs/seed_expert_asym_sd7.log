@@ -1,0 +1,31 @@
+
+=== sd_7_asym (seed 7): 140 train / 40 val (HPTFRTEnvV2) run=p3par_20260623_010704 ===
+fatal   : Memory allocation failure
+Traceback (most recent call last):
+  File "C:\Users\m1391\AppData\Local\Programs\Python\Python38\lib\runpy.py", line 194, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "C:\Users\m1391\AppData\Local\Programs\Python\Python38\lib\runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "E:\research_space\Hybrid-power-transformer\src\hpt_frt\device\train_single.py", line 38, in <module>
+    main()
+  File "E:\research_space\Hybrid-power-transformer\src\hpt_frt\device\train_single.py", line 29, in main
+    r = seed_train_one(f'sd_{a.seed}_{a.name}', EXPERTS[a.name], a.seed, total_steps=a.steps)
+  File "E:\research_space\Hybrid-power-transformer\src\hpt_frt\device\train_seeds.py", line 57, in train_one
+    sac.learn(total_timesteps=chunk, reset_num_timesteps=False); step += chunk
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\stable_baselines3\sac\sac.py", line 307, in learn
+    return super().learn(
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\stable_baselines3\common\off_policy_algorithm.py", line 347, in learn
+    self.train(batch_size=self.batch_size, gradient_steps=gradient_steps)
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\stable_baselines3\sac\sac.py", line 280, in train
+    actor_loss.backward()
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\torch\_tensor.py", line 521, in backward
+    torch.autograd.backward(
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\torch\autograd\__init__.py", line 289, in backward
+    _engine_run_backward(
+  File "E:\research_space\Hybrid-power-transformer\.venv\lib\site-packages\torch\autograd\graph.py", line 769, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: CUDA error: unknown error
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+

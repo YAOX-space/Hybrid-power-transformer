@@ -1,0 +1,33 @@
+Dual-HPT DC-interlink pool validation (STAGE 2, REAL switching converters)
+Model: hpt_dual_dcpool_sw (build_dual_dcpool_sw.m) | Ts=20us | ode23tb | Cdc=2200uF init 800V
+Real elements: two 2-level IGBT shunt VSCs (5 kHz SPWM) running the validated PLL + dq current
+loop + Vdc outer loop, each fed from a 400 V 3-phase source scaled by local sag; series boost =
+constant-current DC drain. Two DC buses linked by Rlink + current measurement.
+Scenario: Bus A sag 0.30 + 90 A series drain (~72 kW @800V) | Bus B healthy 1.00, idle.
+(VSC gates soft-enable at t=0.15 s after PLL lock; system has a single ground, AC sources floating Y.)
+
+config            Vdc_A(pu)  Vdc_B(pu)  Ilink(A)   verdict
+no link (solo)      0.00       1.00        0.0      A collapses
+link R=1.0 ohm      0.888      0.965     -61.5      A SURVIVES
+link R=0.5 ohm      0.916      0.957     -65.7      A SURVIVES
+link R=0.1 ohm      0.940      0.949     -69.6      A SURVIVES
+
+Conclusion: the DC-pool transfer holds at the REAL SWITCHING level. Solo, a sagged HPT whose
+shunt VSC is power-limited by the 0.30 pu terminal cannot cover the 72 kW series drain -> Vdc
+collapses. Linked, the healthy HPT's real IGBT VSC supplies ~62-70 A (~50-56 kW) B->A through the
+DC link, holding Vdc_A at 0.89-0.94 pu (survives). This confirms stage-1's calibrated result
+(0.246 solo / 0.914 linked) with real converters, DC ripple, dq control under sag, and genuine
+converter-to-converter electromagnetic coupling -- the fidelity stage-1's current-source model
+abstracted away. Validates Phase-2 report Section 5 (DC pool) and supplies the multi-converter EM
+layer noted as pending for the SAC stress test (Section 7).
+
+Key build lessons (all real bugs found + fixed):
+1. VSC enable while PLL unlocked -> wrong-phase modulation dumps ~350 A, crashes the bus in 5 ms.
+   Fix: soft-enable gates only after t>0.15 s (PLL locked); cap floats at its 800 V init meanwhile.
+2. Grounding DC- with an Yg (earthed) AC source = common-mode short through the bridge -> instant
+   collapse. Fix: float each DC bus (referenced via the AC source through the VSC).
+3. Two Yg AC sources + tied DC- rails = earth loop coupling the two units even when unlinked.
+   Fix: floating-Y AC sources + a SINGLE system ground on the common DC- rail.
+4. Drain current-source sign reversed (injected, blew Vdc to 11 kV); terminals flipped.
+5. Enable gate "Vdc>620" deadlocks under a drain (passive diode level < 620 -> never enables).
+   Fix: time-only enable; active control then regulates Vdc up from the passive level.

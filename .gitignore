@@ -16,12 +16,15 @@ build/
 slprj/
 *.asv
 *.autosave
+*.slxc
+*.slx.r*
 codegen/
 
-# ── OS / editor ─────────────────────────────────────────────────────────────────
+# ── OS / editor / agent tooling ─────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
 .idea/
 .vscode/
+.codex/

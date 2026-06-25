@@ -1,0 +1,32 @@
+"""test_frt_envelope — GB/T LVRT/HVRT envelopes (frt-v2): ONE explicit boundary, no legacy slack."""
+from hpt_frt.common import frt_v2 as F
+
+
+def test_lvrt_lower_boundary_is_exactly_residual_in_hold():
+    res = 0.5
+    assert F.lvrt_lower_env(-0.1, res) == 0.9
+    assert F.lvrt_lower_env(0.1, res) == res          # hold boundary == imposed residual (NOT res-0.05)
+    assert F.lvrt_lower_env(0.4, res) == res
+    mid = F.lvrt_lower_env(1.0, res)
+    assert res < mid < 0.9                            # ramps after the 625 ms hold
+    assert abs(F.lvrt_lower_env(2.0, res) - 0.9) < 1e-9
+
+
+def test_lvrt_boundary_not_residual_minus_007():
+    # frt-v1 effectively used residual-0.07; frt-v2 must NOT (regression guard)
+    res = 0.5
+    assert F.lvrt_lower_env(0.1, res) != res - 0.07
+    assert F.lvrt_lower_env(0.1, res) != res - 0.05
+
+
+def test_hvrt_upper_is_time_varying_not_static_135():
+    assert F.hvrt_upper_env(0.2) == 1.30
+    assert F.hvrt_upper_env(0.8) == 1.20
+    assert F.hvrt_upper_env(2.0) == 1.10
+    assert 1.35 not in {F.hvrt_upper_env(x) for x in (0.0, 0.2, 0.8, 1.5, 3.0)}
+
+
+def test_iq_ref_droop_sign_and_cap():
+    assert F.iq_ref_droop(0.5) > 0 and F.iq_ref_droop(0.0) == 0.30
+    assert F.iq_ref_droop(1.0) == 0.0
+    assert F.iq_ref_droop(1.3) < 0 and F.iq_ref_droop(2.0) == -0.30

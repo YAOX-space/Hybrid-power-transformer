@@ -1,0 +1,15 @@
+
+=== expert "asym": 140 train / 40 val (HPTFRTEnvV2) run=p3par_20260623_015450 ===
+  [asym] step= 25,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 5min
+  [asym] step= 50,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 11min
+  [asym] step= 75,000 proxy=80% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail8 unev0] (con=100 rea=68 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 17min
+  [asym] step=100,000 proxy=50% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail20 unev0] (con=100 rea=20 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 24min
+  [asym] step=125,000 proxy=82% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail7 unev0] (con=100 rea=67 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 30min
+  [asym] step=150,000 proxy=85% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail6 unev0] (con=100 rea=71 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 36min
+  [asym] step=175,000 proxy=75% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail10 unev0] (con=100 rea=54 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 42min
+  [asym] step=200,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 47min
+  [asym] step=225,000 proxy=100% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail0 unev0] (con=100 rea=100 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 52min
+  [asym] step=250,000 proxy=75% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail10 unev0] (con=100 rea=50 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 59min
+  [asym] step=275,000 proxy=25% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail30 unev0] (con=100 rea=0 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 72min
+  [asym] step=300,000 proxy=75% frt_pass=n/a [req40 ok40 cmpl0 incmpl40 fail10 unev0] (con=100 rea=54 lim=n/e rec=100 sur=n/e) [frt-v2] best_proxy=100%@25000 85min
+JOB DONE kind=expert name=asym seed=42 -> 100.0

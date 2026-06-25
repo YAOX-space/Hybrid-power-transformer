@@ -1,0 +1,21 @@
+{
+  "_metadata": {
+    "metrics_version": "frt-v2",
+    "env_contract": "frt-v2",
+    "env_class": "HPTFRTEnvV2",
+    "observation_dim": 20,
+    "action_dim": 3,
+    "seed": 42,
+    "scenario_split": "per-expert filter (no OOD split; P5)",
+    "legacy_run": false,
+    "training_status": "ODE-proxy training; Simulink frt-v2 certification (P1/full-320) PENDING (proxy is NOT a certified pass rate)"
+  },
+  "sym": 0.0,
+  "asym": 100.0,
+  "hvrt_sym": 100.0,
+  "hvrt_asym": 100.0,
+  "_metadata_correction": {
+    "scenario_split_FACT": "the run actually used split_scenarios() held-out FAMILY val (val_frac=0.2); the original _metadata.scenario_split='per-expert filter (no OOD split; P5)' was a stale/incorrect label. Original field preserved.",
+    "original_sha256": "b07999411539766acb900776a25d84b366ee493ee0f113f9d3d107793b27ca11"
+  }
+}

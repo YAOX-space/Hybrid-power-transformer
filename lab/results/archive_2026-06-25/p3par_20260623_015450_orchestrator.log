@@ -1,0 +1,13 @@
+P3 PARALLEL run=p3par_20260623_015450 | 22 jobs | 2 workers | CPU | stagger=5.0s | seeds=[7, 31, 42, 123, 2024] | steps=300000 | logs=E:\research_space\Hybrid-power-transformer\lab\results\p3par_20260623_015450_jobs
+  [ 1/22] expert_sym_sd42                  rc=0   83min
+  [ 2/22] expert_asym_sd42                 rc=0   85min
+  [ 3/22] expert_hvrt_sym_sd42             rc=0   56min
+  [ 4/22] expert_hvrt_asym_sd42            rc=0   55min
+  [ 5/22] seed_expert_sym_sd7              rc=0   48min
+  [ 6/22] seed_expert_asym_sd7             rc=0   53min
+  [ 7/22] seed_expert_hvrt_sym_sd7         rc=0  146min
+  [ 8/22] seed_expert_hvrt_asym_sd7        rc=0  150min
+  [ 9/22] seed_expert_sym_sd123            rc=0  142min
+  [10/22] seed_expert_asym_sd123           rc=0  144min
+  [11/22] seed_expert_hvrt_sym_sd123       rc=0  143min
+  [12/22] seed_expert_hvrt_asym_sd123      rc=0  145min

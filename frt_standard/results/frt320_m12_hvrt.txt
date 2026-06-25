@@ -1,8 +1,0 @@
-
-=== mode 12, hvrt (80 scenarios) ===
-connect    100.0%
-reactive    75.0%
-limit      100.0%
-recover    100.0%
-survive    100.0%
-frt         75.0%

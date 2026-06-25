@@ -1,9 +1,0 @@
-
-=== Full-HPT standard-FRT: SAC vs dq-traditional (60 LVRT scenarios) ===
-criterion       dq      SAC
-connect     100.0%   100.0%
-reactive    100.0%   100.0%
-limit        21.7%   100.0%
-recover     100.0%   100.0%
-survive       0.0%   100.0%
-frt           0.0%   100.0%

@@ -1,0 +1,5 @@
+variant,convergence_pct,oscillation_pct,wrong_sign_scn_pct,frt_pass_pct,survive_pct,reactive_pct,connect_pct,limit_pct,recover_pct,load_strict_pct,load_tol_pct,minV_mean,se_proj_mean,se_proj_max
+A_baseline,90.750,6.250,0.000,90.248,99.945,91.956,98.347,100.000,100.000,38.540,78.292,0.631,0.000,0.000
+B_slew,91.500,2.250,0.000,90.191,99.945,91.885,98.361,100.000,100.000,38.934,78.443,0.630,0.000,0.000
+C_safety,90.750,6.250,0.000,90.248,100.000,91.956,98.292,100.000,100.000,38.540,78.292,0.631,0.025,0.120
+D_hyst_slew,91.500,2.250,0.000,90.191,99.945,91.885,98.361,100.000,100.000,38.934,78.443,0.630,0.000,0.000
