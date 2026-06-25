@@ -52,6 +52,15 @@ MODES = {
             period='dual-rate 20us/2ms', action_dim=3, status='active', main=False,
             internal=14, results='frt320_m14_*', validity='pending-frt-v2', score=None, legacy_frt_v1_score=96.25,  # 308/320
             paper_role='扩展性能方法(非主方法、非纯 SAC)'),
+    7: dict(name='Expert-prior residual SAC', zh='专家先验残差 SAC(纯学习混合)', family='learning',
+            learning=True, model_prior=False, oracle=False, deployable=True,
+            period='2ms', action_dim=3, status='active', main=False,
+            internal=17, results='p3_full320_sw_mi17',
+            # NOTE: validity is the FROZEN governance marker (same convention as certified mi=14/7 which
+            # also read 'pending-frt-v2'); the authoritative frt-v2 numbers live in FRT_V2_RESULTS.
+            validity='pending-frt-v2', score=None,
+            frt_v2_strict=42.5, frt_v2_nofail=82.2,               # 136/57/127 full-320 switching (CERTIFIED 2026-06-25, NEGATIVE result)
+            paper_role='负结果：残差≈0(专家已饱和)，弱于 Mode 6 之 MPC 先验直流管理。见 docs/FRT_V2_RESULTS_2026-06-23.md ADDENDUM'),
 }
 
 # legacy internal HLC integer -> canonical mode (or None if deprecated with no canonical id).

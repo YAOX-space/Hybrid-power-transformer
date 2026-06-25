@@ -109,3 +109,39 @@ natural improvement direction (note the `hvrt_asym` expert is broken — flat +0
 
 Data: `lab/results/p3_full320_switching_summary.json`, `p3_full320_sw_mi{14,7}.mat`,
 `p3_scenario_faultparams.json`, `calib_*.mat`.
+
+---
+
+# ADDENDUM 2026-06-25 — mi=17 (4-expert + residual, pure-learning hybrid) — NEGATIVE RESULT
+
+A new mode (HLC `mi==17`): a single global residual SAC on the online-gated **frozen-expert** prior
+(not the MPC prior), with the always-on wrong-sign reactive clip. Hypothesis: a pure-learning hybrid
+(experts + residual, no analytic MPC) could match or beat Mode 6. **It does not.** Certified full-320
+(switching, same calibrated faults + authoritative `frt_v2_evaluate`):
+
+| Controller | T/F/NE | strict | no-fail | fail | pass\|det | LVRT p\|d | HVRT p\|d |
+|---|---|---|---|---|---|---|---|
+| **mi=17 (experts+residual+clip)** | 136/57/127 | 42.5% | 82.2% | 17.8% | 70.5% | 88.9% | **0.0%** |
+| mi=14 Mode 6 (MPC+residual) | 170/34/116 | **53.1%** | **89.4%** | 10.6% | **83.3%** | 92.0% | 33.3% |
+| mi=7 dq fixed-law | 127/102/91 | 39.7% | 68.1% | 31.9% | 55.5% | 53.8% | 66.7% |
+
+By fault (T/F/NE): sym3ph **43/17/0** (vs Mode6 60/0/0), swell_3ph **0/40/0** (vs 10/10/20),
+swell_1ph **0/0/40** (vs 0/10/30). mi=17 beats dq but loses to Mode 6.
+
+**Findings (three):**
+1. **The residual collapsed to ≈0** (exported EMA act ≈ `[0.036, 0.009, 0.006]`; train best = the
+   *first* eval, more steps only hurt reactive). The 4 experts already saturate the ODE proxy, so a
+   residual on top has no useful gradient — unlike Mode 6's residual on the *weak* MPC prior (+16pp).
+2. **The 4-expert prior is weaker than the analytic MPC prior on the hard DC-survival tail**: deep-sym
+   survive (17 sym fails the experts take, Mode 6's MPC prior holds) and deep swell_3ph (all 40 fail).
+   The MPC law's explicit receding Vdc feedback (`fb=(Vdc−0.80)/0.04`) actively manages the bus — the
+   pure-learning experts have no equivalent, so they undershoot. **This is *why* Mode 6 wins: the MPC
+   prior's DC management, not the residual mechanism.**
+3. **The wrong-sign clip works** — the only win: swell_1ph reactive fails 10 → 0 (now NE).
+
+**Implication:** the pure-learning "experts + residual" route does NOT supersede Mode 6. Mode 6
+(MPC + residual) remains the performance method; Mode 5 (experts) is the pure-learning baseline,
+weak on the DC-survival tail. Verified: codegen + Python↔MATLAB consistency (incl. `resexpert`) + the
+12-case switching gate all PASS. Data: `lab/results/p3_full320_sw_mi17.mat`. Plan/diagnosis:
+`docs/RESIDUAL_EXPERT_PLAN_2026-06-25.md`. **Still open: Mode 5 (mi=12) has no certified frt-v2 score
+(mi=17 ≈ Mode 5 + clip, so Mode 5 ≈ 42.5%/82.2% minus the swell_1ph clip win).**

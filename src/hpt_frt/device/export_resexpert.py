@@ -37,6 +37,17 @@ def main():
          for k, v in sd.items() if 'latent_pi' in k or k.startswith('mu.')}
     W['act_low'] = m.action_space.low.astype('float64')
     W['act_high'] = m.action_space.high.astype('float64')
+    W['n_obs'] = np.array([[20]], 'float64'); W['n_act'] = np.array([[3]], 'float64')
+    W['metrics_version'] = 'frt-v2'
+    # provenance into the MAT (mirror export_sac_actor.export_actor field names exactly — the HLC,
+    # spotcheck and full-320 read run_id / checkpoint_sha256 / etc. from the .mat for traceability).
+    side = json.loads((MODELS / pick).with_suffix('.json').read_text(encoding='utf-8'))
+    W['run_id'] = side['run_id']
+    W['policy_seed'] = np.array([[side['policy_seed']]], 'float64')
+    W['checkpoint_step'] = np.array([[side['checkpoint_step']]], 'float64')
+    W['validation_proxy'] = np.array([[side.get('validation_partial_proxy_pct') or np.nan]], 'float64')
+    W['checkpoint_sha256'] = side['model_sha256']
+    W['checkpoint_kind'] = side['kind']
     rng = np.random.default_rng(0)
     ot = rng.uniform(-1, 1, (4, 20)).astype('float64'); ot[:, 0] = rng.uniform(0.4, 1.2, 4)   # 20-D (frt-v2)
     W['obs_test'] = ot
