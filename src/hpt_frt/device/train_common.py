@@ -12,12 +12,15 @@ import numpy as np
 from .frt_env import HPTFRTEnv
 from .frt_env_v2 import HPTFRTEnvV2, OBS_DIM_V2, N_ACT_V2
 from .residual_env import HPTFRTResidualEnv, HPTFRTResidualEnvV2
+from .residual_expert_env import HPTFRTResidualExpertEnvV2
 from ..common import frt_v2 as FV2
 
-# (default frt-v2 env, legacy env) per family
+# (default frt-v2 env, legacy env) per family. 'residual_expert' is frt-v2 only (no legacy variant);
+# the legacy slot reuses the v2 class so `--legacy` is a harmless no-op rather than a crash.
 ENV_FAMILIES = {
-    'frt':      (HPTFRTEnvV2, HPTFRTEnv),
-    'residual': (HPTFRTResidualEnvV2, HPTFRTResidualEnv),
+    'frt':             (HPTFRTEnvV2, HPTFRTEnv),
+    'residual':        (HPTFRTResidualEnvV2, HPTFRTResidualEnv),
+    'residual_expert': (HPTFRTResidualExpertEnvV2, HPTFRTResidualExpertEnvV2),
 }
 
 

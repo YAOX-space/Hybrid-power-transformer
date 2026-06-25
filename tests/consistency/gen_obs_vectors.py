@@ -17,7 +17,11 @@ MODELS = ROOT / 'data' / 'models'
 # residual -> EMA (that is what export_sac_actor.choose_residual exported to sac_residual_weights.mat)
 POLICIES = {'single': 'sac_frt_best.zip', 'sym': 'sac_sym_best.zip', 'asym': 'sac_asym_best.zip',
             'hvrt_sym': 'sac_hvrt_sym_best.zip', 'hvrt_asym': 'sac_hvrt_asym_best.zip',
-            'residual': 'sac_residual_ema_best.zip'}
+            'residual': 'sac_residual_ema_best.zip',
+            # mi==17 (4-expert + residual hybrid): the gated-expert forwards are already covered above
+            # (sym/asym/hvrt_*); only the residual net's forward needs locking. The mode-level
+            # composition (gate + prior + residual + caps + wrong-sign clip) is verified by spotcheck.
+            'resexpert': 'sac_resexpert_ema_best.zip'}
 
 # (V1, V2n, label) operating points — covers the audit D.1 list
 POINTS = [

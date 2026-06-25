@@ -265,8 +265,8 @@ sprintf('Imax=%.6g; Vnom=%.6g; Iact=%.6g;', p.I_pe_rms, p.VLN_peak, p.I_action_p
 'Vpu=sqrt(Valpha*Valpha+Vbeta*Vbeta)/Vnom;'
 'mi=int32(mode);'
 'proj_en=0; if mi==int32(16); proj_en=1; mi=int32(14); end'   % mode 16 = deployment-side PROJECTED mode-14 (reactive sign dead-band); mode 14 path byte-unchanged
-'if mi==11 || mi==12 || mi==13 || mi==14 || mi==15'
-'    % ===== closed-loop SAC (11=single/Mode3, 12=online-gated 4-expert/Mode5, 15=ORACLE-gated/Mode4 ablation), frt-v2 20-D obs / 3-D action / de-privileged online detector ====='
+'if mi==11 || mi==12 || mi==13 || mi==14 || mi==15 || mi==17'
+'    % ===== closed-loop SAC (11=single/Mode3, 12=online-gated 4-expert/Mode5, 15=ORACLE-gated/Mode4 ablation, 17=4-expert+residual hybrid), frt-v2 20-D obs / 3-D action / de-privileged online detector ====='
 '    NB=250;'
 '    Vad=ba(bi); Vbd=bb(bi); ba(bi)=Valpha; bb(bi)=Vbeta; bi=bi+1; if bi>NB; bi=1; end'
 '    V1a=0.5*(Valpha-Vbd); V1b=0.5*(Vbeta+Vad);'
@@ -274,7 +274,7 @@ sprintf('Imax=%.6g; Vnom=%.6g; Iact=%.6g;', p.I_pe_rms, p.VLN_peak, p.I_action_p
 '    V2p=sqrt(V1a*V1a+V1b*V1b)/Vnom; V2n=sqrt(V2a*V2a+V2b*V2b)/Vnom;'
 '    af=0.005; vpf=vpf+af*(V2p-vpf); vnf=vnf+af*(V2n-vnf); V2p=vpf; V2n=vnf;'   % match ODE TAU_V2 smoothing -> kill ripple-driven chatter
 '    fc=fclass;'
-'    if mi==11 || mi==12 || mi==13 || mi==14'   % DE-PRIVILEGED online fault class from measured (V2p,V2n)
+'    if mi==11 || mi==12 || mi==13 || mi==14 || mi==17'   % DE-PRIVILEGED online fault class from measured (V2p,V2n)
 '        if V2p>1.1; fc=5; elseif V2n>0.05; fc=2; else; fc=1; end'   % mi==15 = ORACLE keeps true fclass (ablation)
 '    end'
 '    piq=0; pmb=0;'   % mode-14 MPC prior (recomputed every 20us from filtered V2p + measured Vdc)
@@ -331,7 +331,18 @@ sprintf('Imax=%.6g; Vnom=%.6g; Iact=%.6g;', p.I_pe_rms, p.VLN_peak, p.I_action_p
 '    alo=reshape(W.act_low,3,1); ahi=reshape(W.act_high,3,1);'
 '    h=max(0, W0*obs + b0); h=max(0, W2*h + b2); h=max(0, W4*h + b4);'
 '    mu=Wm*h + bm; at=tanh(mu); act=alo + 0.5*(at+1).*(ahi-alo);'
-'    if (mi==12 || mi==13 || mi==14 || mi==15) && V2p>=0.9 && V2p<=1.1 && infault<0.5; act=zeros(3,1); end'   % normal: hold
+'    if mi==17'   % 4-expert+residual: act so far = gated EXPERT prior; add the residual net forward on the SAME obs
+'        Wr=coder.load(''sac_resexpert_weights.mat'');'
+'        r0=reshape(Wr.latent_pi_0_weight,256,20); rb0=reshape(Wr.latent_pi_0_bias,256,1);'
+'        r2=reshape(Wr.latent_pi_2_weight,256,256); rb2=reshape(Wr.latent_pi_2_bias,256,1);'
+'        r4=reshape(Wr.latent_pi_4_weight,256,256); rb4=reshape(Wr.latent_pi_4_bias,256,1);'
+'        rm=reshape(Wr.mu_weight,3,256); rbm=reshape(Wr.mu_bias,3,1);'
+'        rlo=reshape(Wr.act_low,3,1); rhi=reshape(Wr.act_high,3,1);'
+'        hr=max(0, r0*obs + rb0); hr=max(0, r2*hr + rb2); hr=max(0, r4*hr + rb4);'
+'        mur=rm*hr + rbm; atr=tanh(mur); actr=rlo + 0.5*(atr+1).*(rhi-rlo);'
+'        act=act+actr;'   % total = gated expert prior + bounded residual (caps applied below)
+'    end'
+'    if (mi==12 || mi==13 || mi==14 || mi==15 || mi==17) && V2p>=0.9 && V2p<=1.1 && infault<0.5; act=zeros(3,1); end'   % normal: hold
 '    la=act; ahold=act;'
 '    else'
 '    act=ahold;'
@@ -348,6 +359,16 @@ sprintf('Imax=%.6g; Vnom=%.6g; Iact=%.6g;', p.I_pe_rms, p.VLN_peak, p.I_action_p
 '            if V2p>1.1 && a1>1e-3; a1=0; end'
 '        end'
 '        iq_ref=a1*Iact; mse_d=-a2; mse_q=-a3;'   % current base = I_action_peak (audit #3)
+'    elseif mi==17'
+'        % 4-expert+residual hybrid: act = gated expert prior + residual (summed above). Apply the SAME'
+'        % physical caps as mode-14 + the wrong-sign reactive dead-band (ALWAYS on = safety_projection Part-1).'
+'        cap17=0.27; if V2n>0.05 && V2p<0.9; cap17=0.24; end'   % asym-aware iq cap (m14-v1 lesson)
+'        a1=act(1); if a1>cap17; a1=cap17; elseif a1<-cap17; a1=-cap17; end'
+'        a2=act(2); if a2>0.2; a2=0.2; elseif a2<-0.2; a2=-0.2; end'
+'        a3=act(3); if a3>0.2; a3=0.2; elseif a3<-0.2; a3=-0.2; end'
+'        if V2p<0.9 && a1<-1e-3; a1=0; end'   % under-voltage: iq must be >=0 (no absorbing)
+'        if V2p>1.1 && a1>1e-3; a1=0; end'    % over-voltage:  iq must be <=0 (no sourcing)
+'        iq_ref=a1*Iact; mse_d=-a2; mse_q=-a3;'
 '    else'
 '        iq_ref=act(1)*Iact; mse_d=-act(2); mse_q=-act(3);'   % [iq, mse_d, mse_q] x I_action_peak'
 '    end'
