@@ -54,7 +54,8 @@ for n=1:numel(ids)
   rec.prov=struct('mi',mi,'fault_type',m.fault_type,'scr',scr,'Vg_p',m.Vg_p,'fault_param',m.fault_param, ...
                   'target_V_pu',m.target_V_pu,'run_id',run_id,'metrics_version','frt-v2');
   R(end+1)=rec; %#ok<AGROW>
-  save(resfile,'R');                     % incremental save (resume safe)
+  metrics_version='frt-v2'; %#ok<NASGU>  % top-level tag (governance: active result dirs require frt-v2)
+  save(resfile,'R','metrics_version');   % incremental save (resume safe)
   fprintf('mi%d sid%3d %-9s scr%g Vg_p=%.2f | con=%s rea=%s lim=%s rec=%s sur=%s | frt=%s\n', ...
     mi, sid, m.fault_type, scr, m.Vg_p, res.connect.status(1:4),res.reactive.status(1:4),res.limit.status(1:4), ...
     res.recover.status(1:4),res.survive.status(1:4), res.frt_pass_str);

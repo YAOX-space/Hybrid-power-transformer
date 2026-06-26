@@ -53,6 +53,13 @@ SE_GAIN   = 0.47             # series-injection voltage effectiveness (Simulink-
 KP_VDC    = 0.6              # Vdc-restore PI demand gain (pu power per pu Vdc error)
 SE_DRAIN  = 1.0              # series H-bridge DC-drain coefficient (P_se = SE_DRAIN·|V_se|)
 VDC_CHOP  = 1.20             # chopper clamp (matches Simulink Vdc>1.20 bleeder)
+# ── HVRT swell DC-undershoot model (Stage A switching calibration 2026-06-27, lab/results/
+# dc_sweep_grid_s3ph.mat, 60 open-loop points, fit R²≈0.91 / RMSE 0.05). During over-voltage the
+# CONVERTER (not the swell itself) drains the DC bus: reactive ABSORPTION drains it, +series compounds,
+# and ANTI-BOOST (V_se_d<0) protects it — the absorb×series cross term dominates. The LVRT-calibrated
+# sag terms are BLIND here (predict Vdc≈0.98); this map replaces them in the swell regime so the ODE
+# can SEE the swell_3ph survive failure. Conservative: tracks the switching Vdc_min (worst-case).
+SW_C0, SW_AB, SW_SE, SW_X, SW_DEP = 0.839, 0.583, 0.371, 4.028, 0.152
 
 FRT_FAULTS = ['normal', 'sym3ph', '1ph_g', '2ph', '2ph_g', 'swell']  # state fault classes
 F2I = {f: i for i, f in enumerate(FRT_FAULTS)}
@@ -209,7 +216,12 @@ class HPTFRTEnv(gym.Env):
         # at fixed RATED load. So load-independence here is faithful to the authority (not a sim-to-real gap);
         # making it load-dependent is only meaningful if the validator is first changed to vary load (future
         # work, would require re-calibration + re-train + re-validate). See report §5.
-        Vdc_eq = min(VDC_CHOP, max(0.05, 1.0 - sag_iq - sag_se))
+        if Vg_p > 1.1:                                     # HVRT swell: command-driven DC undershoot
+            absb = max(0.0, -i_sh_q)                       # reactive ABSORPTION magnitude (iq<0)
+            Vdc_eq = (SW_C0 - SW_AB*absb - SW_SE*V_se_d - SW_X*absb*V_se_d - SW_DEP*(Vg_p - 1.25))
+            Vdc_eq = min(VDC_CHOP, max(0.05, Vdc_eq))      # swell-regime map (Stage A); LVRT path unchanged
+        else:
+            Vdc_eq = min(VDC_CHOP, max(0.05, 1.0 - sag_iq - sag_se))
         nsub = 10
         hsub = DT / nsub
         for _ in range(nsub):
