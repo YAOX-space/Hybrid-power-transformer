@@ -58,6 +58,14 @@ def evaluate_scenario(model, env_cls, scenario):
     except ValueError as e:
         return {'kind': 'unevaluable', 'error': str(e)}
     res['response'] = _response_of(tr, t_fault, residual)   # SEPARATE 5 ms metric (never in frt_pass)
+    # Vdc-only survival SELECTION signal (audit 2026-06-27): the full `survive` criterion needs I2
+    # (absent in the averaged ODE) so it stays NOT_EVALUATED for CERTIFICATION. But the ODE Vdc IS
+    # informative (esp. after the Stage-A swell extension), so we expose a Vdc-min survival gate for
+    # CHECKPOINT SELECTION only — it de-saturates the proxy so it TRACKS DC-survival improvements
+    # (deep-sym drain / swell anti-boost). NOT a certified criterion; never folded into frt_pass.
+    vdc_min = float(np.min(tr['Vdc'])) if tr['Vdc'].size else 1.0
+    res['vdc_survive_proxy'] = FV2.PASS if vdc_min >= FV2.VDC_LO else FV2.FAIL
+    res['vdc_min'] = vdc_min
     return {'kind': 'evaluated', 'res': res}
 
 
@@ -133,10 +141,13 @@ def evaluate_frt(model, scenarios, env_cls, n_eval=None):
 
     def available_all_pass(res):
         ev = [res[c]['status'] for c in CRITERIA if res[c]['status'] != FV2.NOT_EVALUATED]
-        return bool(ev) and all(s == FV2.PASS for s in ev)
+        vdc_ok = res.get('vdc_survive_proxy', FV2.PASS) == FV2.PASS   # Vdc-survival selection gate (audit 2026-06-27)
+        return bool(ev) and all(s == FV2.PASS for s in ev) and vdc_ok
     # denominator = ALL rolled-out scenarios; unevaluable ones are NOT passes
     n_proxy_pass = sum(1 for r in evaluated if available_all_pass(r))
     out['partial_proxy_pct'] = round(100.0 * n_proxy_pass / n_rolled, 1) if n_rolled else 0.0
+    out['vdc_survive_proxy_pct'] = round(100.0 * np.mean(   # Vdc-min≥0.75 rate (selection visibility)
+        [1.0 if r.get('vdc_survive_proxy') == FV2.PASS else 0.0 for r in evaluated]), 1) if evaluated else None
     # PROXY HONESTY (audit #8): the proxy ignores NOT_EVALUATED criteria, so a high % can mean
     # "the few evaluable criteria passed", NOT "FRT passed". Report how many of the 5 mandatory
     # criteria were actually evaluable per scenario, and FLAG saturation (a proxy resting on < 3/5
@@ -171,7 +182,7 @@ def fmt_summary(m):
         v = m.get(k)
         return 'n/e' if v is None else f'{v:.0f}'
     frt = 'n/a' if m.get('frt_pass_pct') is None else f"{m['frt_pass_pct']:.0f}%"
-    return (f"proxy={m['partial_proxy_pct']:.0f}% frt_pass={frt} "
+    return (f"proxy={m['partial_proxy_pct']:.0f}% vdc_surv={g('vdc_survive_proxy_pct')}% frt_pass={frt} "
             f"[req{m['n_requested']} ok{m['n_rollout_ok']} cmpl{m['n_complete']} "
             f"incmpl{m['n_incomplete']} fail{m['n_decided_fail']} unev{m['n_unevaluable']}] "
             f"(con={g('connect')} rea={g('reactive')} lim={g('limit')} rec={g('recover')} "
