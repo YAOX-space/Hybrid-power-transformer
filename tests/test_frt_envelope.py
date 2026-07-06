@@ -1,4 +1,6 @@
 """test_frt_envelope — GB/T LVRT/HVRT envelopes (frt-v2): ONE explicit boundary, no legacy slack."""
+import numpy as np
+import pytest
 from hpt_frt.common import frt_v2 as F
 
 
@@ -30,3 +32,14 @@ def test_iq_ref_droop_sign_and_cap():
     assert F.iq_ref_droop(0.5) > 0 and F.iq_ref_droop(0.0) == 0.30
     assert F.iq_ref_droop(1.0) == 0.0
     assert F.iq_ref_droop(1.3) < 0 and F.iq_ref_droop(2.0) == -0.30
+
+
+def test_invalid_category_is_rejected_not_treated_as_hvrt():
+    t = np.linspace(0.0, 1.0, 101)
+    x = np.ones_like(t)
+    with pytest.raises(ValueError, match='category'):
+        F.evaluate(t, x, 'TYPO', 0.5, 0.1, 0.2,
+                   Vdc=x, iq=np.zeros_like(t), i_peak=np.zeros_like(t),
+                   idq_mag=np.zeros_like(t), i2=np.zeros_like(t))
+    with pytest.raises(ValueError, match='category'):
+        F.envelope_value('TYPO', 0.0, 0.5)

@@ -1,0 +1,675 @@
+﻿% !TeX program = xelatex
+% -*- coding:utf-8 -*-
+\documentclass[10pt,aspectratio=169,mathserif]{beamer}
+
+\IfFileExists{zju.sty}{\usepackage{zju}}{}
+\usepackage{ctex}
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{color,graphicx,hyperref,url}
+\usepackage{fontspec,xeCJK}
+\usepackage{booktabs,array,multirow}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,fit}
+
+\beamertemplateballitem
+\definecolor{hptblue}{RGB}{0,63,135}
+\definecolor{hptcyan}{RGB}{0,130,155}
+\definecolor{hptorange}{RGB}{205,92,28}
+\definecolor{hptgreen}{RGB}{42,125,82}
+\definecolor{hptgray}{RGB}{95,105,115}
+\definecolor{hptlight}{RGB}{240,245,249}
+\setbeamercolor{alerted text}{fg=hptorange}
+
+\newcommand{\metric}[1]{\textcolor{hptblue}{\textbf{#1}}}
+\newcommand{\warn}[1]{\textcolor{hptorange}{\textbf{#1}}}
+\newcommand{\ok}[1]{\textcolor{hptgreen}{\textbf{#1}}}
+\newcommand{\neval}{\ensuremath{\mathrm{NOT\_EVALUATED}}}
+\newcommand{\pass}{\ensuremath{\mathrm{PASS}}}
+\newcommand{\fail}{\ensuremath{\mathrm{FAIL}}}
+\newcommand{\todo}{\textcolor{hptgray}{\textit{[后续补充]}}}
+
+\title[HPT故障穿越控制]{多端口混合配电变压器故障穿越控制研究进展}
+\subtitle{故障穿越可信评价、控制器谱系对比与主方法认证}
+\author[Yijiang Yao]{姚羿江\\\medskip
+{\small Electrical Engineering and Automation}}
+\institute[ZJU]{浙江大学 \quad ZJU-UIUC Institute}
+\date[June 2026]{2026年6月组会}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{汇报提纲}
+  \tableofcontents
+\end{frame}
+%================================================
+\section{Introduction}
+%================================================
+
+\begin{frame}{研究背景：HPT故障穿越控制问题}
+\begin{columns}[T,onlytextwidth]
+\column{0.53\textwidth}
+\begin{block}{故障期间的控制目标}
+\[
+\boxed{\text{不脱网}}
+\cap
+\boxed{\text{无功支撑}}
+\cap
+\boxed{\text{电流限制}}
+\cap
+\boxed{\text{直流母线生存}}
+\cap
+\boxed{\text{故障后恢复}}
+\]
+\end{block}
+
+\begin{itemize}
+  \item 并联变流器提供无功电流支撑；
+  \item 串联变流器注入补偿电压；
+  \item 两侧通过直流母线耦合，故障穿越受能量约束限制。
+\end{itemize}
+
+\column{0.43\textwidth}
+\begin{block}{研究问题}
+在统一的故障穿越评价下，\textbf{模型预测控制基线、单策略SAC与门控多专家SAC}分别揭示了什么？门控多专家SAC作为主方法的定量优势何在？
+\end{block}
+
+\begin{block}{研究对象}
+\centering
+400 kVA, 10 kV/400 V HPT\\
+120 kVA电力电子端口\\
+共享直流母线
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{研究工作主线}
+\begin{center}
+\begin{tikzpicture}[>=Latex,node distance=0.62cm,every node/.style={font=\small,align=center}]
+\node[draw,rounded corners,fill=hptlight,minimum width=2.1cm,minimum height=0.75cm] (a) {旧结果审计};
+\node[draw,rounded corners,fill=hptcyan!12,right=of a,minimum width=2.1cm,minimum height=0.75cm] (b) {FRT评价链};
+\node[draw,rounded corners,fill=hptgreen!12,right=of b,minimum width=2.1cm,minimum height=0.75cm] (c) {开关级全场景};
+\node[draw,rounded corners,fill=hptorange!12,right=of c,minimum width=2.1cm,minimum height=0.75cm] (d) {失败归因};
+\node[draw,rounded corners,fill=hptlight,right=of d,minimum width=2.1cm,minimum height=0.75cm] (e) {主方法认证};
+\draw[->,thick,hptblue] (a)--(b);
+\draw[->,thick,hptblue] (b)--(c);
+\draw[->,thick,hptblue] (c)--(d);
+\draw[->,thick,hptblue] (d)--(e);
+\end{tikzpicture}
+\end{center}
+
+\begin{block}{研究定位}
+本阶段从增加训练轮次转向构建可复现、可审计、可解释失效机制的评价链。
+\end{block}
+
+\begin{table}
+\centering\small
+\begin{tabular}{lll}
+\toprule
+层级 & 作用 & 当前状态 \\
+\midrule
+ODE训练层 & 快速训练与模型选择 & 多随机种子完成 \\
+Simulink开关层 & FRT可信验证 & 全场景完成 \\
+结果治理层 & 主方法认证归档 & 已完成 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{控制器谱系与本次汇报边界}
+\begin{table}
+\centering\small
+\begin{tabular}{lll}
+\toprule
+控制器 & 控制思想 & 本次角色 \\
+\midrule
+一步显式MPC & 基于简化物理模型的约束优化 & 模型驱动基线 \\
+单策略SAC & 一个策略覆盖全部故障族 & 单策略学习消融 \\
+门控多专家SAC & 在线门控选择LVRT/HVRT专家 & \textbf{本文主方法} \\
+FRT评价器 & 场景级通过/失败判定 & 本次评价口径 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{block}{汇报边界}
+本部分对比三类高层控制器：模型预测控制基线、单策略SAC消融、门控多专家SAC主方法。
+\end{block}
+\end{frame}
+
+%================================================
+\section{Background}
+%================================================
+
+\begin{frame}{HPT拓扑与能量耦合}
+\begin{center}
+\begin{tikzpicture}[>=Latex,node distance=0.62cm and 0.70cm,every node/.style={font=\small,align=center}]
+\node[draw,rounded corners,fill=hptlight,minimum width=1.45cm] (g) {10 kV电网};
+\node[draw,rounded corners,right=of g,minimum width=1.35cm] (f) {故障};
+\node[draw,rounded corners,fill=hptlight,right=of f,minimum width=1.65cm] (t) {主变压器};
+\node[draw,rounded corners,right=of t,minimum width=1.40cm] (s) {串联VSC};
+\node[draw,rounded corners,fill=hptlight,right=of s,minimum width=1.40cm] (l) {负荷};
+\node[draw,rounded corners,below=0.85cm of t,minimum width=1.40cm] (p) {并联VSC};
+\node[draw,rounded corners,fill=hptorange!12,right=0.95cm of p,minimum width=1.45cm] (d) {DC link};
+\draw[->,very thick,hptblue] (g)--(f)--(t)--(s)--(l);
+\draw[<->,thick,hptcyan] (t)--(p);
+\draw[<->,thick,hptorange] (p)--(d)--(s);
+\end{tikzpicture}
+\end{center}
+
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{幅值不变dq功率}
+\[
+P=\frac{3}{2}(v_di_d+v_qi_q),\qquad
+Q=\frac{3}{2}(v_qi_d-v_di_q).
+\]
+\end{block}
+\column{0.48\textwidth}
+\begin{block}{直流母线能量平衡}
+\[
+C_{dc}V_{dc}\dot V_{dc}=P_{sh}-P_{se}-P_{loss}.
+\]
+\end{block}
+\end{columns}
+
+\begin{block}{参考脉络}
+HPT为主变压器与串、并联电力电子端口的协同结构，与UPQC串并联补偿框架同源\cite{song_hpt,fujita_upqc}。
+\end{block}
+\end{frame}
+
+\begin{frame}{故障序分量与无功支撑需求}
+\begin{columns}[T,onlytextwidth]
+\column{0.47\textwidth}
+\begin{block}{Fortescue变换}
+\[
+\begin{bmatrix}V_0\\V_1\\V_2\end{bmatrix}
+=\frac{1}{3}
+\begin{bmatrix}1&1&1\\1&a&a^2\\1&a^2&a\end{bmatrix}
+\begin{bmatrix}V_a\\V_b\\V_c\end{bmatrix},
+\quad a=e^{j2\pi/3}.
+\]
+\[
+\rho_{seq}=\frac{|V_2|}{\max(|V_1|,\epsilon)}.
+\]
+\end{block}
+
+\column{0.49\textwidth}
+\begin{block}{无功电流参考}
+\[
+i_q^\star(V_1)=
+\begin{cases}
+\min\{0.3,1.5(0.9-V_1)\},&V_1<0.9,\\
+\max\{-0.3,-1.5(V_1-1.1)\},&V_1>1.1,\\
+0,&0.9\le V_1\le1.1.
+\end{cases}
+\]
+\end{block}
+\end{columns}
+
+\begin{block}{边界工况}
+$|i_q^\star|$接近零时，微小符号偏差即触发反号失败，是失败归因的重点。
+\end{block}
+\end{frame}
+
+\begin{frame}{FRT评价体系}
+\begin{table}
+\centering\small
+\begin{tabular}{cll}
+\toprule
+编号 & 判据 & 内容 \\
+\midrule
+$C_1$ & connect & $V_1(t)$保持在动态LVRT/HVRT包络内 \\
+$C_2$ & reactive & 响应延迟后满足有符号最小无功支撑 \\
+$C_3$ & limit & 峰值电流与dq合成电流不超过约束 \\
+$C_4$ & recover & 故障后恢复到稳态电压范围 \\
+$C_5$ & survive & $V_{dc}\in[0.75,1.25]$，且$I_2\le3$ pu \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\[
+\mathrm{FRT}=
+\begin{cases}
+\fail,&\exists j:C_j=\fail,\\
+\pass,&\text{否则}.
+\end{cases}
+\]
+
+\medskip
+\centering
+\textbf{口径：}以场景级判定，存在明确失败判据即记失败，否则记通过。
+\end{frame}
+
+%================================================
+\section{Method}
+%================================================
+
+\begin{frame}{SAC控制器与训练设置}
+\begin{columns}[T,onlytextwidth]
+\column{0.50\textwidth}
+\begin{block}{信息约束}
+\[
+\bm o_k\in\mathbb R^{20},\qquad
+\bm a_k=[i_q,m_{se,d},m_{se,q}]^\top\in\mathbb R^3.
+\]
+\[
+t_f,T_f,\text{true label},V_r\notin \mathcal I_k.
+\]
+\end{block}
+
+\begin{block}{SAC目标函数}
+\[
+J_\pi(\theta)=
+\mathbb E[\alpha\log\pi_\theta(a|s)-Q_\phi(s,a)].
+\]
+最大熵目标来自Soft Actor-Critic框架\cite{haarnoja_sac}。
+\end{block}
+
+\column{0.46\textwidth}
+\begin{table}
+\centering\small
+\begin{tabular}{ll}
+\toprule
+项目 & 设置 \\
+\midrule
+Algorithm & SAC \\
+Observation / action & 20 / 3 \\
+Training steps & $3\times10^5$/model \\
+Seeds & 42, 7, 123, 2024, 31 \\
+Evaluation & held-out family split \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{block}{评价口径}
+ODE代理仅用于训练选择，非最终通过率；多种子评价遵循复现性规范\cite{henderson_drl,agarwal_precipice}。
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{三类控制方法的共同闭环结构}
+\begin{center}
+\begin{tikzpicture}[
+  >=Latex,
+  every node/.style={font=\small,align=center},
+  ctrl/.style={draw,rounded corners,fill=hptlight,minimum width=2.55cm,minimum height=0.78cm},
+  alg/.style={draw,rounded corners,fill=hptgreen!12,minimum width=2.75cm,minimum height=0.78cm},
+  exec/.style={draw,rounded corners,fill=hptorange!12,minimum width=2.55cm,minimum height=0.78cm}
+]
+\node[ctrl] (meas) at (0,1.35) {\shortstack{测量与状态估计\\$V_{abc},I_{abc},V_{dc}$}};
+\node[ctrl,fill=hptcyan!12] (det) at (3.25,1.35) {\shortstack{在线故障检测\\序分量/电压包络}};
+\node[alg] (hlc) at (6.65,1.35) {\shortstack{高层策略\\三类控制器}};
+\node[exec] (llc) at (6.65,-0.25) {\shortstack{底层dq电流环\\PWM调制}};
+\node[exec,fill=hptlight] (plant) at (3.25,-0.25) {\shortstack{开关级HPT\\DC link与负荷}};
+\draw[->,thick,hptblue] (meas)--(det);
+\draw[->,thick,hptblue] (det)--(hlc);
+\draw[->,thick,hptblue] (hlc)--node[right,font=\scriptsize] {$\bm a_k$} (llc);
+\draw[->,thick,hptblue] (llc)--(plant);
+\draw[->,thick,hptblue] (plant.west) -- ++(-2.15,0) |- (meas.south);
+\node[font=\scriptsize,text=hptgray] at (3.25,-1.05) {统一被控对象与统一底层执行器};
+\end{tikzpicture}
+\end{center}
+
+\begin{block}{共同点}
+三类方法都不直接控制开关器件，而是在同一套底层控制环上生成高层参考量：
+\[
+\bm a_k=[i_q^\star,m_{se,d}^\star,m_{se,q}^\star]^\top.
+\]
+\end{block}
+
+\medskip
+\textbf{关键理解：}差异不在被控对象，而在高层控制器如何根据故障观测生成$\bm a_k$。
+\end{frame}
+
+\begin{frame}{共同部分一：观测量、动作量与约束}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{在线观测}
+\[
+\bm o_k=
+f(V_{abc},I_{abc},V_{dc},\rho_{seq},\Delta t,\ldots)
+\]
+\begin{itemize}
+  \item 使用可在线测得的电压、电流、直流母线量；
+  \item 不直接输入真实故障类型、故障持续时间和残压标签；
+  \item 序分量用于区分对称与不对称故障特征。
+\end{itemize}
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{统一动作接口}
+\[
+\bm a_k=[i_q^\star,m_{se,d}^\star,m_{se,q}^\star]^\top
+\]
+\begin{itemize}
+  \item $i_q^\star$：并联VSC无功电流参考；
+  \item $m_{se,d}^\star,m_{se,q}^\star$：串联VSC补偿电压调制量；
+  \item 所有策略共享同一个动作限幅与底层执行器。
+\end{itemize}
+\end{block}
+\end{columns}
+
+\begin{block}{共同约束}
+\[
+\bm a_k\in\mathcal A,\qquad
+V_{dc}\in[0.75,1.25],\qquad
+I_2\le 3~\mathrm{pu}.
+\]
+\end{block}
+\end{frame}
+
+\begin{frame}{共同部分二：底层执行与评价链条}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{底层控制器}
+高层策略给出参考量后，底层控制器完成：
+\[
+i_q^\star \rightarrow \text{并联侧dq电流环},
+\]
+\[
+(m_{se,d}^\star,m_{se,q}^\star)
+\rightarrow \text{串联侧电压注入}.
+\]
+因此三类方法的比较是在相同硬件容量、相同底层环和相同评价标准下进行。
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{FRT评价}
+\[
+\mathrm{FRT}=C_1\cap C_2\cap C_3\cap C_4\cap C_5
+\]
+\[
+C_j\in\{\pass,\fail\}.
+\]
+\begin{itemize}
+  \item connect：不脱网；
+  \item reactive：无功支撑方向与幅值；
+  \item limit / recover / survive：电流、恢复和直流母线生存。
+\end{itemize}
+\end{block}
+\end{columns}
+
+\medskip
+\textbf{公平比较原则：}三类控制器只替换高层决策模块，不改变被控对象、底层dq执行器与FRT判据。
+\end{frame}
+
+\begin{frame}{方法一：一步显式MPC（模型基线）}
+\begin{columns}[T,onlytextwidth]
+\column{0.50\textwidth}
+\begin{block}{控制思想}
+\[
+\bm a_{\mathrm{mpc}}=\arg\min_{\bm a\in\mathcal A} J(\bm a),
+\]
+\[
+J=\big\|V_{\mathrm{load}}^{+}-V_{\mathrm{ref}}\big\|_2^2
++\lambda_q i_q^2+\lambda_m\|\bm m_{se}\|_2^2 .
+\]
+\[
+\mathrm{s.t.}\ |i_q|\le I_{\max},\ |\bm m_{se}|\le m_{\max},\ V_{dc}\ge V_{dc,\min}.
+\]
+\end{block}
+
+\column{0.46\textwidth}
+\begin{block}{特点}
+\begin{itemize}
+  \item 无需训练，依赖简化物理模型；
+  \item 联合约束并联无功、串联补偿与DC母线；
+  \item 可解释性强，适合作模型驱动基线；
+  \item 受模型精度与一步预测假设限制。
+\end{itemize}
+\end{block}
+
+\medskip
+\textbf{角色：}回答“仅靠物理模型优化的性能上界”，提供非学习基线。
+\end{columns}
+\end{frame}
+
+\begin{frame}{方法二：单策略SAC控制}
+\begin{columns}[T,onlytextwidth]
+\column{0.52\textwidth}
+\begin{block}{策略形式}
+\[
+\bm a_k=\pi_{\theta}(\bm o_k),
+\qquad
+\bm a_k=[i_q^\star,m_{se,d}^\star,m_{se,q}^\star]^\top .
+\]
+一个actor同时覆盖LVRT/HVRT、对称/不对称、弱网/强网等全部工况。
+\end{block}
+
+\begin{block}{SAC目标}
+\[
+J_\pi(\theta)=
+\mathbb E_{s_t\sim\mathcal D}
+\left[
+\alpha\log\pi_\theta(a_t|s_t)
+-Q_\phi(s_t,a_t)
+\right].
+\]
+\end{block}
+
+\column{0.44\textwidth}
+\begin{block}{诊断意义}
+\begin{itemize}
+  \item 检验“一个策略是否足以覆盖全部故障族”；
+  \item 暴露不同工况之间的动作冲突；
+  \item 为多专家分治提供必要性证据。
+\end{itemize}
+\end{block}
+
+\begin{block}{结果观察}
+FRT下单策略SAC明确失败数较高，表明单策略结构在跨故障域FRT约束下存在显著泛化压力。
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{方法三：门控多专家SAC控制}
+\begin{center}
+\begin{tikzpicture}[
+  >=Latex,
+  every node/.style={font=\small,align=center},
+  base/.style={draw,rounded corners,minimum height=0.62cm},
+  expert/.style={base,minimum width=2.0cm},
+  io/.style={base,fill=hptlight,minimum width=1.65cm},
+  gate/.style={base,fill=hptcyan!12,minimum width=1.85cm}
+]
+\node[io] (obs) at (0,0) {\shortstack{在线观测\\$\bm o_k$}};
+\node[gate] (g) at (2.25,0) {\shortstack{在线门控\\$g(\bm o_k)$}};
+\node[expert,fill=hptgreen!12] (e1) at (5.05,0.95) {LVRT 3$\phi$};
+\node[expert,fill=hptgreen!12] (e2) at (5.05,0.20) {LVRT asym};
+\node[expert,fill=hptorange!12] (e3) at (5.05,-0.55) {HVRT 3$\phi$};
+\node[expert,fill=hptorange!12] (e4) at (5.05,-1.30) {HVRT asym};
+\node[base,fill=hptblue!10,minimum width=0.28cm,minimum height=2.55cm] (mux) at (7.25,-0.18) {};
+\node[io,fill=hptlight] (a) at (9.15,-0.18) {\shortstack{动作输出\\$\bm a_k$}};
+\draw[->,thick,hptblue] (obs)--(g);
+\foreach \x in {e1,e2,e3,e4}{
+  \draw[->,thick,hptblue] (g.east) -- ++(0.45,0) |- (\x.west);
+  \draw[->,thick,hptblue] (\x.east) -- (mux.west);
+}
+\draw[->,thick,hptblue] (mux.east)--(a.west);
+\node[font=\scriptsize,text=hptgray] at (5.05,-1.85) {四个专家共享同一动作接口};
+\end{tikzpicture}
+\end{center}
+
+\begin{block}{实现逻辑}
+\[
+\pi(\bm a|\bm o)=\pi_{g(\bm o)}(\bm a|\bm o),
+\qquad
+g(\bm o)\in\{\mathrm{LVRT}_{3\phi},\mathrm{LVRT}_{asym},\mathrm{HVRT}_{3\phi},\mathrm{HVRT}_{asym}\}.
+\]
+\end{block}
+
+\begin{block}{方法思想}
+门控多专家SAC将全局故障穿越控制任务分解为四个运行域内的策略学习问题；其作为本文主方法的严格开关级全场景认证结果见结果部分。
+\end{block}
+\end{frame}
+
+\begin{frame}{三类方法的差异总结}
+\begin{table}
+\centering\scriptsize
+\begin{tabular}{p{2.1cm}p{2.7cm}p{3.1cm}p{3.1cm}}
+\toprule
+维度 & 模型预测控制基线 & 单策略SAC & 门控多专家SAC \\
+\midrule
+高层决策 & 一步约束优化 & 单一actor直接决策 & 在线门控选择专家策略 \\
+动作输出 & $[i_q,m_{se,d},m_{se,q}]$ & $[i_q,m_{se,d},m_{se,q}]$ & $[i_q,m_{se,d},m_{se,q}]$ \\
+训练需求 & 无 & 训练一个SAC & 训练四个专家SAC \\
+可解释性 & 高，依赖模型 & 较低，策略混合所有工况 & 中等，依赖专家划分与门控 \\
+优势 & 约束清晰、可复现 & 最简单的学习基线 & 多故障域分治，主方法结构清晰 \\
+风险 & 简化模型不准 & 工况冲突、泛化差 & 门控边界与专家训练需进一步收口 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{block}{方法关系}
+模型预测控制基线给出模型优化上界，单策略SAC暴露泛化不足，门控多专家SAC给出可部署的主方法。
+\end{block}
+\end{frame}
+
+\begin{frame}{多保真验证流程}
+\begin{center}
+\begin{tikzpicture}[>=Latex,node distance=0.72cm,every node/.style={font=\small,align=center}]
+\node[draw,rounded corners,fill=hptlight,minimum width=2.55cm,minimum height=0.88cm] (o) {\shortstack{ODE平均模型\\训练与筛选}};
+\node[draw,rounded corners,fill=hptcyan!12,right=of o,minimum width=2.55cm,minimum height=0.88cm] (s) {\shortstack{Simulink开关模型\\FRT验证}};
+\node[draw,rounded corners,fill=hptorange!12,right=of s,minimum width=2.55cm,minimum height=0.88cm] (n) {\shortstack{结果治理\\报告收口}};
+\draw[->,thick,hptblue] (o)--(s);
+\draw[->,thick,hptblue] (s)--(n);
+\end{tikzpicture}
+\end{center}
+
+\begin{table}
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+能力 & ODE & Simulink开关层 & 结果治理层 \\
+\midrule
+训练效率 & 高 & 低 & 中 \\
+开关电流/电压细节 & 否 & 是 & 否 \\
+DC母线暂态 & 近似 & 是 & 近似 \\
+逐场景可追溯 & 部分 & 是 & \textbf{是} \\
+可信FRT判据 & 否 & \textbf{是} & 负责归档 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+%================================================
+\section{Results}
+%================================================
+
+\begin{frame}{开关级全场景认证结果：三类高层控制器}
+\begin{table}
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+控制器 & 通过 & 失败 & 通过率 \\
+\midrule
+一步显式MPC（模型基线） & 230 & 90 & 71.9\% \\
+单策略SAC & 51 & 269 & 15.9\% \\
+\textbf{门控多专家SAC（主方法）} & \textbf{268} & \textbf{52} & \textbf{83.8\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\[
+\Delta_{\mathrm{expert}}=83.8\%-15.9\%=67.9~\mathrm{pp}.
+\]
+
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{专家化增益}
+门控多专家SAC较单策略SAC通过率提升$67.9$ pp，亦高于模型驱动基线（$71.9\%$），定量支持运行域分解。
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{主方法分域}
+\[
+\text{LVRT}~95.0\%\ \gg\ \text{HVRT}~50.0\%.
+\]
+HVRT短板集中于三相暂升的直流母线生存，构成第二部分改进目标。
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{结果解读：运行域分解的必要性}
+\begin{table}
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+故障类别 & 模型基线 & 单策略SAC & 门控多专家SAC \\
+\midrule
+sym3ph & 66.7\% & 16.7\% & \textbf{80.0\%} \\
+1ph-g & 66.7\% & 16.7\% & \textbf{100\%} \\
+2ph & 50.0\% & 25.0\% & \textbf{100\%} \\
+2ph-g & 83.3\% & 26.7\% & \textbf{100\%} \\
+swell-3ph & 75.0\% & 0\% & \warn{0\%} \\
+swell-1ph & 100\% & 0\% & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\centering\footnotesize（各故障类型通过率）
+
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{观察}
+门控多专家SAC在LVRT各域达80--100\%，远超单策略SAC；短板仅三相暂升（survive全失败）。
+\end{block}
+\column{0.48\textwidth}
+\begin{block}{方法动机}
+按运行域分解降低学习难度：在线序分量识别故障域，再调用对应专家。
+\end{block}
+\end{columns}
+\end{frame}
+
+%================================================
+
+\section{References}
+
+\begin{frame}[allowframebreaks]{参考文献：第一部分}
+\footnotesize
+\setbeamertemplate{bibliography item}[text]
+\begin{thebibliography}{99}
+\bibitem{song_hpt}
+宋幸．\newblock 混合式电力变压器多工作模式控制策略研究．
+
+\bibitem{fujita_upqc}
+H. Fujita and H. Akagi．
+\newblock The unified power quality conditioner: the integration of series- and shunt-active filters．
+\newblock \emph{IEEE Transactions on Power Electronics}, 1998.
+
+\bibitem{haarnoja_sac}
+T. Haarnoja, A. Zhou, P. Abbeel, and S. Levine．
+\newblock Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor．
+\newblock \emph{ICML}, 2018.
+
+\bibitem{henderson_drl}
+P. Henderson et al．
+\newblock Deep Reinforcement Learning That Matters．
+\newblock \emph{AAAI}, 2018.
+
+\bibitem{agarwal_precipice}
+R. Agarwal, M. Schwarzer, P. S. Castro, A. C. Courville, and M. Bellemare．
+\newblock Deep Reinforcement Learning at the Edge of the Statistical Precipice．
+\newblock \emph{NeurIPS}, 2021.
+
+\bibitem{mpc_hdt}
+MPC-based Hybrid Distribution Transformer grid-service control．
+\newblock 本项目 references/week3 相关文献．
+
+\bibitem{mpc_frt}
+MPC-based fault ride-through control for converter-interfaced generation．
+\newblock 本项目 references/week3 相关文献．
+\end{thebibliography}
+\end{frame}
+
+\begin{frame}
+\centering
+\vspace{1cm}
+\Huge 第一部分结束
+
+\vspace{0.7cm}
+\normalsize 控制方法与开关级结果
+\end{frame}
+
+\end{document}

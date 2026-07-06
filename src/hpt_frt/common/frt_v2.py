@@ -33,6 +33,7 @@ PASS = 'PASS'
 FAIL = 'FAIL'
 NOT_EVALUATED = 'NOT_EVALUATED'
 MANDATORY = ('connect', 'reactive', 'limit', 'recover', 'survive')
+VALID_CATEGORIES = ('LVRT', 'HVRT')
 
 # GB/T envelope timing (s, real time after fault onset)
 LVRT_HOLD = 0.625          # residual held >= 625 ms
@@ -83,9 +84,15 @@ def envelope_value(category, t_rel, residual):
     """UNIFIED versioned voltage-time boundary (the single interface the ODE env trips/rewards on).
     Returns (boundary_pu, side): side='lower' for LVRT (V+ must be >= boundary), 'upper' for HVRT
     (V+ must be <= boundary). t_rel is REAL seconds after fault onset."""
+    _validate_category(category)
     if category == 'LVRT':
         return lvrt_lower_env(t_rel, residual), 'lower'
     return hvrt_upper_env(t_rel), 'upper'
+
+
+def _validate_category(category):
+    if category not in VALID_CATEGORIES:
+        raise ValueError(f'category must be one of {VALID_CATEGORIES}, got {category!r}')
 
 
 def within_envelope(category, t_rel, residual, v_plus, solver_tol=DEFAULT_SOLVER_TOL):
@@ -117,6 +124,7 @@ def reactive_criterion(t, V1, iq, category, in_fault, t_fault, *, tol=REACTIVE_T
     - PASS requires the met-fraction over demanded samples >= `dwell`;
     - reports max under-support (worst shortfall) and the sustained met-fraction.
     Over-injection is NOT penalised here — it is bounded by the LIMIT criterion (total current)."""
+    _validate_category(category)
     ref = np.array([iq_ref_droop(v) for v in V1])
     fault = in_fault
     if not fault.any():
@@ -185,6 +193,7 @@ def evaluate(t, V1, category, residual, t_fault, dur, *, V2=None, Vdc=None,
              iq=None, i_peak=None, idq_mag=None, i2=None, solver_tol=DEFAULT_SOLVER_TOL):
     """Evaluate frt-v2 criteria from REAL time-series. See module docstring for the status model.
     Returns {criterion: {status,passed,worst,t_worst,reason}, ..., frt_pass: True|False|None}."""
+    _validate_category(category)
     if dur <= 0:
         raise ValueError('dur must be > 0')
     t, V1, A = _validate(t, V1, dict(V2=V2, Vdc=Vdc, iq=iq, i_peak=i_peak, idq_mag=idq_mag, i2=i2))

@@ -1,0 +1,443 @@
+﻿% !TeX program = xelatex
+% -*- coding:utf-8 -*-
+\documentclass[10pt,aspectratio=169,mathserif]{beamer}
+
+\IfFileExists{zju.sty}{\usepackage{zju}}{}
+\usepackage{ctex}
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{color,graphicx,hyperref,url}
+\usepackage{fontspec,xeCJK}
+\usepackage{booktabs,array,multirow}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,fit}
+
+\beamertemplateballitem
+\definecolor{hptblue}{RGB}{0,63,135}
+\definecolor{hptcyan}{RGB}{0,130,155}
+\definecolor{hptorange}{RGB}{205,92,28}
+\definecolor{hptgreen}{RGB}{42,125,82}
+\definecolor{hptgray}{RGB}{95,105,115}
+\definecolor{hptlight}{RGB}{240,245,249}
+\setbeamercolor{alerted text}{fg=hptorange}
+
+\newcommand{\metric}[1]{\textcolor{hptblue}{\textbf{#1}}}
+\newcommand{\warn}[1]{\textcolor{hptorange}{\textbf{#1}}}
+\newcommand{\ok}[1]{\textcolor{hptgreen}{\textbf{#1}}}
+\newcommand{\neval}{\ensuremath{\mathrm{NOT\_EVALUATED}}}
+\newcommand{\pass}{\ensuremath{\mathrm{PASS}}}
+\newcommand{\fail}{\ensuremath{\mathrm{FAIL}}}
+\newcommand{\todo}{\textcolor{hptgray}{\textit{[后续补充]}}}
+
+\title[HPT故障穿越控制]{多端口混合配电变压器故障穿越控制研究进展}
+\subtitle{故障穿越可信评价、误差分析闭环与门控多专家SAC改进}
+\author[Yijiang Yao]{姚羿江\\\medskip
+{\small Electrical Engineering and Automation}}
+\institute[ZJU]{浙江大学 \quad ZJU-UIUC Institute}
+\date[June 2026]{2026年6月组会}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{汇报提纲}
+  \tableofcontents
+\end{frame}
+\section{Error Analysis}
+%================================================
+
+\begin{frame}{为什么做Error Analysis}
+\begin{center}
+\begin{tikzpicture}[>=Latex,every node/.style={font=\small,align=center}]
+\node[draw,rounded corners,fill=hptlight,minimum width=2.4cm,minimum height=0.72cm] (r) at (0,0) {\shortstack{FRT认证\\逐场景五判据}};
+\node[draw,rounded corners,fill=hptcyan!12,minimum width=2.4cm,minimum height=0.72cm] (e) at (3.2,0) {\shortstack{失败归因\\聚类与分流}};
+\node[draw,rounded corners,fill=hptgreen!12,minimum width=2.4cm,minimum height=0.72cm] (m) at (6.4,0) {\shortstack{SAC改进\\reward/采样/标定}};
+\node[draw,rounded corners,fill=hptorange!12,minimum width=2.4cm,minimum height=0.72cm] (v) at (9.6,0) {\shortstack{重新认证\\防遗忘门}};
+\draw[->,thick,hptblue] (r)--(e);
+\draw[->,thick,hptblue] (e)--(m);
+\draw[->,thick,hptblue] (m)--(v);
+\end{tikzpicture}
+\end{center}
+
+\begin{block}{分析目标}
+误差分析并非重复展示失效分布，而是建立从失效模式到训练设计变量的映射：
+\[
+\text{失败类型}\ \Longrightarrow\ \text{奖励项/采样权重/ODE标定/部署约束}.
+\]
+该思路与自动奖励设计中的“诊断--修订”循环一致\cite{ma_eureka}，并遵循深度强化学习的稳健评价原则\cite{henderson_drl,agarwal_precipice}。
+\end{block}
+
+\medskip
+\textbf{对象：}面向门控多专家SAC主方法，只修改专家本身的奖励、采样与训练环境标定。\quad
+\textbf{设计变量：}奖励权重、超参搜索范围、困难样本采样分布与ODE标定优先级。
+\end{frame}
+
+\begin{frame}{Step 1：先按FRT判据拆开失败}
+\begin{table}
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+判据 & 物理含义 & 对门控多专家SAC改进的提示 \\
+\midrule
+connect & 是否越出LVRT/HVRT电压-时间包络 & 若失败，优先检查场景标定和电压恢复逻辑 \\
+reactive & 无功支撑方向与幅值是否满足 & 增加wrong-sign惩罚、边界场景采样或部署钳位 \\
+limit & 电流峰值/负序是否越限 & 调整动作幅值、slew-rate和限流投影 \\
+recover & 清除后是否按时恢复 & 检查门控保持、恢复期动作归零和阻尼 \\
+survive & DC母线是否越界 & 加强Vdc奖励、减少串联能量抽取或重标定ODE \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\[
+\mathrm{error\ analysis}:\quad
+\mathrm{scenario}\rightarrow\{C_j=\fail\}\rightarrow\mathrm{failure\ cluster}.
+\]
+
+\medskip
+\textbf{方法含义：}优化前先将失效样本映射到具体判据，而非盲目增加训练预算：
+\[
+\text{判据}\rightarrow\text{物理机制}\rightarrow\text{奖励/采样/标定出口}.
+\]
+\end{frame}
+
+\begin{frame}{Step 2：ODE-visible / ODE-blind 分流}
+\begin{columns}[T,onlytextwidth]
+\column{0.50\textwidth}
+\begin{block}{ODE-visible}
+\begin{table}
+\centering\scriptsize
+\begin{tabular}{ll}
+\toprule
+含义 & 处理出口 \\
+\midrule
+ODE中也复现同类失败 & SAC Adjustment \\
+reward能感知该错误 & 调奖励权重 \\
+训练分布覆盖不足 & hard-case sampling \\
+动作边界不稳 & slew / projection / hysteresis \\
+\bottomrule
+\end{tabular}
+\end{table}
+\[
+\Rightarrow\quad \text{SAC Adjustment}.
+\]
+\vspace{-0.2cm}
+
+将物理约束显式写入奖励目标；约束权重需系统扫描\cite{haarnoja_sac}。
+\end{block}
+
+\column{0.46\textwidth}
+\begin{block}{ODE-blind}
+\begin{table}
+\centering\scriptsize
+\begin{tabular}{ll}
+\toprule
+含义 & 处理出口 \\
+\midrule
+Simulink失败但ODE不失败 & ODE Adjustment \\
+训练环境看不到真实风险 & Simulink sweep标定 \\
+DC暂态模型缺项 & 重拟合Vdc欠冲模型 \\
+开关级独有暂态 & 先补模型，再谈重训 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\[
+\Rightarrow\quad \text{ODE Adjustment}.
+\]
+\end{block}
+\end{columns}
+
+\medskip
+\textbf{分流原则：}ODE能复现的失效优先调整策略学习目标与训练分布；ODE无法复现的开关级失效须先重标定训练环境，避免策略在低保真模型中学不到真实风险。
+\end{frame}
+
+\begin{frame}{Step 3：把Error Analysis映射到奖励与采样参数}
+\begin{block}{判据对齐的奖励整形（势函数型整形保最优策略不变\cite{ng_shaping}）}
+\[
+r
+=r_{\mathrm{volt}}
++r_{\mathrm{reactive}}
+-\lambda_{\mathrm{wrong}}J_{\mathrm{wrong}}
+-\lambda_{dc}J_{dc}
+-\lambda_u\|\bm a\|_2^2 .
+\]
+\end{block}
+
+\begin{columns}[T,onlytextwidth]
+\column{0.50\textwidth}
+\begin{block}{针对无功方向/幅值问题}
+\[
+J_{\mathrm{wrong}}
+=
+\mathbf{1}_{V_1<0.9}\max(0,-i_q)^2
++
+\mathbf{1}_{V_1>1.1}\max(0,i_q)^2 .
+\]
+候选范围：
+\[
+\lambda_{\mathrm{wrong}}\in\{5,10,20\}.
+\]
+\end{block}
+
+\column{0.46\textwidth}
+\begin{block}{针对DC母线生存问题}
+\[
+J_{dc}
+=
+\max(0,V_{dc}-1.25)^2
++
+\max(0,0.75-V_{dc})^2 .
+\]
+候选范围：
+\[
+\lambda_{dc}\in\{10,30,50\}.
+\]
+\end{block}
+\end{columns}
+
+\medskip
+\textbf{优化约束：}优化变量限定为奖励权重与采样比例；FRT判据固定，ODE系数仅用于提高对开关级响应的忠实度，不作为直接优化目标。
+\end{frame}
+
+\begin{frame}{Step 4：用Targeted Sampling提升关键场景}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{原始采样}
+\[
+s_0\sim\mathcal D_{\mathrm{all}}.
+\]
+优点是覆盖全场景；缺点是失败簇占比低，SAC对边界场景学习不充分。
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{定向采样}
+\[
+s_0\sim
+(1-p_h)\mathcal D_{\mathrm{all}}
++p_h\mathcal D_{\mathrm{hard}}.
+\]
+候选比例：
+\[
+p_h\in\{0.2,0.3,0.4\}.
+\]
+\end{block}
+\end{columns}
+
+\medskip
+\textbf{方法依据：}定向采样把误差分析发现的失败簇重新注入训练分布，避免稀有但关键的困难样本被平均奖励淹没（与优先经验回放思想一致\cite{schaul_per,andrychowicz_rl}）。
+
+\begin{table}
+\centering\small
+\begin{tabular}{ll}
+\toprule
+hard-case集合 & 加入原因 \\
+\midrule
+$V_1\in[0.88,0.92]\cup[1.08,1.12]$ & 无功方向边界 \\
+2ph / 2ph-g & 不对称故障wrong-sign \\
+swell-1ph & HVRT边界无功符号 \\
+SCR=3 + swell-3ph + $V_g^+=1.30$ & DC母线生存失败 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{BO候选参数与分阶段验证}
+\begin{table}
+\centering\scriptsize
+\begin{tabular}{llll}
+\toprule
+参数 & 含义 & 候选范围 & 作用对象 \\
+\midrule
+$w_{\mathrm{signfix}}$ & 无功反号惩罚 & $[0,20]$ & reactive簇 \\
+$w_{dc}$ & Vdc欠冲/越界惩罚 & $[5,40]$ & survive簇 \\
+$vdc_{\mathrm{floor}}$ & DC安全地板 & $[0.78,0.88]$ & survive簇 \\
+$p_h$ & hard-case采样比例 & $[0.2,0.4]$ & 边界/弱网簇 \\
+$s_{\mathrm{swell}}$ & swell过采样倍率 & $[1,5]$ & HVRT簇 \\
+$s_{\mathrm{asym}}$ & 不对称故障过采样 & $[1,5]$ & reactive簇 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{block}{验证顺序}
+\[
+\text{ODE小验证}
+\rightarrow
+\text{8--16个开关级抽样验证}
+\rightarrow
+\text{防遗忘门}
+\rightarrow
+\text{确认有效后再全场景}.
+\]
+\end{block}
+
+\medskip
+\textbf{实验设计原则：}将奖励权重视为可调超参\cite{eimer_hpo}，以小规模开关级抽样验证作为门禁降低错误方向的计算成本；每次更新均检查已通过簇是否退化。
+\end{frame}
+
+%================================================
+\section{Closed-loop Optimization}
+%================================================
+
+\begin{frame}{双保真闭环：低保真训练与高保真认证}
+\begin{center}
+\begin{tikzpicture}[>=Latex,every node/.style={font=\small,align=center}]
+\node[draw,rounded corners,fill=hptlight,minimum width=2.2cm,minimum height=0.70cm] (ode) at (0,0) {\shortstack{ODE训练环境\\快速筛选}};
+\node[draw,rounded corners,fill=hptcyan!12,minimum width=2.3cm,minimum height=0.70cm] (train) at (3.1,0) {\shortstack{4专家SAC\\重训受影响专家}};
+\node[draw,rounded corners,fill=hptorange!12,minimum width=2.3cm,minimum height=0.70cm] (sim) at (6.25,0) {\shortstack{Simulink开关级\\FRT认证}};
+\node[draw,rounded corners,fill=hptgreen!12,minimum width=2.3cm,minimum height=0.70cm] (ea) at (9.4,0) {\shortstack{error analysis\\聚类+分流}};
+\draw[->,thick,hptblue] (ode)--(train);
+\draw[->,thick,hptblue] (train)--(sim);
+\draw[->,thick,hptblue] (sim)--(ea);
+\draw[->,thick,hptblue] (ea.south) .. controls +(0,-1.0) and +(0,-1.0) .. node[below,font=\scriptsize]{SAC Adjustment} (train.south);
+\draw[->,thick,hptorange] (ea.north) .. controls +(0,0.95) and +(0,0.95) .. node[above,font=\scriptsize]{ODE Adjustment} (ode.north);
+\end{tikzpicture}
+\end{center}
+
+\begin{block}{两条反馈通道}
+\begin{itemize}
+  \item \textbf{SAC Adjustment：}失败在ODE中可见，则调reward权重、hard-case采样和动作约束。
+  \item \textbf{ODE Adjustment：}失败只在Simulink中出现，则先用开关级扫描重标定ODE，避免训练环境“看不见风险”。
+\end{itemize}
+\end{block}
+
+\medskip
+\textbf{方法边界：}该闭环服务于门控多专家SAC主方法，先完成其严格FRT认证，再讨论扩展。
+\end{frame}
+
+\begin{frame}{防止reward hacking：三道门}
+\begin{table}
+\centering\small
+\begin{tabular}{lll}
+\toprule
+门控 & 作用 & 具体规则 \\
+\midrule
+判据对齐 & 防止奖励偏离目标 & reward项需对应connect/reactive/limit/recover/survive \\
+真目标门 & 防止proxy冒充结果 & 最终只看Simulink FRT，不把ODE proxy称为通过率 \\
+防遗忘门 & 防止局部提分牺牲旧场景 & 新参数不能让原本通过的簇明显退步 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{block}{形式化目标}
+\[
+\max_{\theta,w}\quad
+\mathrm{Pass}_{\mathrm{Sim}}(\pi_{\theta,w})
+\quad
+\mathrm{s.t.}\quad
+\Delta \mathrm{Fail}_{\mathrm{old\ clusters}}\le 0.
+\]
+\end{block}
+
+\medskip
+\textbf{认证原则：}ODE与奖励用于提高训练效率，但不能替代开关级认证；优化目标是让控制器显式响应已识别的失效机制，而非仅改善代理指标。
+\end{frame}
+
+\begin{frame}{最小可落地版本}
+\begin{enumerate}
+  \item 将误差分析脚本参数化：对任意认证结果输出失败簇报表。
+  \item 编码“失败簇$\rightarrow$reward/采样/标定出口”映射表。
+  \item 先只激活2--4个参数：$w_{\mathrm{signfix}}$、$w_{dc}$、$p_h$、$s_{\mathrm{swell}}$。
+  \item 每轮只重训受影响专家，不重训全部专家。
+  \item 用8--16个开关级抽样验证做门禁，通过后再考虑全场景。
+\end{enumerate}
+
+\begin{block}{阶段性贡献}
+本阶段将error analysis从失效统计扩展为\textbf{认证--诊断--改参--重训--再认证}的闭环优化流程。
+\end{block}
+\end{frame}
+
+\begin{frame}{闭环首轮执行：HVRT survive失败的诊断与纠错}
+\begin{columns}[T,onlytextwidth]
+\column{0.53\textwidth}
+\begin{block}{执行步骤（swell-3ph survive簇）}
+\begin{enumerate}\small
+  \item 分流判别：ODE中HVRT恒为survive=\pass、开关级失败 $\Rightarrow$ ODE-blind；
+  \item ODE Adjustment：开关级开环扫描拟合$V_{dc}$欠冲模型（$R^2=0.91$）；
+  \item 重训HVRT专家：ODE中习得吸收+反向串联，$V_{dc}$不再越下界；
+  \item 开关级重认证：结果\warn{无变化}，三相暂升survive仍全部失败。
+\end{enumerate}
+\end{block}
+
+\column{0.43\textwidth}
+\begin{block}{机制定位（轨迹诊断）}
+开关级$V_{dc}$轨迹显示失败发生在\textbf{故障清除瞬间}（$V_{dc}\!\to\!0.725$），而非故障期间；故障期$V_{dc}$实为偏高（钳位于$1.20$）。
+\end{block}
+\end{columns}
+
+\begin{block}{双保真闭环的纠错价值}
+静态标定仅捕获稳态指令--$V_{dc}$关系，而survive失败属\textbf{清除暂态}，故标定必要而不充分；开关级认证既阻止"仅ODE改善"被误判，又将失效机制由"故障期"修正为"清除瞬态"。
+\end{block}
+\end{frame}
+
+%================================================
+\section{Conclusion}
+%================================================
+
+\begin{frame}{总结}
+\begin{enumerate}
+  \item 统一FRT口径下完成三类控制器开关级全场景认证：门控多专家SAC主方法通过率$83.8\%$，专家化增益$67.9$ pp。
+  \item 门控多专家SAC在LVRT域领先（$95.0\%$）、HVRT域$50.0\%$，HVRT构成闭环改进目标。
+  \item 第二部分将error analysis扩展为认证--诊断--改参--重训--再认证的双保真闭环，并区分ODE-visible（改SAC）与ODE-blind（改标定）两条通道。
+  \item 首轮执行（HVRT survive）表明：标定可消除盲区但不充分，真实失效为清除暂态；开关级认证有效阻止了非传递性改进的误判。
+  \item 下一步：将清除暂态纳入标定、实现失败簇--参数映射与BO小步调参，再进入大规模复核。
+\end{enumerate}
+\end{frame}
+
+\section{References}
+
+\begin{frame}[allowframebreaks]{参考文献：第二部分}
+\footnotesize
+\setbeamertemplate{bibliography item}[text]
+\begin{thebibliography}{99}
+\bibitem{haarnoja_sac}
+T. Haarnoja, A. Zhou, P. Abbeel, and S. Levine．
+\newblock Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor．
+\newblock \emph{ICML}, 2018.
+
+\bibitem{henderson_drl}
+P. Henderson et al．
+\newblock Deep Reinforcement Learning That Matters．
+\newblock \emph{AAAI}, 2018.
+
+\bibitem{agarwal_precipice}
+R. Agarwal, M. Schwarzer, P. S. Castro, A. C. Courville, and M. Bellemare．
+\newblock Deep Reinforcement Learning at the Edge of the Statistical Precipice．
+\newblock \emph{NeurIPS}, 2021.
+
+\bibitem{andrychowicz_rl}
+M. Andrychowicz et al．
+\newblock What Matters in On-Policy Reinforcement Learning? A Large-Scale Empirical Study．
+\newblock \emph{ICLR}, 2021.
+
+\bibitem{ng_shaping}
+A. Y. Ng, D. Harada, and S. Russell．
+\newblock Policy Invariance Under Reward Transformations: Theory and Application to Reward Shaping．
+\newblock \emph{ICML}, 1999.
+
+\bibitem{ma_eureka}
+Y. J. Ma et al．
+\newblock Eureka: Human-Level Reward Design via Coding Large Language Models．
+\newblock \emph{ICLR}, 2024.
+
+\bibitem{eimer_hpo}
+T. Eimer, M. Lindauer, and R. Raileanu．
+\newblock Hyperparameters in Reinforcement Learning and How To Tune Them．
+\newblock \emph{ICML}, 2023.
+
+\bibitem{schaul_per}
+T. Schaul, J. Quan, I. Antonoglou, and D. Silver．
+\newblock Prioritized Experience Replay．
+\newblock \emph{ICLR}, 2016.
+\end{thebibliography}
+\end{frame}
+
+\begin{frame}
+\centering
+\vspace{1.1cm}
+\Huge 谢谢老师！
+\vspace{0.8cm}
+
+\normalsize 敬请批评指正
+\end{frame}
+
+\end{document}

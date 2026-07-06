@@ -222,4 +222,4 @@ frt_v2_spotcheck()                     % 12 例开关级门禁（快速健全性
 ## 依赖
 
 - **MATLAB R2025a** + Simulink + **Simscape Electrical**（专用电力系统）；MCP 会话需 `addpath(...agentic-toolkits/simulink); satk_initialize` 共享；
-- **Python**：仓库内 `.venv`(py3.8) — stable-baselines3 2.8.0 + PyTorch（CPU 即可）+ gymnasium + numpy + scipy。
+- **Python**：仓库内 `.venv`(py3.8) — stable-baselines3 2.4.1 + PyTorch（CPU 即可）+ gymnasium + numpy + scipy；精确版本以 `requirements.txt` 为准。

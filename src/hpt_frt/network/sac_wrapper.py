@@ -160,7 +160,7 @@ class HPTController:
         if self.slew is None:
             return iq, se_d, se_q
         diq, dmse = self.slew
-        liq, lsd, lsq = self.last_a[1], self.last_a[2], self.last_a[3]
+        liq, lsd, lsq = self.last_a[0], self.last_a[1], self.last_a[2]
         niq = float(np.clip(iq, liq - diq, liq + diq))
         nsd = float(np.clip(se_d, lsd - dmse, lsd + dmse))
         nsq = float(np.clip(se_q, lsq - dmse, lsq + dmse))
