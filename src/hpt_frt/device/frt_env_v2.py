@@ -23,6 +23,8 @@ from ..common import frt_v2 as FV2
 GATE_V2N_THR = 0.05
 GATE_LV, GATE_HV = 0.90, 1.10
 ELAPSED_NORM = 0.5            # normalisation for the elapsed-since-detected-onset fraction (s)
+HVRT_RECOVERY_HOLD = 0.45     # online-measured hold after HVRT clears; no scenario labels/timing
+HVRT_RECOVERY_DEADBAND = 0.025
 
 # frt-v2 OBSERVATION DIMENSION — defined explicitly (audit item 5). The last-action block is the TRUE
 # 3-D action [iq, mse_d, mse_q]; no dummy 4th element is retained to pad to 21. Layout (20):
@@ -31,7 +33,7 @@ N_ACT_V2 = 3
 OBS_DIM_V2 = 9 + 6 + 2 + N_ACT_V2     # = 20
 
 
-def online_fault_class(V2p, V2n):
+def online_fault_class(V2p, V2n, recent_hvrt=False):
     """Deployment-identical online classifier on MEASURED sequence voltages -> fault-class index
     into FRT_FAULTS (normal0 sym3ph1 1ph_g2 2ph3 2ph_g4 swell5). No labels, no true time.
 
@@ -44,7 +46,7 @@ def online_fault_class(V2p, V2n):
     ⚠️ If the topology changes (independent H-bridge / deeper reachable asym residual, see §5-9), add a
     `V2n>GATE_V2N_THR` asym branch here — but that changes obs/routing and FORCES a retrain + frt-v2
     full-320 re-run, so it is a deliberate experiment, not a silent edit."""
-    if V2p > GATE_HV:
+    if recent_hvrt or V2p > GATE_HV:
         return F2I['swell']                       # HVRT (sym/asym share index 5, as in deployment)
     if V2p < GATE_LV:
         return F2I['1ph_g'] if V2n > GATE_V2N_THR else F2I['sym3ph']
@@ -67,16 +69,39 @@ class OnlineFaultDetector:
     def reset(self):
         self.detected = False
         self.onset_t = None
+        self.seen_hvrt = False
+        self.last_hvrt_t = None
+        self.recent_hvrt = False
 
     def update(self, t, V2p, V2n):
         """Advance one step. Returns (in_fault_online: bool, elapsed_s: float)."""
+        measured = is_fault_measured(V2p, V2n)
+        if V2p > GATE_HV:
+            self.seen_hvrt = True
+            self.last_hvrt_t = t
         if is_fault_measured(V2p, V2n):
             if not self.detected:
                 self.detected = True
                 self.onset_t = t
+            self.recent_hvrt = self.seen_hvrt
+        elif (
+            self.seen_hvrt
+            and self.last_hvrt_t is not None
+            and (t - self.last_hvrt_t) <= HVRT_RECOVERY_HOLD
+            and abs(V2p - 1.0) > HVRT_RECOVERY_DEADBAND
+        ):
+            # Keep the post-clear recovery segment visible as an HVRT state using only measured
+            # voltage history. This prevents shallow recovery points from being misrouted as LVRT.
+            self.detected = True
+            if self.onset_t is None:
+                self.onset_t = self.last_hvrt_t
+            self.recent_hvrt = True
         else:
             self.detected = False
             self.onset_t = None
+            self.seen_hvrt = False
+            self.last_hvrt_t = None
+            self.recent_hvrt = False
         elapsed = (t - self.onset_t) if self.detected else 0.0
         return self.detected, float(max(0.0, elapsed))
 
@@ -127,7 +152,7 @@ class HPTFRTEnvV2(HPTFRTEnv):
         vdev = 0.9 - self.V2p
         iq_err = self._iq_ref() - self._iq
         infault_online, elapsed = self._detector.update(self.t, self.V2p, self.V2n)
-        fc = online_fault_class(self.V2p, self.V2n)
+        fc = online_fault_class(self.V2p, self.V2n, self._detector.recent_hvrt)
         probs = np.zeros(6, np.float32)
         if infault_online and fc != 0:
             probs[fc] = 0.92; probs[0] += 0.08

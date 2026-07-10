@@ -27,6 +27,7 @@ import math
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
+from hpt_frt.common import frt_v2 as FV2
 
 # ── per-unit constants ──────────────────────────────────────────────────────────
 VDC_NOM   = 1.0                 # DC bus pu (nominal)
@@ -60,12 +61,70 @@ VDC_CHOP  = 1.20             # chopper clamp (matches Simulink Vdc>1.20 bleeder)
 # sag terms are BLIND here (predict Vdc≈0.98); this map replaces them in the swell regime so the ODE
 # can SEE the swell_3ph survive failure. Conservative: tracks the switching Vdc_min (worst-case).
 SW_C0, SW_AB, SW_SE, SW_X, SW_DEP = 0.839, 0.583, 0.371, 4.028, 0.152
+# HVRT clearing/release undershoot (2026-07-07 ODE-blind fix): switching mi=14 fails the weak-grid
+# swell_3ph survive criterion after clearing (Vdc≈0.72), while the ODE recovered to ≈0.95. Model the
+# missing release transient as a short post-clear DC sink proportional to the peak absorption during
+# the preceding swell. This is intentionally narrow: category=HVRT, immediately after fault clearing.
+HVRT_CLEAR_DROP = 2.25
+HVRT_CLEAR_TAU  = 0.010
+HVRT_CLEAR_WIN  = 0.030
+# Stiff-grid balanced LVRT DC-link starvation (2026-07-07 ODE-blind fix): switching showed
+# sym3ph/SCR=10 deep and mid faults can under-shoot Vdc even with little series boost. That is the
+# current-limited active-power deficit during a low terminal voltage, which the previous averaged
+# map missed because it was calibrated mostly on SCR=3 series-boost sweeps. Keep this narrow so
+# shallow sym3ph and weak-grid cases are not over-penalised.
+LVRT_STIFF_SCR0 = 8.0
+LVRT_STIFF_VG_MAX = 0.55
+LVRT_STIFF_DC_DROP = 0.33
+# Expanded-grid impedance-shape correction (2026-07-09): selected Simulink spotchecks showed that
+# cases with the same SCR but lower Rg / higher X component have materially worse DC survival and
+# post-clear recovery. The old ODE used only SCR, so these cases stayed ODE-invisible. The scenario
+# generator's maximum-R branch follows Rg_base ~= 138.675 / SCR; the factor below is 0 on that branch
+# and grows as the same-SCR grid becomes more inductive.
+GRID_R_BASE_AT_SCR1 = 138.675
+LVRT_XR_DC_DROP = 0.08
+LVRT_RECOVERY_BIAS0 = 0.045
+LVRT_RECOVERY_XR_BIAS = 0.060
+# Single-phase HVRT sequence/measurement correction (2026-07-07 ODE-blind fix): unbalanced swell
+# has positive/negative-sequence coupling and PLL/current-measurement ripple. Switching saw
+# swell_1ph/SCR=3 wrong-sign reactive failures near the 1.1-pu boundary; the ODE was too smooth
+# (V+ stayed just below 1.1 and measured iq kept the command sign). These terms are only active for
+# swell_1ph and are proportional to V2n.
+HVRT_ASYM_V1_BIAS = 0.35
+HVRT_ASYM_IQ_MEAS_BIAS = 0.70
+HVRT_ASYM_SCR_MAX = 4.0
+HVRT_RECOVERY_WEAK_UNDER = 0.125
+HVRT_RECOVERY_XR_OVER = 0.130
+HVRT_SHALLOW_SCR2_EXTRA_UNDER = 0.033
+HVRT_1PH_RECOVERY_WEAK_UNDER = 0.180
+HVRT_1PH_RECOVERY_XR_OVER = 0.100
+# Asymmetric LVRT boundary measured-iq proxy: switching reactive FAILs occur where the commanded
+# support is tiny but negative-sequence ripple makes measured iq cross the wrong sign. Dynamics still
+# use the command; reward/evaluation use the measured proxy in this narrow boundary band.
+ASYM_IQ_MEAS_BIAS = 0.70
+ASYM_BOUNDARY_V_LO, ASYM_BOUNDARY_V_HI = 0.82, 0.91
+# Extra shallow-asym LVRT measurement ripple (2026-07-07 active-baseline ODE-blind fix): for
+# 2ph/2ph_g at target=0.75 the residual prior's V2n feed-forward keeps the ODE measured iq positive,
+# but switching still sees wrong-sign reactive current after sequence extraction/filtering. This term
+# is deliberately narrow and only affects the measured criterion/reward, not plant dynamics.
+ASYM_SHALLOW_FT = ('2ph', '2ph_g')
+ASYM_SHALLOW_TARGET_MIN = 0.70
+ASYM_SHALLOW_IQ_EXTRA_BIAS = 0.45
+ASYM_SHALLOW_2PH_MIN_DUR = 0.37
+ASYM_SHALLOW_2PHG_MIN_DUR = 0.45
+ASYM_SHALLOW_2PHG_SCR_MIN = 8.0
 
 FRT_FAULTS = ['normal', 'sym3ph', '1ph_g', '2ph', '2ph_g', 'swell']  # state fault classes
 F2I = {f: i for i, f in enumerate(FRT_FAULTS)}
 
 DT      = 2e-3                  # control step (s)
 TSCALE  = 0.20                 # compress GB/T seconds-curve for training (see header)
+MAX_SWITCHING_FAULT_DUR = 0.5   # frt_v2_full320_switching.m uses dur=min(fault_dur,0.5)
+
+
+def effective_fault_dur(s):
+    """Fault duration used by the certified switching harness and therefore by the ODE proxy."""
+    return min(float(s['fault_dur']), MAX_SWITCHING_FAULT_DUR)
 
 
 def fault_sequence(ftype: str, targetV: float):
@@ -78,6 +137,22 @@ def fault_sequence(ftype: str, targetV: float):
     if ftype == '2ph_g':   return (1 + 2*targetV) / 3.0, (1 - targetV) / 3.0
     if ftype == 'swell_1ph': return (2 + targetV) / 3.0, abs(targetV - 1) / 3.0
     return 1.0, 0.0
+
+
+def grid_xr_factor(s, scr):
+    """0..1 proxy for same-SCR grid inductiveness from expanded scenario Rg.
+
+    Original 320 scenarios do not carry Rg_ohm; they keep factor 0. Expanded scenarios do, and the
+    selected switching failures line up with low-R/high-X branches that SCR alone cannot distinguish.
+    """
+    try:
+        rg = float(s.get('Rg_ohm', 0.0))
+    except (TypeError, ValueError, AttributeError):
+        return 0.0
+    if rg <= 0.0 or scr <= 0.0:
+        return 0.0
+    rg_base = GRID_R_BASE_AT_SCR1 / scr
+    return min(1.0, max(0.0, 1.0 - rg / max(1e-9, rg_base)))
 
 
 def lvrt_envelope(t_rel, residual, reach09=2.0, ts=TSCALE):
@@ -109,7 +184,7 @@ class HPTFRTEnv(gym.Env):
     # ── grid voltage imposed by the scenario at time t ──────────────────────────
     def _grid_seq(self, t):
         s = self._sc
-        t_f, dur = s['t_fault'], s['fault_dur'] * TSCALE
+        t_f, dur = s['t_fault'], effective_fault_dur(s) * TSCALE
         if t < t_f or t > t_f + dur:
             return 1.0, 0.0                      # pre/post fault: nominal
         return self._Vg_p, self._Vg_n
@@ -131,13 +206,17 @@ class HPTFRTEnv(gym.Env):
         self.tripped = False
         self._iq = 0.0
         self._last_a = np.zeros(4, np.float32)
+        self._prev_in_fault = False
+        self._hvrt_absorb_peak = 0.0
+        self._hvrt_swell_peak = 1.0
+        self._hvrt_clear_timer = math.inf
         self._fp = F2I.get('sym3ph' if s['category']=='LVRT' and s['fault_type']=='sym3ph'
                            else ('swell' if s['category']=='HVRT' else s['fault_type']), 0)
         return self._obs(), {}
 
     def _obs(self):
         s = self._sc
-        in_fault = float(s['t_fault'] <= self.t <= s['t_fault'] + s['fault_dur']*TSCALE)
+        in_fault = float(s['t_fault'] <= self.t <= s['t_fault'] + effective_fault_dur(s)*TSCALE)
         vdev = 0.9 - self.V2p
         iq_ref = self._iq_ref()
         iq_err = iq_ref - self._iq
@@ -176,15 +255,21 @@ class HPTFRTEnv(gym.Env):
         return 0.0
 
     def step(self, action):
+        t_sample = self.t
+        s = self._sc
         a = np.asarray(action, np.float32)
         i_sh_d, i_sh_q, m_se_d, m_se_q = [float(x) for x in a]
         # current limit (reactive priority): cap iq, then active fits under total limit
         i_sh_q = float(np.clip(i_sh_q, -I_Q_MAX, I_Q_MAX))
         id_max = math.sqrt(max(0.0, I_CONV_MAX**2 - i_sh_q**2))
         i_sh_d = float(np.clip(i_sh_d, 0.0, id_max))
-        self._iq = i_sh_q
+        iq_cmd = i_sh_q
 
         Vg_p, Vg_n = self._grid_seq(self.t)
+        in_fault_now = (s['t_fault'] <= t_sample <= s['t_fault'] + effective_fault_dur(s) * TSCALE)
+        clear_t = s['t_fault'] + effective_fault_dur(s) * TSCALE
+        post_clear = t_sample > clear_t
+        xr = grid_xr_factor(s, self.scr)
         # series injection magnitude limited
         V_se_d = float(np.clip(m_se_d, -V_SE_MAX, V_SE_MAX))
         V_se_q = float(np.clip(m_se_q, -V_SE_MAX, V_SE_MAX))
@@ -192,6 +277,24 @@ class HPTFRTEnv(gym.Env):
         # ── positive-seq terminal voltage: grid + series support + reactive boost ──
         # actuator gains Simulink-calibrated (SE_GAIN, K_q) — see constants block
         V2p_ss = Vg_p + SE_GAIN * V_se_d + self.K_q * i_sh_q
+        if (s['category'] == 'HVRT' and s['fault_type'] == 'swell_1ph'
+                and self.scr <= HVRT_ASYM_SCR_MAX and Vg_n > 0.05):
+            V2p_ss += HVRT_ASYM_V1_BIAS * Vg_n
+        if post_clear:
+            if (s['category'] == 'LVRT' and s['fault_type'] == 'sym3ph'
+                    and self.scr >= LVRT_STIFF_SCR0 and float(s['target_V_pu']) <= LVRT_STIFF_VG_MAX):
+                V2p_ss += LVRT_RECOVERY_BIAS0 + LVRT_RECOVERY_XR_BIAS * xr
+            elif s['category'] == 'HVRT' and s['fault_type'] == 'swell_3ph':
+                weak = max(0.0, (4.0 - self.scr) / 2.0)
+                V2p_ss += -HVRT_RECOVERY_WEAK_UNDER * weak + HVRT_RECOVERY_XR_OVER * xr
+                shallow = max(0.0, (1.15 - float(s['target_V_pu'])) / 0.05)
+                shallow = min(1.0, shallow)
+                scr2 = max(0.0, (2.5 - self.scr) / 0.5)
+                scr2 = min(1.0, scr2)
+                V2p_ss -= HVRT_SHALLOW_SCR2_EXTRA_UNDER * shallow * scr2
+            elif s['category'] == 'HVRT' and s['fault_type'] == 'swell_1ph':
+                weak = max(0.0, (4.0 - self.scr) / 2.0)
+                V2p_ss += -HVRT_1PH_RECOVERY_WEAK_UNDER * weak + HVRT_1PH_RECOVERY_XR_OVER * xr
         V2p_ss = max(0.0, V2p_ss)
         self.V2p += (V2p_ss - self.V2p) * (DT / TAU_V2)
         # ── negative-seq: imposed by the grid; series injection CANNOT cancel it (Simulink series
@@ -199,6 +302,24 @@ class HPTFRTEnv(gym.Env):
         # ctrl_series_code L318). The old "−|V_se_q|" cancellation was a fake channel — removed.
         V2n_ss = Vg_n
         self.V2n += (V2n_ss - self.V2n) * (DT / TAU_V2)
+        iq_meas = iq_cmd
+        if (s['category'] == 'LVRT' and self.V2n > 0.05
+                and ASYM_BOUNDARY_V_LO <= self.V2p <= ASYM_BOUNDARY_V_HI):
+            iq_meas = iq_cmd - ASYM_IQ_MEAS_BIAS * self.V2n
+            long_2ph = (s['fault_type'] == '2ph'
+                        and float(s['fault_dur']) >= ASYM_SHALLOW_2PH_MIN_DUR)
+            strong_long_2phg = (s['fault_type'] == '2ph_g'
+                                and self.scr >= ASYM_SHALLOW_2PHG_SCR_MIN
+                                and float(s['fault_dur']) >= ASYM_SHALLOW_2PHG_MIN_DUR)
+            if (s['fault_type'] in ASYM_SHALLOW_FT
+                    and float(s['target_V_pu']) >= ASYM_SHALLOW_TARGET_MIN
+                    and (long_2ph or strong_long_2phg)):
+                iq_meas -= ASYM_SHALLOW_IQ_EXTRA_BIAS * self.V2n
+        if (s['category'] == 'HVRT' and s['fault_type'] == 'swell_1ph'
+                and self.scr <= HVRT_ASYM_SCR_MAX
+                and self.V2n > 0.05 and self.V2p > 1.05):
+            iq_meas = iq_cmd + HVRT_ASYM_IQ_MEAS_BIAS * self.V2n
+        self._iq = iq_meas
 
         # ── DC bus (Simulink-CALIBRATED, 2026-06-10): a[0]=i_sh_d is unused (discarded in Simulink; id
         # is set by the shunt's own Vdc PI loop, which holds Vdc near 1.0). Vdc is dragged down only by
@@ -218,10 +339,27 @@ class HPTFRTEnv(gym.Env):
         # work, would require re-calibration + re-train + re-validate). See report §5.
         if Vg_p > 1.1:                                     # HVRT swell: command-driven DC undershoot
             absb = max(0.0, -i_sh_q)                       # reactive ABSORPTION magnitude (iq<0)
+            self._hvrt_absorb_peak = max(self._hvrt_absorb_peak, absb)
+            self._hvrt_swell_peak = max(self._hvrt_swell_peak, Vg_p)
             Vdc_eq = (SW_C0 - SW_AB*absb - SW_SE*V_se_d - SW_X*absb*V_se_d - SW_DEP*(Vg_p - 1.25))
             Vdc_eq = min(VDC_CHOP, max(0.05, Vdc_eq))      # swell-regime map (Stage A); LVRT path unchanged
         else:
-            Vdc_eq = min(VDC_CHOP, max(0.05, 1.0 - sag_iq - sag_se))
+            stiff = max(0.0, (self.scr - LVRT_STIFF_SCR0) / (10.0 - LVRT_STIFF_SCR0))
+            stiff = min(1.0, stiff)
+            lvrt_stiff_drop = 0.0
+            if (in_fault_now and s['category'] == 'LVRT' and s['fault_type'] == 'sym3ph'
+                    and Vg_p <= LVRT_STIFF_VG_MAX):
+                sev = max(0.0, 0.9 - Vg_p) / 0.7
+                lvrt_stiff_drop = LVRT_STIFF_DC_DROP * stiff * sev
+                lvrt_stiff_drop += LVRT_XR_DC_DROP * xr * stiff * sev
+            Vdc_eq = min(VDC_CHOP, max(0.05, 1.0 - sag_iq - sag_se - lvrt_stiff_drop))
+        if s['category'] == 'HVRT' and (not in_fault_now) and self._prev_in_fault:
+            self._hvrt_clear_timer = 0.0
+        if s['category'] == 'HVRT' and self._hvrt_clear_timer < HVRT_CLEAR_WIN:
+            over = max(0.0, (self._hvrt_swell_peak - 1.1) / 0.2)
+            release_drop = HVRT_CLEAR_DROP * self._hvrt_absorb_peak * min(1.0, over) * math.exp(-self._hvrt_clear_timer / HVRT_CLEAR_TAU)
+            Vdc_eq = max(0.05, Vdc_eq - release_drop)
+            self._hvrt_clear_timer += DT
         nsub = 10
         hsub = DT / nsub
         for _ in range(nsub):
@@ -233,20 +371,37 @@ class HPTFRTEnv(gym.Env):
 
         # ── envelope / trip check (boundary is INJECTED via overridable hooks so the versioned
         #    criterion is decoupled from the shared plant dynamics above; V2 overrides the hooks) ──
-        s = self._sc
-        t_rel = self.t - s['t_fault']
+        # The voltage/current sample above was computed at t_sample. Checking the envelope at the
+        # post-increment timestamp creates a one-step false trip around HVRT/LVRT boundary changes.
+        t_rel = t_sample - s['t_fault']
         if s['category'] == 'LVRT':
             if self.V2p < self._lvrt_floor(t_rel) - self._trip_tol():
                 self.tripped = True
         else:  # HVRT upper boundary
             if self.V2p > self._hvrt_ceiling(t_rel) + self._trip_tol():
                 self.tripped = True
+        self._prev_in_fault = in_fault_now
 
         # ── reward (FRT_SPEC §1 五条判据) ─────────────────────────────────────────
         iq_ref = self._iq_ref()
         r_connect = -20.0 if self.tripped else 0.0
-        r_reactive = -8.0 * abs(iq_ref - i_sh_q)   # strengthened (2026-06-10): force GB/T reactive injection,
+        r_reactive = -8.0 * abs(iq_ref - iq_meas)   # strengthened (2026-06-10): force GB/T reactive injection,
         # decouple from V2p-raising (else agent uses cheap series V_se_d which drains Vdc in Simulink; see asym bug)
+        # Criteria-aligned reactive shaping: the frt-v2 criterion immediately fails sustained wrong-sign
+        # current after the response delay. Make that failure mode loud in the reward, especially for
+        # asymmetric LVRT where measured iq can cross negative even when the command is small positive.
+        assess_reactive = in_fault_now and (t_sample >= s['t_fault'] + FV2.REACTIVE_DELAY * TSCALE)
+        if assess_reactive:
+            if self.V2p < 0.9:
+                min_support = max(0.0, iq_ref - FV2.REACTIVE_TOL)
+                short = max(0.0, min_support - iq_meas)
+                wrong = max(0.0, -iq_meas - FV2.REACTIVE_SIGN_EPS)
+                r_reactive += -35.0 * short - 60.0 * wrong
+            elif self.V2p > 1.1:
+                max_absorb = iq_ref + FV2.REACTIVE_TOL
+                short = max(0.0, iq_meas - max_absorb)
+                wrong = max(0.0, iq_meas - FV2.REACTIVE_SIGN_EPS)
+                r_reactive += -35.0 * short - 60.0 * wrong
         r_limit = -5.0 * max(0.0, math.hypot(i_sh_d, i_sh_q) - I_CONV_MAX)
         r_v2 = -5.0 * abs(1.0 - self.V2p) - 3.0 * self.V2n
         r_vdc = -10.0 * max(0.0, 0.82 - self.Vdc) - 5.0 * max(0.0, self.Vdc - 1.25)
@@ -255,16 +410,19 @@ class HPTFRTEnv(gym.Env):
         reward = r_connect + r_reactive + r_limit + r_v2 + r_vdc + 1.0  # +1 alive
 
         done = self.t >= float(s['T_sim']) * TSCALE or self.tripped
-        info = {'V2p': self.V2p, 'V2n': self.V2n, 'Vdc': self.Vdc, 'iq': i_sh_q,
-                'iq_ref': iq_ref, 'tripped': self.tripped, 't': self.t}
+        info = {'V2p': self.V2p, 'V2n': self.V2n, 'Vdc': self.Vdc, 'iq': iq_meas, 'iq_cmd': iq_cmd,
+                'iq_ref': iq_ref, 'mse_d': V_se_d, 'mse_q': V_se_q,
+                'Vdc_eq': Vdc_eq, 'Vg_p': Vg_p, 'Vg_n': Vg_n,
+                'tripped': self.tripped, 't': self.t}
         return self._obs(), float(reward), bool(done), False, info
 
 
 def load_frt_scenarios(csv_path):
     import csv
     rows = []
+    text_fields = ('category', 'fault_type', 'grid', 'scenario_profile')
     with open(csv_path, encoding='utf-8') as f:
         for r in csv.DictReader(f):
-            rows.append({k: (float(v) if k not in ('category', 'fault_type', 'grid') else v)
+            rows.append({k: (float(v) if (v != '' and k not in text_fields) else v)
                          for k, v in r.items()})
     return rows

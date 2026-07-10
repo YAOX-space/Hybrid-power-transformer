@@ -16,7 +16,7 @@ scenarios are never counted as certified passes.
 from __future__ import annotations
 import numpy as np
 from hpt_frt.common import frt_v2 as FV2
-from .frt_env import TSCALE
+from .frt_env import TSCALE, effective_fault_dur
 
 CRITERIA = ('connect', 'reactive', 'limit', 'recover', 'survive')
 
@@ -49,15 +49,21 @@ def evaluate_scenario(model, env_cls, scenario):
     if tr['t'].size < 2:
         return {'kind': 'rollout_failed', 'error': f'rollout produced {tr["t"].size} samples'}
     t_fault = float(scenario['t_fault'])
-    dur = float(scenario['fault_dur']) * TSCALE        # the env compresses the fault duration by TSCALE
+    # The env compresses post-onset dynamics by TSCALE, but frt_v2.evaluate expects real seconds for
+    # voltage-time envelopes, response delay, and dwell. Map each sampled ODE timestamp back to its
+    # real-time equivalent around the true onset.
+    t_eval = t_fault + (tr['t'] - t_fault) / TSCALE
+    dur = effective_fault_dur(scenario)
     residual = float(scenario['target_V_pu'])
     try:
-        res = FV2.evaluate(tr['t'], tr['V1'], scenario['category'], residual,
+        res = FV2.evaluate(t_eval, tr['V1'], scenario['category'], residual,
                            t_fault, dur, V2=tr['V2'], Vdc=tr['Vdc'], iq=tr['iq'],
                            i_peak=tr['i_peak'], idq_mag=tr['idq_mag'], i2=tr['i2'])
     except ValueError as e:
         return {'kind': 'unevaluable', 'error': str(e)}
-    res['response'] = _response_of(tr, t_fault, residual)   # SEPARATE 5 ms metric (never in frt_pass)
+    tr_eval = dict(tr)
+    tr_eval['t'] = t_eval
+    res['response'] = _response_of(tr_eval, t_fault, residual)   # SEPARATE 5 ms metric (never in frt_pass)
     # Vdc-only survival SELECTION signal (audit 2026-06-27): the full `survive` criterion needs I2
     # (absent in the averaged ODE) so it stays NOT_EVALUATED for CERTIFICATION. But the ODE Vdc IS
     # informative (esp. after the Stage-A swell extension), so we expose a Vdc-min survival gate for

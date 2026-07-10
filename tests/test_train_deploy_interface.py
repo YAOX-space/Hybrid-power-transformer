@@ -49,6 +49,18 @@ def test_detector_elapsed_independent_of_true_onset():
     assert a[15][0] is False                # reset after recovery to normal band
 
 
+def test_detector_keeps_hvrt_visible_during_measured_recovery():
+    det = V2.OnlineFaultDetector()
+    assert det.update(0.00, 1.0, 0.0) == (False, 0.0)
+    inf, _ = det.update(0.02, 1.18, 0.0)
+    assert inf and det.recent_hvrt
+    inf, _ = det.update(0.08, 0.92, 0.0)
+    assert inf and det.recent_hvrt
+    assert V2.online_fault_class(0.92, 0.0, det.recent_hvrt) == F2I['swell']
+    inf, _ = det.update(0.12, 1.0, 0.0)
+    assert not inf and not det.recent_hvrt
+
+
 def test_obs_identical_for_same_measurement_different_true_tfault():
     """Two envs with identical measured state but different scenario t_fault produce identical obs."""
     e1 = V2.HPTFRTEnvV2([{**SC, 't_fault': 0.05}]); e1.reset()

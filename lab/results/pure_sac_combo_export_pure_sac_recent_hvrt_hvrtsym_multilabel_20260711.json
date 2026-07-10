@@ -1,0 +1,17 @@
+{
+  "run_id": "pure_sac_recent_hvrt_hvrtsym_multilabel_20260711",
+  "pure_sac": true,
+  "deployment_mode": "mi12 online-gated four-expert SAC",
+  "model_paths": {
+    "sym": "lab\\results\\pure_sac_simtrace_bc_20260711_012231\\sac_sym_best.zip",
+    "asym": "lab\\results\\pure_sac_simtrace_bc_20260710_134037\\sac_asym_best.zip",
+    "hvrt_sym": "lab\\results\\pure_sac_simtrace_bc_20260711_020617\\sac_hvrt_sym_best.zip",
+    "hvrt_asym": "lab\\results\\pure_sac_simtrace_bc_20260710_135918\\sac_hvrt_asym_best.zip"
+  },
+  "mat_files": {
+    "sym": "E:\\research_space\\Hybrid-power-transformer\\lab\\sac_sym_weights.mat",
+    "asym": "E:\\research_space\\Hybrid-power-transformer\\lab\\sac_asym_weights.mat",
+    "hvrt_sym": "E:\\research_space\\Hybrid-power-transformer\\lab\\sac_hvrt_sym_weights.mat",
+    "hvrt_asym": "E:\\research_space\\Hybrid-power-transformer\\lab\\sac_hvrt_asym_weights.mat"
+  }
+}

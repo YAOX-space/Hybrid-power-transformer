@@ -20,8 +20,8 @@ for _sub in ['', '.multiarray', '.numeric', '._multiarray_umath', '.umath', '.nu
         pass
 
 
-def load_sac(path, device='cpu'):
+def load_sac(path, device='cpu', env=None):
     """Load a SAC checkpoint robustly across numpy1/numpy2 pickles. Returns the SAC model."""
     from stable_baselines3 import SAC
     co = {'lr_schedule': (lambda _: 3e-4), 'clip_range': (lambda _: 0.2)}
-    return SAC.load(str(path), device=device, custom_objects=co)
+    return SAC.load(str(path), device=device, env=env, custom_objects=co)
