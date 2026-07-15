@@ -105,7 +105,7 @@ class HPTVoltageEnvConfig:
     recovery_time_norm_s: float = 0.50
     derivative_norm: float = 50.0
     dynamic_reg_limit_topology1: float = 0.80
-    dynamic_reg_limit_topology2: float = 0.605
+    dynamic_reg_limit_topology2: float = 0.60
     topology2_dynamic_soft_reg_limit: float = 0.25
     topology2_dynamic_stress_weight: float = 35.0
     topology2_dynamic_slew_weight: float = 8.0
