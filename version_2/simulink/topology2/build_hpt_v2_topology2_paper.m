@@ -95,6 +95,7 @@ assignin(mw, 'hpt_sac_fixed_reg_d', 0.0);
 assignin(mw, 'hpt_sac_fixed_reg_q', 0.0);
 assignin(mw, 'hpt_sac_fixed_energy_d', 0.0);
 assignin(mw, 'hpt_sac_fixed_energy_q', 0.0);
+assignin(mw, 'hpt_sac_guard_enable', 0.0);
 
 add_block('powerlib/powergui', [M '/powergui'], 'Position', P(20, 20, 70, 40));
 set_param([M '/powergui'], 'SimulationMode', 'Discrete', 'SampleTime', num2str(Ts));

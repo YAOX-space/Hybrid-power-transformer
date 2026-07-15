@@ -50,10 +50,11 @@
 
 ## 重要说明
 
-当前通过的 fault-transition 不是“纯 actor 原始输出无保护”：
+当前通过的 fault-transition 是 guarded smoke，不是最终成果：
 
-- topology1 仍使用已校准的执行层安全投影。
-- topology2 动态 fault-transition 使用 conventional-like 执行层保护，避免 actor 在动态故障边沿产生不物理的注入。
+- `hpt_sac_guard_enable = 1` 时，topology1 使用已校准的执行层安全投影。
+- `hpt_sac_guard_enable = 1` 时，topology2 动态 fault-transition 使用 conventional-like 执行层保护，避免 actor 在动态故障边沿产生不物理的注入。
+- `hpt_sac_guard_enable = 0` 才是最终 direct SAC 路径；除硬件调制限幅外，不允许执行层覆盖 actor 动作。
 
 因此，本轮达到了研究计划里的 minimum success / smoke gate：
 
@@ -65,14 +66,15 @@
 但还没有达到 strong/final success：
 
 - 还没有证明一个无执行层保护的统一 actor 能单独通过全动态矩阵。
+- final promotion gate 必须在 `hpt_sac_guard_enable = 0` 下通过。
 - 还没有完成 TD3+BC/IQL/CQL offline baseline。
 - 还没有完成 SAC-MOPO/MOReL 与 learned proxy uncertainty penalty 的正式比较。
 - 还没有跑 full validation matrix，包括更深 sag、HVRT、更弱电网、非对称故障和 DC-link 初值扰动。
 
 ## 下一步
 
-1. 把当前 execution-layer protection 作为 teacher 生成训练目标，让 SAC actor 内化 topology2 dynamic control law。
+1. 把当前 execution-layer protection 只作为 teacher 生成训练目标，让 SAC actor 内化 topology2 dynamic control law。
 2. 扩展 fault-transition 数据集，覆盖 0.2/0.5/0.75/0.85/0.9 pu LVRT、1.1/1.2/1.25/1.3 pu HVRT 和非对称故障。
 3. 训练 offline baseline：TD3+BC 和 IQL 优先，CQL 作为保守策略对照。
 4. 训练 SAC-MOPO/MOReL，使用 learned proxy uncertainty 避免 SAC exploiting proxy errors。
-5. 只有通过 switch-level expanded matrix 的 actor 才能晋级为最终候选。
+5. 只有在 `hpt_sac_guard_enable = 0` 下通过 switch-level expanded matrix 的 actor 才能晋级为最终候选。

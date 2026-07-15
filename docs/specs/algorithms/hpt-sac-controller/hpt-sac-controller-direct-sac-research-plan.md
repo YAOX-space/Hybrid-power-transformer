@@ -23,6 +23,12 @@ observation -> actor -> [m_reg_d, m_reg_q, m_energy_d, m_energy_q]
 The deployment layer converts these normalized modulation commands to PWM/gate
 signals for the regulating and energy converters.
 
+Final promotion must use `hpt_sac_guard_enable = 0`: execution-layer
+teacher guards, topology-specific action overwrites, and conventional-like
+fallback laws may be used for data generation and smoke baselines, but they are
+not allowed in the final claimed controller. Hardware modulation saturation is
+still allowed.
+
 ## 2. Current Evidence
 
 Latest overnight run:
@@ -663,6 +669,8 @@ Final success:
 
 - Unified or topology-conditioned direct SAC passes the full validation matrix.
 - No non-physical average injection source is used for final validation.
+- `hpt_sac_guard_enable = 0` for final switch-level validation; no
+  execution-layer rule may overwrite actor actions except actuator saturation.
 - The final report clearly separates training proxy results from physical
   switch-level Simulink results.
 

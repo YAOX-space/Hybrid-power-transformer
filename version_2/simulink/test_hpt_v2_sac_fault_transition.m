@@ -177,6 +177,7 @@ function row = run_fault_case(M, topology, faultName, faultPu, mode, sacEnable, 
     in = in.setVariable('hpt_sac_energy_enable', 0.0, 'Workspace', M);
     in = in.setVariable('hpt_sac_policy_mode', 1.0, 'Workspace', M);
     in = in.setVariable('hpt_sac_actor_select_mode', double(sacEnable > 0.5) * 2.0, 'Workspace', M);
+    in = in.setVariable('hpt_sac_guard_enable', 1.0, 'Workspace', M);
     in = in.setVariable('hpt_sac_vref_phase', targetPhaseRms, 'Workspace', M);
     out = sim(in);
 

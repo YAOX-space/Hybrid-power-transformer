@@ -107,6 +107,7 @@ function row = run_case(M, modelName, mode, gridVoltage, sacEnable, policyMode, 
     in = in.setVariable('hpt_sac_enable', sacEnable, 'Workspace', M);
     in = in.setVariable('hpt_sac_energy_enable', 0.0, 'Workspace', M);
     in = in.setVariable('hpt_sac_policy_mode', policyMode, 'Workspace', M);
+    in = in.setVariable('hpt_sac_guard_enable', 1.0, 'Workspace', M);
     in = in.setVariable('hpt_sac_vref_phase', targetPhaseRms, 'Workspace', M);
     out = sim(in);
 
