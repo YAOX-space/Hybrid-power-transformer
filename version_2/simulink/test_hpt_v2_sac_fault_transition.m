@@ -36,7 +36,7 @@ faultStart = 0.035;
 faultClear = 0.095;
 stopTime = 0.16;
 Ts = 20e-6;
-assertEnabled = false;
+assertEnabled = true;
 
 oldDir = pwd;
 cleanup = onCleanup(@() cd(oldDir));

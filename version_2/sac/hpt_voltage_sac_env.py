@@ -593,6 +593,13 @@ class HPTVoltageSACEnv(gym.Env):
         candidates = np.linspace(-self.config.reg_limit, self.config.reg_limit, 81)
         best_score = float("inf")
         best_reg_d = 0.0
+        if self._topology_name() == "topology2":
+            lv_low, lv_high = 198.0 / 207.0, 212.0 / 207.0
+            vdc_low, vdc_high = 760.0 / 800.0, 930.0 / 800.0
+        else:
+            lv_low, lv_high = 200.0 / 207.0, 210.0 / 207.0
+            vdc_low, vdc_high = 760.0 / 800.0, 920.0 / 800.0
+
         for raw_reg_d in candidates:
             projected = self._project_action(
                 np.asarray([raw_reg_d, 0.0, 0.0, 0.0], dtype=np.float32)
@@ -603,10 +610,14 @@ class HPTVoltageSACEnv(gym.Env):
             if lv_target is None:
                 continue
             vdc_target = 1.0 if vdc_target is None else float(vdc_target)
-            vdc_penalty = 8.0 * max(0.0, 0.90 - vdc_target) ** 2
-            vdc_penalty += 4.0 * max(0.0, vdc_target - 1.18) ** 2
-            action_penalty = 0.015 * abs(reg_d)
-            score = abs(float(lv_target) - 1.0) + vdc_penalty + action_penalty
+            lv_penalty = max(0.0, lv_low - float(lv_target)) ** 2
+            lv_penalty += max(0.0, float(lv_target) - lv_high) ** 2
+            vdc_penalty = max(0.0, vdc_low - vdc_target) ** 2
+            vdc_penalty += max(0.0, vdc_target - vdc_high) ** 2
+            tracking_bias = 0.05 * abs(float(lv_target) - 1.0)
+            dc_bias = 0.03 * abs(vdc_target - 1.0)
+            action_penalty = 0.003 * abs(reg_d)
+            score = 35.0 * lv_penalty + 30.0 * vdc_penalty + tracking_bias + dc_bias + action_penalty
             if score < best_score:
                 best_score = score
                 best_reg_d = reg_d
@@ -626,7 +637,7 @@ class HPTVoltageSACEnv(gym.Env):
         cfg = self.config
         if (self.v_pos < cfg.sag_entry or self.v_lv < 0.98) and projected[0] < 0.0:
             projected[0] = 0.0
-        elif (self.v_pos > cfg.swell_entry or self.v_lv > 1.00) and projected[0] > 0.0:
+        elif self.v_pos > cfg.swell_entry and projected[0] > 0.0:
             projected[0] = 0.0
 
         if self.vdc < 0.95:
