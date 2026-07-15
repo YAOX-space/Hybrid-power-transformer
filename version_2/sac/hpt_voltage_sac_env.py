@@ -1,26 +1,28 @@
 """Topology-neutral SAC surrogate for HPT voltage regulation and FRT transitions.
 
 This environment targets the final HPT switch-level models in
-``version_2/simulink``.  It keeps the final 4-D modulation-action contract and
+``version_2/simulink``.  It keeps the final 4-D direct-action contract and
 extends the observation from the early steady-regulation 16-D vector to a
 fault-transition-aware 24-D vector:
 
     obs = [
         v_lv_rms_pu, v_pos_pu, v_neg_pu, vdc_pu, vdc_err_pu, v_err_pu,
         energy_id_pu, energy_iq_pu,
-        last_m_reg_d, last_m_reg_q, last_m_energy_d, last_m_energy_q,
+        last_m_reg_d, last_m_reg_q, last_i_energy_d_ref, last_i_energy_q_ref,
         sag_flag, swell_flag, topology1_flag, topology2_flag,
         fault_active_est, recovery_active_est, t_fault_est_pu, t_recovery_est_pu,
         v_fault_min_pu, v_fault_max_pu, dv_pos_dt_pu, d_vdc_dt_pu,
     ]
 
-    act = [m_reg_d, m_reg_q, m_energy_d, m_energy_q]
+    act = [m_reg_d, m_reg_q, i_energy_d_ref_pu, i_energy_q_ref_pu]
 
 The fault detector and scenario coverage are intentionally borrowed from the
 older ``src/hpt_frt/device`` FRT SAC design: online measured-voltage detection,
 LVRT/HVRT depth sweeps, asymmetric negative-sequence cases, and recovery
 segments.  The dynamics remain a fast averaged proxy; the switch-level Simulink
-models are still the source of record.
+models are still the source of record.  The energy action is intentionally a
+normalized dq current-reference command; the Simulink switch-level controller
+turns it into TPFBVSC PWM modulation through a physical current loop.
 """
 from __future__ import annotations
 

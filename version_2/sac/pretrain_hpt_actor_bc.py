@@ -240,10 +240,12 @@ def append_raw_smoke_corrections(
                 continue
             topology = str(row.get("topology", "")).lower()
             scenario_type = str(row.get("scenario_type", "")).lower()
-            vpu = float(row.get("obs_vpu_mean") or float(row.get("lv_mean", 207.0)) / 207.0)
-            vpos = float(row.get("obs_vpos_mean") or vpu)
-            vdcpu = float(row.get("obs_vdcpu_mean") or float(row.get("vdc_min", 800.0)) / 800.0)
             lv_mean = float(row.get("lv_mean") or 207.0)
+            vpu = lv_mean / 207.0
+            vpos = vpu
+            obs_vdcpu = float(row.get("obs_vdcpu_mean") or 1.0)
+            vdc_min_pu = float(row.get("vdc_min") or 800.0) / 800.0
+            vdcpu = min(obs_vdcpu, vdc_min_pu)
             current_reg_d = float(row.get("reg_d_mean") or 0.0)
             current_reg_q = float(row.get("reg_q_mean") or 0.0)
             current_energy_d = float(row.get("energy_d_mean") or 0.0)
@@ -255,7 +257,7 @@ def append_raw_smoke_corrections(
             obs[2] = 0.0
             obs[3] = vdcpu
             obs[4] = 1.0 - vdcpu
-            obs[5] = float(row.get("obs_verr_mean") or (1.0 - vpu))
+            obs[5] = 1.0 - vpu
             obs[8] = current_reg_d
             obs[9] = current_reg_q
             obs[10] = current_energy_d
@@ -302,6 +304,71 @@ def append_raw_smoke_corrections(
             for _ in range(max(1, repeat)):
                 extra_x.append(obs)
                 extra_y.append(target)
+
+    if not extra_x:
+        return X, Y, 0
+    return (
+        np.concatenate([X, np.asarray(extra_x, dtype=np.float32)], axis=0),
+        np.concatenate([Y, np.asarray(extra_y, dtype=np.float32)], axis=0),
+        len(extra_x),
+    )
+
+
+def append_energy_teacher_trace_samples(
+    X: np.ndarray,
+    Y: np.ndarray,
+    csv_path: Path | None,
+    *,
+    repeat: int,
+    reg_limit: float,
+    energy_limit: float,
+    dynamic_reg_limit_topology1: float,
+    dynamic_reg_limit_topology2: float,
+    topology2_phase_equivalent: bool,
+    phase_shift_rad: float,
+) -> tuple[np.ndarray, np.ndarray, int]:
+    if csv_path is None:
+        return X, Y, 0
+    if not csv_path.exists():
+        raise FileNotFoundError(csv_path)
+
+    extra_x: list[np.ndarray] = []
+    extra_y: list[np.ndarray] = []
+    with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
+        for row in csv.DictReader(f):
+            obs = np.asarray(
+                [float(row[f"obs_{idx:02d}"]) for idx in range(1, OBS_DIM_HPT + 1)],
+                dtype=np.float32,
+            )
+            topology = str(row.get("topology", "")).lower()
+            dynamic_mode = str(row.get("scenario_type", "")).lower() != "steady"
+            target = execution_guard_teacher_action(
+                obs,
+                reg_limit=reg_limit,
+                energy_limit=energy_limit,
+                dynamic_mode=dynamic_mode,
+                dynamic_reg_limit_topology1=dynamic_reg_limit_topology1,
+                dynamic_reg_limit_topology2=dynamic_reg_limit_topology2,
+            )
+            if (
+                topology2_phase_equivalent
+                and topology == "topology2"
+                and dynamic_mode
+                and target[0] < 0.0
+            ):
+                raw_reg = float(target[0])
+                target[0] = raw_reg * np.cos(phase_shift_rad)
+                target[1] = raw_reg * np.sin(phase_shift_rad)
+
+            target[2] = float(
+                np.clip(float(row.get("target_action_03") or 0.0), -energy_limit, energy_limit)
+            )
+            target[3] = float(
+                np.clip(float(row.get("target_action_04") or 0.0), -energy_limit, energy_limit)
+            )
+            for _ in range(max(1, repeat)):
+                extra_x.append(obs)
+                extra_y.append(target.astype(np.float32))
 
     if not extra_x:
         return X, Y, 0
@@ -411,11 +478,13 @@ def main() -> None:
     parser.add_argument("--switch-trace-phase-shift-rad", type=float, default=0.55)
     parser.add_argument("--raw-smoke-correction-csv", type=Path, default=None)
     parser.add_argument("--raw-smoke-correction-repeat", type=int, default=512)
+    parser.add_argument("--energy-teacher-trace-csv", type=Path, default=None)
+    parser.add_argument("--energy-teacher-trace-repeat", type=int, default=16)
     parser.add_argument("--epochs", type=int, default=240)
     parser.add_argument("--batch-size", type=int, default=512)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--reg-limit", type=float, default=0.80)
-    parser.add_argument("--energy-limit", type=float, default=0.05)
+    parser.add_argument("--energy-limit", type=float, default=0.95)
     parser.add_argument("--teacher-prior-weight", type=float, default=30.0)
     parser.add_argument("--init-model", type=Path, default=None)
     parser.add_argument("--model-out", type=Path, default=MODELS / "hpt_voltage_sac_bc_warmstart.zip")
@@ -464,6 +533,18 @@ def main() -> None:
         topology2_phase_equivalent=args.switch_trace_topology2_phase_equivalent,
         phase_shift_rad=args.switch_trace_phase_shift_rad,
     )
+    X, Y, energy_teacher_samples = append_energy_teacher_trace_samples(
+        X,
+        Y,
+        args.energy_teacher_trace_csv,
+        repeat=args.energy_teacher_trace_repeat,
+        reg_limit=args.reg_limit,
+        energy_limit=args.energy_limit,
+        dynamic_reg_limit_topology1=config.dynamic_reg_limit_topology1,
+        dynamic_reg_limit_topology2=config.dynamic_reg_limit_topology2,
+        topology2_phase_equivalent=args.switch_trace_topology2_phase_equivalent,
+        phase_shift_rad=args.switch_trace_phase_shift_rad,
+    )
     model = build_or_load_model(args, scenarios, config)
     metrics = train_actor_bc(
         model,
@@ -493,6 +574,7 @@ def main() -> None:
             **metrics,
             "switch_trace_augmented_samples": int(switch_trace_samples),
             "raw_smoke_correction_samples": int(raw_smoke_samples),
+            "energy_teacher_trace_samples": int(energy_teacher_samples),
         },
     }
     args.model_out.with_suffix(".json").write_text(json.dumps(sidecar, indent=2), encoding="utf-8")

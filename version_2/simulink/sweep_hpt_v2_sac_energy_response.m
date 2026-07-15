@@ -8,8 +8,8 @@
 %   hpt_sac_policy_mode = -1
 %   hpt_sac_energy_enable = 1
 %
-% This isolates how [m_energy_d,m_energy_q] changes the DC link and the
-% energy-side current on each topology.
+% This isolates how [i_energy_d_ref_pu,i_energy_q_ref_pu] changes the DC
+% link and the energy-side current on each topology.
 
 clearvars;
 close all;
@@ -122,7 +122,7 @@ function row = run_energy_case(M, topology, gridVoltage, targetPhaseRms, ...
     row.cmd_m_reg_q = 0.0;
     row.cmd_m_energy_d = mEnergyD;
     row.cmd_m_energy_q = mEnergyQ;
-    row.action_semantics = "fixed_energy_command_through_controller_projection";
+    row.action_semantics = "fixed_energy_current_reference_through_dq_current_loop";
     row.action_raw_available = true;
     row.action_projected_available = true;
     row.action_effective_available = true;

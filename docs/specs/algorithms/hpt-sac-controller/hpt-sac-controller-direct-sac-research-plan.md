@@ -17,11 +17,12 @@ residual controller and not a second control layer around SAC.
 Final deployment interface:
 
 ```text
-observation -> actor -> [m_reg_d, m_reg_q, m_energy_d, m_energy_q]
+observation -> actor -> [m_reg_d, m_reg_q, i_energy_d_ref_pu, i_energy_q_ref_pu]
 ```
 
-The deployment layer converts these normalized modulation commands to PWM/gate
-signals for the regulating and energy converters.
+The deployment layer converts the regulating modulation commands and the
+energy-converter current-reference commands to PWM/gate signals for the two
+switch-level converters.
 
 Final promotion must use `hpt_sac_guard_enable = 0`: execution-layer
 teacher guards, topology-specific action overwrites, and conventional-like
@@ -198,8 +199,8 @@ Current action interface remains 4-D:
 | --- | --- | --- |
 | `m_reg_d` | regulating converter d-axis modulation | `[-0.8, 0.8]` |
 | `m_reg_q` | regulating converter q-axis modulation | `[-0.8, 0.8]` |
-| `m_energy_d` | energy converter d-axis modulation | `[-0.95, 0.95]` |
-| `m_energy_q` | energy converter q-axis modulation | `[-0.95, 0.95]` |
+| `i_energy_d_ref_pu` | normalized TPFBVSC d-axis current reference | `[-0.95, 0.95]` |
+| `i_energy_q_ref_pu` | normalized TPFBVSC q-axis current reference | `[-0.95, 0.95]` |
 
 Observation options:
 
