@@ -59,7 +59,10 @@ def _read_rows(path: Path) -> list[dict[str, float | str]]:
                 if key in {"model", "topology"}:
                     row[key] = value
                 else:
-                    row[key] = float(value)
+                    try:
+                        row[key] = float(value)
+                    except (TypeError, ValueError):
+                        row[key] = value
             rows.append(row)
     if not rows:
         raise ValueError(f"Sweep CSV is empty: {path}")

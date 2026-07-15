@@ -1,6 +1,6 @@
 {
   "schema": "hpt_proxy_calibration_v1",
-  "source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_proxy_sweep\\hpt_v2_sac_proxy_sweep_20260715_014435.csv",
+  "source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_proxy_sweep\\hpt_v2_sac_proxy_sweep_20260715_182303.csv",
   "target_phase_rms": 207.0,
   "action_contract": "[m_reg_d, m_reg_q, m_energy_d, m_energy_q]",
   "energy_bridge_mode": "calibrated_direct_energy_bridge_available",
@@ -16,15 +16,15 @@
   "topologies": {
     "topology1": {
       "topology": "topology1",
-      "source_gain": 0.6596233705725101,
-      "source_bias": 0.12433805518702001,
-      "reg_gain": 0.4789587380700238,
-      "vdc_base_pu": 1.1132258135540596,
-      "vdc_reg_abs_cost": 0.27004243431800756,
+      "source_gain": 0.5662045035669253,
+      "source_bias": 0.21196898386277302,
+      "reg_gain": 0.517330116120672,
+      "vdc_base_pu": 1.1008646264169146,
+      "vdc_reg_abs_cost": 0.1090979996814245,
       "samples": 15,
-      "fit_rmse_pu": 0.029127255915532717,
+      "fit_rmse_pu": 0.016017229897623792,
       "reg_sign": 1.0,
-      "stable_reg_limit": 0.717930517370647,
+      "stable_reg_limit": 0.583070294304312,
       "response_table": [
         {
           "grid_pu": 0.9,
@@ -65,11 +65,11 @@
         {
           "grid_pu": 0.9,
           "cmd_m_reg_d": 0.8,
-          "reg_d_mean": 0.717930517370647,
-          "lv_pu_mean": 1.00000594250708,
-          "vdc_pu_mean": 0.7026560586282025,
-          "lv_unbalance_pu": 0.015059121411120726,
-          "vdc_min_pu": 0.6333712516671537
+          "reg_d_mean": 0.583070294304312,
+          "lv_pu_mean": 1.00000866801937,
+          "vdc_pu_mean": 1.0291305193488411,
+          "lv_unbalance_pu": 0.004178585847319932,
+          "vdc_min_pu": 0.90954790571894
         },
         {
           "grid_pu": 1.0,
@@ -101,37 +101,37 @@
         {
           "grid_pu": 1.0,
           "cmd_m_reg_d": 0.4,
-          "reg_d_mean": 0.399999999999994,
-          "lv_pu_mean": 1.02414423503308,
-          "vdc_pu_mean": 1.0586268092838624,
-          "lv_unbalance_pu": 0.0038151441644792756,
+          "reg_d_mean": 0.369407648087974,
+          "lv_pu_mean": 0.99925723159657,
+          "vdc_pu_mean": 1.06186866457088,
+          "lv_unbalance_pu": 0.0023164080209864446,
           "vdc_min_pu": 0.9500831371765475
         },
         {
           "grid_pu": 1.0,
           "cmd_m_reg_d": 0.8,
-          "reg_d_mean": 0.620244938765308,
-          "lv_pu_mean": 1.07398454434806,
-          "vdc_pu_mean": 1.03251068461192,
-          "lv_unbalance_pu": 0.007348519303170193,
-          "vdc_min_pu": 0.9005345066175374
+          "reg_d_mean": 0.476462846697829,
+          "lv_pu_mean": 1.00066350103016,
+          "vdc_pu_mean": 1.0578747143879437,
+          "lv_unbalance_pu": 0.0040048629887227925,
+          "vdc_min_pu": 0.9086433461396437
         },
         {
           "grid_pu": 1.1,
           "cmd_m_reg_d": -0.8,
-          "reg_d_mean": -0.00439890027493127,
-          "lv_pu_mean": 0.838157825153783,
-          "vdc_pu_mean": 1.1483977608315787,
-          "lv_unbalance_pu": 0.004644686455891323,
+          "reg_d_mean": 0.0,
+          "lv_pu_mean": 0.834851736786323,
+          "vdc_pu_mean": 1.145211764713704,
+          "lv_unbalance_pu": 0.004286743780765561,
           "vdc_min_pu": 0.9447635134589549
         },
         {
           "grid_pu": 1.1,
           "cmd_m_reg_d": -0.4,
-          "reg_d_mean": -0.00219945013746563,
-          "lv_pu_mean": 0.837473102632262,
-          "vdc_pu_mean": 1.14836776000252,
-          "lv_unbalance_pu": 0.005055041086030242,
+          "reg_d_mean": 0.0,
+          "lv_pu_mean": 0.834851736786323,
+          "vdc_pu_mean": 1.145211764713704,
+          "lv_unbalance_pu": 0.004286743780765561,
           "vdc_min_pu": 0.9447635134589549
         },
         {
@@ -146,20 +146,20 @@
         {
           "grid_pu": 1.1,
           "cmd_m_reg_d": 0.4,
-          "reg_d_mean": 0.350912271932014,
-          "lv_pu_mean": 1.06836293364325,
-          "vdc_pu_mean": 1.06295188457093,
-          "lv_unbalance_pu": 0.004525211552064184,
+          "reg_d_mean": 0.281706498203237,
+          "lv_pu_mean": 0.999947761990037,
+          "vdc_pu_mean": 1.0672631013202962,
+          "lv_unbalance_pu": 0.0031373291981875704,
           "vdc_min_pu": 0.9454013780648163
         },
         {
           "grid_pu": 1.1,
           "cmd_m_reg_d": 0.8,
-          "reg_d_mean": 0.516070982254441,
-          "lv_pu_mean": 1.07864787790816,
-          "vdc_pu_mean": 1.058763884803295,
-          "lv_unbalance_pu": 0.014765652032558117,
-          "vdc_min_pu": 0.899516965169195
+          "reg_d_mean": 0.350266141173093,
+          "lv_pu_mean": 1.00129469377158,
+          "vdc_pu_mean": 1.0651179824401964,
+          "lv_unbalance_pu": 0.0035273619454776377,
+          "vdc_min_pu": 0.905025348436955
         }
       ],
       "energy_response_table": [
@@ -474,32 +474,32 @@
     },
     "topology2": {
       "topology": "topology2",
-      "source_gain": 0.4262819916373988,
-      "source_bias": 0.5031382905577864,
-      "reg_gain": 0.11108635805526917,
-      "vdc_base_pu": 1.0930552850534176,
-      "vdc_reg_abs_cost": 0.11368096920114099,
+      "source_gain": 0.4998216949814475,
+      "source_bias": 0.46636398090632464,
+      "reg_gain": 0.015793513226091682,
+      "vdc_base_pu": 1.1802666364088397,
+      "vdc_reg_abs_cost": 0.20953632913649378,
       "samples": 15,
-      "fit_rmse_pu": 0.05000350856705605,
+      "fit_rmse_pu": 0.03816920162166905,
       "reg_sign": 1.0,
-      "stable_reg_limit": 0.75081229692576,
+      "stable_reg_limit": 0.696562549066901,
       "response_table": [
         {
           "grid_pu": 0.9,
           "cmd_m_reg_d": -0.8,
-          "reg_d_mean": -0.0121969507623094,
-          "lv_pu_mean": 0.877511413251636,
-          "vdc_pu_mean": 1.0613971342936062,
-          "lv_unbalance_pu": 0.033146432280088164,
+          "reg_d_mean": 0.0,
+          "lv_pu_mean": 0.896434851891402,
+          "vdc_pu_mean": 1.0572034050427137,
+          "lv_unbalance_pu": 0.018326332400385798,
           "vdc_min_pu": 0.9817228873560189
         },
         {
           "grid_pu": 0.9,
           "cmd_m_reg_d": -0.4,
-          "reg_d_mean": -0.0078980254936266,
-          "lv_pu_mean": 0.886102054472753,
-          "vdc_pu_mean": 1.0600386133531738,
-          "lv_unbalance_pu": 0.027988901332953914,
+          "reg_d_mean": 0.0,
+          "lv_pu_mean": 0.896434851891402,
+          "vdc_pu_mean": 1.0572034050427137,
+          "lv_unbalance_pu": 0.018326332400385798,
           "vdc_min_pu": 0.9817228873560189
         },
         {
@@ -523,29 +523,29 @@
         {
           "grid_pu": 0.9,
           "cmd_m_reg_d": 0.8,
-          "reg_d_mean": 0.75081229692576,
-          "lv_pu_mean": 1.00287214077624,
-          "vdc_pu_mean": 0.9633451931661813,
-          "lv_unbalance_pu": 0.022426501648727632,
-          "vdc_min_pu": 0.8989909522836463
-        },
-        {
-          "grid_pu": 1.0,
-          "cmd_m_reg_d": -0.8,
-          "reg_d_mean": -0.116180954761309,
-          "lv_pu_mean": 0.859475508541186,
-          "vdc_pu_mean": 0.9913453215516838,
-          "lv_unbalance_pu": 0.002868586798366981,
-          "vdc_min_pu": 0.703723741671045
+          "reg_d_mean": 0.696562549066901,
+          "lv_pu_mean": 0.984606415551687,
+          "vdc_pu_mean": 1.0109465823241113,
+          "lv_unbalance_pu": 0.013936311305374637,
+          "vdc_min_pu": 0.9048156588189913
         },
         {
           "grid_pu": 1.0,
           "cmd_m_reg_d": -0.4,
-          "reg_d_mean": -0.0786503374156461,
-          "lv_pu_mean": 0.89785708186897,
-          "vdc_pu_mean": 1.008432382341925,
-          "lv_unbalance_pu": 0.027650757733822418,
-          "vdc_min_pu": 0.6984518852695925
+          "reg_d_mean": -0.00439890027493127,
+          "lv_pu_mean": 0.970816622210604,
+          "vdc_pu_mean": 1.080599014119575,
+          "lv_unbalance_pu": 0.012413975801731545,
+          "vdc_min_pu": 0.9791682941144175
+        },
+        {
+          "grid_pu": 1.0,
+          "cmd_m_reg_d": -0.8,
+          "reg_d_mean": -0.00339915021244689,
+          "lv_pu_mean": 0.970860973914271,
+          "vdc_pu_mean": 1.0806144642948525,
+          "lv_unbalance_pu": 0.014004172058524878,
+          "vdc_min_pu": 0.9791682941144175
         },
         {
           "grid_pu": 1.0,
@@ -568,56 +568,56 @@
         {
           "grid_pu": 1.0,
           "cmd_m_reg_d": 0.8,
-          "reg_d_mean": 0.716020994751306,
-          "lv_pu_mean": 0.997531764807961,
-          "vdc_pu_mean": 0.9962461803196012,
-          "lv_unbalance_pu": 0.02340761827302208,
-          "vdc_min_pu": 0.8532039256948287
+          "reg_d_mean": 0.658672861319762,
+          "lv_pu_mean": 0.966834947514516,
+          "vdc_pu_mean": 1.01061046115005,
+          "lv_unbalance_pu": 0.026036515194965606,
+          "vdc_min_pu": 0.8760527682062975
         },
         {
           "grid_pu": 1.1,
           "cmd_m_reg_d": -0.8,
-          "reg_d_mean": -0.172956760809798,
-          "lv_pu_mean": 0.887904666852754,
-          "vdc_pu_mean": 1.3137096122033376,
-          "lv_unbalance_pu": 0.028688579591642997,
+          "reg_d_mean": -0.100774806298425,
+          "lv_pu_mean": 0.992679712881218,
+          "vdc_pu_mean": 1.4001683035303,
+          "lv_unbalance_pu": 0.013113105210635315,
           "vdc_min_pu": 0.9764685034466463
         },
         {
           "grid_pu": 1.1,
           "cmd_m_reg_d": -0.4,
-          "reg_d_mean": -0.135886028492878,
-          "lv_pu_mean": 0.968293737752466,
-          "vdc_pu_mean": 1.0271657292085488,
-          "lv_unbalance_pu": 0.02090721786160227,
-          "vdc_min_pu": 0.7856367867583637
+          "reg_d_mean": -0.0947763059235194,
+          "lv_pu_mean": 1.00086587283145,
+          "vdc_pu_mean": 1.3748837371398375,
+          "lv_unbalance_pu": 0.03094462263840034,
+          "vdc_min_pu": 0.9764685034466463
         },
         {
           "grid_pu": 1.1,
           "cmd_m_reg_d": 0.0,
           "reg_d_mean": 0.0,
-          "lv_pu_mean": 1.06314400620325,
-          "vdc_pu_mean": 1.1343141825992187,
-          "lv_unbalance_pu": 0.010730223567592704,
+          "lv_pu_mean": 1.07775528049928,
+          "vdc_pu_mean": 1.31892067646015,
+          "lv_unbalance_pu": 0.0037295189807820773,
           "vdc_min_pu": 0.9764685034466463
         },
         {
           "grid_pu": 1.1,
           "cmd_m_reg_d": 0.4,
-          "reg_d_mean": 0.302824293926518,
-          "lv_pu_mean": 1.09229686045732,
-          "vdc_pu_mean": 1.1417870419968563,
-          "lv_unbalance_pu": 0.0052253871497799035,
+          "reg_d_mean": 0.151162209447639,
+          "lv_pu_mean": 1.07844096157055,
+          "vdc_pu_mean": 1.3584115956357623,
+          "lv_unbalance_pu": 0.0014871361832046474,
           "vdc_min_pu": 0.9922168766226562
         },
         {
           "grid_pu": 1.1,
           "cmd_m_reg_d": 0.8,
-          "reg_d_mean": 0.632641839540113,
-          "lv_pu_mean": 0.976722939819998,
-          "vdc_pu_mean": 0.9911902219654425,
-          "lv_unbalance_pu": 0.023025475235819517,
-          "vdc_min_pu": 0.8263484479081274
+          "reg_d_mean": 0.560209937845482,
+          "lv_pu_mean": 0.969976612666604,
+          "vdc_pu_mean": 1.0278958532361286,
+          "lv_unbalance_pu": 0.011020775148867488,
+          "vdc_min_pu": 0.9340445243176463
         }
       ],
       "energy_response_table": [
@@ -931,5 +931,5 @@
       }
     }
   },
-  "energy_source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_energy_sweep\\hpt_v2_sac_energy_sweep_20260715_024945.csv"
+  "energy_source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_energy_sweep\\hpt_v2_sac_energy_sweep_20260715_182415.csv"
 }
