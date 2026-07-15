@@ -1,13 +1,15 @@
 % collect_hpt_v2_sac_energy_teacher_traces
-% Collect switch-level teacher labels for the SAC energy-converter action.
+% Collect switch-level teacher labels for the SAC converter actions.
 %
-% The conventional EnergyController is used as the teacher:
+% The conventional VoltageRegulator and EnergyController are used as teachers:
 %   - hpt_sac_enable = 0
 %   - hpt_sac_energy_enable = 0
 %   - hpt_sac_policy_mode = -1
 %
-% The CSV records obs_01..obs_24 plus the conventional Vdc/current loop
-% signals.  The intended SAC energy target is:
+% The CSV records obs_01..obs_24 plus the conventional voltage and
+% Vdc/current loop signals.  The intended SAC targets are:
+%   action_01 = conventional m_reg_d equivalent
+%   action_02 = conventional m_reg_q equivalent
 %   action_03 = id_ref / hpt_energy_id_max
 %   action_04 = iq_ref / hpt_energy_id_max
 %
@@ -127,10 +129,13 @@ function rowCells = append_trace_rows(rowCells, out, M, topology, scenarioType, 
 
     obsRows = orient_channels(out.get('HPTSAC_obs'), 24);
     dbgRows = orient_channels(out.get('Energy_dbg'), 12);
+    regDbgRows = orient_channels(out.get('Mreg_cmd'), 7);
+    mRegRows = orient_channels(out.get('Mref6_cmd'), 6);
     mRows = orient_channels(out.get('Menergy_cmd'), 3);
     vdcRows = orient_channels(out.get('Vdc'), 1);
     lvRows = orient_channels(out.get('Vlv_abc'), 3);
-    n = min([size(obsRows, 2), size(dbgRows, 2), size(mRows, 2), ...
+    n = min([size(obsRows, 2), size(dbgRows, 2), size(regDbgRows, 2), ...
+        size(mRegRows, 2), size(mRows, 2), ...
         size(vdcRows, 2), size(lvRows, 2)]);
     t = (0:n-1) * Ts;
     sampleIdx = find(t >= minTime);
@@ -140,6 +145,9 @@ function rowCells = append_trace_rows(rowCells, out, M, topology, scenarioType, 
         j = sampleIdx(kk);
         theta = dbgRows(1, j);
         [md, mq] = abc_to_dq(mRows(:, j), theta);
+        regTheta = regDbgRows(1, j);
+        regPhi = regDbgRows(7, j);
+        [regMd, regMq] = reg6_to_dq(mRegRows(:, j), regTheta + regPhi);
         row = struct();
         row.model = string(M);
         row.topology = string(topology);
@@ -149,6 +157,13 @@ function rowCells = append_trace_rows(rowCells, out, M, topology, scenarioType, 
         row.grid_V = gridVoltage;
         row.fault_pu = faultPu;
         row.energy_id_max = energyIdMax;
+        row.reg_theta = regTheta;
+        row.reg_phi = regPhi;
+        row.reg_v_meas = regDbgRows(4, j);
+        row.reg_v_err = regDbgRows(5, j);
+        row.reg_m_amp = regDbgRows(6, j);
+        row.reg_m_d_equiv = regMd;
+        row.reg_m_q_equiv = regMq;
         row.energy_theta = theta;
         row.energy_vd = dbgRows(2, j);
         row.energy_vq = dbgRows(3, j);
@@ -168,6 +183,8 @@ function rowCells = append_trace_rows(rowCells, out, M, topology, scenarioType, 
         row.m_energy_q_equiv = mq;
         row.vdc = vdcRows(1, j);
         row.lv_rms_inst = sqrt(mean(lvRows(:, j).^2));
+        row.target_action_01 = clip_scalar(regMd, -0.80, 0.80);
+        row.target_action_02 = clip_scalar(regMq, -0.80, 0.80);
         row.target_action_03 = row.energy_id_ref_pu;
         row.target_action_04 = row.energy_iq_ref_pu;
         for ii = 1:24
@@ -175,6 +192,18 @@ function rowCells = append_trace_rows(rowCells, out, M, topology, scenarioType, 
         end
         rowCells{end+1} = row; %#ok<AGROW>
     end
+end
+
+function [d, q] = reg6_to_dq(reg6, angle)
+    ma = reg6(1);
+    mb = reg6(3);
+    mc = reg6(5);
+    alpha = (2/3) * (ma - 0.5*mb - 0.5*mc);
+    beta = (sqrt(3)/3) * (mb - mc);
+    s = sin(angle);
+    c = cos(angle);
+    d = s*alpha - c*beta;
+    q = c*alpha + s*beta;
 end
 
 function [d, q] = abc_to_dq(abc, theta)

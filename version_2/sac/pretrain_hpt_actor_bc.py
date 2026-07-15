@@ -169,6 +169,17 @@ def append_step4_corrections(
     )
 
 
+def _scenario_type_allowed(row: dict[str, str], scenario_types: str) -> bool:
+    if scenario_types == "all":
+        return True
+    scenario_type = str(row.get("scenario_type", "")).lower()
+    if scenario_types == "steady":
+        return scenario_type == "steady"
+    if scenario_types == "fault":
+        return scenario_type != "steady"
+    raise ValueError(f"Unknown scenario type filter: {scenario_types}")
+
+
 def append_switch_trace_samples(
     X: np.ndarray,
     Y: np.ndarray,
@@ -177,6 +188,7 @@ def append_switch_trace_samples(
     repeat: int,
     topology2_phase_equivalent: bool,
     phase_shift_rad: float,
+    scenario_types: str,
 ) -> tuple[np.ndarray, np.ndarray, int]:
     if csv_path is None:
         return X, Y, 0
@@ -187,6 +199,8 @@ def append_switch_trace_samples(
     extra_y: list[np.ndarray] = []
     with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
         for row in csv.DictReader(f):
+            if not _scenario_type_allowed(row, scenario_types):
+                continue
             obs = np.asarray(
                 [float(row[f"obs_{idx:02d}"]) for idx in range(1, OBS_DIM_HPT + 1)],
                 dtype=np.float32,
@@ -226,6 +240,7 @@ def append_raw_smoke_corrections(
     energy_limit: float,
     topology2_phase_equivalent: bool,
     phase_shift_rad: float,
+    scenario_types: str,
 ) -> tuple[np.ndarray, np.ndarray, int]:
     if csv_path is None:
         return X, Y, 0
@@ -237,6 +252,8 @@ def append_raw_smoke_corrections(
     with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
         for row in csv.DictReader(f):
             if row.get("mode") != "sac_actor_raw_guard0":
+                continue
+            if not _scenario_type_allowed(row, scenario_types):
                 continue
             topology = str(row.get("topology", "")).lower()
             scenario_type = str(row.get("scenario_type", "")).lower()
@@ -326,6 +343,8 @@ def append_energy_teacher_trace_samples(
     dynamic_reg_limit_topology2: float,
     topology2_phase_equivalent: bool,
     phase_shift_rad: float,
+    scenario_types: str,
+    min_time: float,
 ) -> tuple[np.ndarray, np.ndarray, int]:
     if csv_path is None:
         return X, Y, 0
@@ -336,29 +355,38 @@ def append_energy_teacher_trace_samples(
     extra_y: list[np.ndarray] = []
     with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
         for row in csv.DictReader(f):
+            if not _scenario_type_allowed(row, scenario_types):
+                continue
+            if min_time > 0.0 and float(row.get("t") or 0.0) < min_time:
+                continue
             obs = np.asarray(
                 [float(row[f"obs_{idx:02d}"]) for idx in range(1, OBS_DIM_HPT + 1)],
                 dtype=np.float32,
             )
             topology = str(row.get("topology", "")).lower()
             dynamic_mode = str(row.get("scenario_type", "")).lower() != "steady"
-            target = execution_guard_teacher_action(
-                obs,
-                reg_limit=reg_limit,
-                energy_limit=energy_limit,
-                dynamic_mode=dynamic_mode,
-                dynamic_reg_limit_topology1=dynamic_reg_limit_topology1,
-                dynamic_reg_limit_topology2=dynamic_reg_limit_topology2,
-            )
-            if (
-                topology2_phase_equivalent
-                and topology == "topology2"
-                and dynamic_mode
-                and target[0] < 0.0
-            ):
-                raw_reg = float(target[0])
-                target[0] = raw_reg * np.cos(phase_shift_rad)
-                target[1] = raw_reg * np.sin(phase_shift_rad)
+            if "target_action_01" in row and str(row.get("target_action_01", "")).strip():
+                target = np.zeros(ACT_DIM_HPT, dtype=np.float32)
+                target[0] = float(np.clip(float(row.get("target_action_01") or 0.0), -reg_limit, reg_limit))
+                target[1] = float(np.clip(float(row.get("target_action_02") or 0.0), -reg_limit, reg_limit))
+            else:
+                target = execution_guard_teacher_action(
+                    obs,
+                    reg_limit=reg_limit,
+                    energy_limit=energy_limit,
+                    dynamic_mode=dynamic_mode,
+                    dynamic_reg_limit_topology1=dynamic_reg_limit_topology1,
+                    dynamic_reg_limit_topology2=dynamic_reg_limit_topology2,
+                )
+                if (
+                    topology2_phase_equivalent
+                    and topology == "topology2"
+                    and dynamic_mode
+                    and target[0] < 0.0
+                ):
+                    raw_reg = float(target[0])
+                    target[0] = raw_reg * np.cos(phase_shift_rad)
+                    target[1] = raw_reg * np.sin(phase_shift_rad)
 
             target[2] = float(
                 np.clip(float(row.get("target_action_03") or 0.0), -energy_limit, energy_limit)
@@ -474,12 +502,16 @@ def main() -> None:
     parser.add_argument("--step4-correction-repeat", type=int, default=512)
     parser.add_argument("--switch-trace-csv", type=Path, default=None)
     parser.add_argument("--switch-trace-repeat", type=int, default=4)
+    parser.add_argument("--switch-trace-scenario-types", choices=["all", "steady", "fault"], default="all")
     parser.add_argument("--switch-trace-topology2-phase-equivalent", action="store_true")
     parser.add_argument("--switch-trace-phase-shift-rad", type=float, default=0.55)
     parser.add_argument("--raw-smoke-correction-csv", type=Path, default=None)
     parser.add_argument("--raw-smoke-correction-repeat", type=int, default=512)
+    parser.add_argument("--raw-smoke-correction-scenario-types", choices=["all", "steady", "fault"], default="all")
     parser.add_argument("--energy-teacher-trace-csv", type=Path, default=None)
     parser.add_argument("--energy-teacher-trace-repeat", type=int, default=16)
+    parser.add_argument("--energy-teacher-trace-scenario-types", choices=["all", "steady", "fault"], default="all")
+    parser.add_argument("--energy-teacher-min-time", type=float, default=0.0)
     parser.add_argument("--epochs", type=int, default=240)
     parser.add_argument("--batch-size", type=int, default=512)
     parser.add_argument("--lr", type=float, default=1e-4)
@@ -523,6 +555,7 @@ def main() -> None:
         repeat=args.switch_trace_repeat,
         topology2_phase_equivalent=args.switch_trace_topology2_phase_equivalent,
         phase_shift_rad=args.switch_trace_phase_shift_rad,
+        scenario_types=args.switch_trace_scenario_types,
     )
     X, Y, raw_smoke_samples = append_raw_smoke_corrections(
         X,
@@ -532,6 +565,7 @@ def main() -> None:
         energy_limit=args.energy_limit,
         topology2_phase_equivalent=args.switch_trace_topology2_phase_equivalent,
         phase_shift_rad=args.switch_trace_phase_shift_rad,
+        scenario_types=args.raw_smoke_correction_scenario_types,
     )
     X, Y, energy_teacher_samples = append_energy_teacher_trace_samples(
         X,
@@ -544,6 +578,8 @@ def main() -> None:
         dynamic_reg_limit_topology2=config.dynamic_reg_limit_topology2,
         topology2_phase_equivalent=args.switch_trace_topology2_phase_equivalent,
         phase_shift_rad=args.switch_trace_phase_shift_rad,
+        scenario_types=args.energy_teacher_trace_scenario_types,
+        min_time=args.energy_teacher_min_time,
     )
     model = build_or_load_model(args, scenarios, config)
     metrics = train_actor_bc(
