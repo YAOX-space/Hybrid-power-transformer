@@ -1,6 +1,8 @@
 # ── Data (large files, generated) ──────────────────────────────────────────────
 data/
 .venv/
+lab/results/
+tmp/
 
 # ── Python ──────────────────────────────────────────────────────────────────────
 __pycache__/
@@ -19,6 +21,7 @@ slprj/
 *.slxc
 *.slx.r*
 codegen/
+version_2/simulink/*.mat
 
 # ── OS / editor / agent tooling ─────────────────────────────────────────────────
 .DS_Store
