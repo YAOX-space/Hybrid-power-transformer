@@ -180,6 +180,39 @@ def _scenario_type_allowed(row: dict[str, str], scenario_types: str) -> bool:
     raise ValueError(f"Unknown scenario type filter: {scenario_types}")
 
 
+def _csv_filter_allowed(value: str, allowed_csv: str) -> bool:
+    allowed_csv = str(allowed_csv or "all").strip().lower()
+    if allowed_csv in {"", "all", "*"}:
+        return True
+    allowed = {item.strip().lower() for item in allowed_csv.split(",") if item.strip()}
+    return str(value or "").strip().lower() in allowed
+
+
+def _contains_filter_allowed(value: str, needle_csv: str) -> bool:
+    needle_csv = str(needle_csv or "all").strip().lower()
+    if needle_csv in {"", "all", "*"}:
+        return True
+    value_l = str(value or "").lower()
+    needles = [item.strip().lower() for item in needle_csv.split(",") if item.strip()]
+    return any(needle in value_l for needle in needles)
+
+
+def _trace_row_allowed(
+    row: dict[str, str],
+    *,
+    scenario_types: str,
+    topologies: str,
+    condition_classes: str,
+    case_contains: str,
+) -> bool:
+    return (
+        _scenario_type_allowed(row, scenario_types)
+        and _csv_filter_allowed(row.get("topology", ""), topologies)
+        and _csv_filter_allowed(row.get("condition_class", ""), condition_classes)
+        and _contains_filter_allowed(row.get("case_name", ""), case_contains)
+    )
+
+
 def append_switch_trace_samples(
     X: np.ndarray,
     Y: np.ndarray,
@@ -189,6 +222,9 @@ def append_switch_trace_samples(
     topology2_phase_equivalent: bool,
     phase_shift_rad: float,
     scenario_types: str,
+    topologies: str,
+    condition_classes: str,
+    case_contains: str,
 ) -> tuple[np.ndarray, np.ndarray, int]:
     if csv_path is None:
         return X, Y, 0
@@ -199,7 +235,13 @@ def append_switch_trace_samples(
     extra_y: list[np.ndarray] = []
     with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
         for row in csv.DictReader(f):
-            if not _scenario_type_allowed(row, scenario_types):
+            if not _trace_row_allowed(
+                row,
+                scenario_types=scenario_types,
+                topologies=topologies,
+                condition_classes=condition_classes,
+                case_contains=case_contains,
+            ):
                 continue
             obs = np.asarray(
                 [float(row[f"obs_{idx:02d}"]) for idx in range(1, OBS_DIM_HPT + 1)],
@@ -503,6 +545,9 @@ def main() -> None:
     parser.add_argument("--switch-trace-csv", type=Path, default=None)
     parser.add_argument("--switch-trace-repeat", type=int, default=4)
     parser.add_argument("--switch-trace-scenario-types", choices=["all", "steady", "fault"], default="all")
+    parser.add_argument("--switch-trace-topologies", default="all")
+    parser.add_argument("--switch-trace-condition-classes", default="all")
+    parser.add_argument("--switch-trace-case-contains", default="all")
     parser.add_argument("--switch-trace-topology2-phase-equivalent", action="store_true")
     parser.add_argument("--switch-trace-phase-shift-rad", type=float, default=0.55)
     parser.add_argument("--raw-smoke-correction-csv", type=Path, default=None)
@@ -556,6 +601,9 @@ def main() -> None:
         topology2_phase_equivalent=args.switch_trace_topology2_phase_equivalent,
         phase_shift_rad=args.switch_trace_phase_shift_rad,
         scenario_types=args.switch_trace_scenario_types,
+        topologies=args.switch_trace_topologies,
+        condition_classes=args.switch_trace_condition_classes,
+        case_contains=args.switch_trace_case_contains,
     )
     X, Y, raw_smoke_samples = append_raw_smoke_corrections(
         X,
