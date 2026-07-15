@@ -16,6 +16,7 @@ from .experiment_metadata import sha256_file, write_experiment_metadata
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROXY_SWEEP_DIR = ROOT / "lab" / "results" / "hpt_v2_sac_proxy_sweep"
 DEFAULT_ENERGY_SWEEP_DIR = ROOT / "lab" / "results" / "hpt_v2_sac_energy_sweep"
+DEFAULT_FAULT_SWEEP_DIR = ROOT / "lab" / "results" / "hpt_v2_sac_fault_fixed_reg_sweep"
 DEFAULT_DATA_ROOT = ROOT / "version_2" / "data" / "hpt_switch_rollouts"
 
 FEATURE_NAMES = [
@@ -30,8 +31,10 @@ FEATURE_NAMES = [
     "effective_m_reg_q",
     "effective_m_energy_d",
     "effective_m_energy_q",
+    "controller_enabled",
     "is_reg_sweep",
     "is_energy_sweep",
+    "is_fault_sweep",
 ]
 
 TARGET_NAMES = [
@@ -79,6 +82,8 @@ def effective(row: dict[str, Any], preferred: str, fallback: str) -> float:
 
 def featurize(row: dict[str, Any], sweep: str) -> tuple[list[float], list[float], dict[str, Any]]:
     topology = str(row.get("topology", "")).lower()
+    action_semantics = str(row.get("action_semantics", ""))
+    controller_enabled = 0.0 if action_semantics.startswith("controller_disabled") else 1.0
     target_phase = max(val(row, "target_phase_rms", 207.0), 1.0)
     vdc_mean = val(row, "vdc_mean", 800.0)
     if abs(vdc_mean) > 5.0:
@@ -90,7 +95,11 @@ def featurize(row: dict[str, Any], sweep: str) -> tuple[list[float], list[float]
     if abs(vdc_max) > 5.0:
         vdc_max = vdc_max / 800.0
 
-    raw_reg_d = val(row, "raw_m_reg_d", val(row, "cmd_m_reg_d", val(row, "reg_d_mean", 0.0)))
+    raw_reg_d = val(
+        row,
+        "raw_m_reg_d",
+        val(row, "cmd_m_reg_d", val(row, "reg_d", val(row, "reg_d_mean", 0.0))),
+    )
     raw_reg_q = val(row, "raw_m_reg_q", val(row, "cmd_m_reg_q", val(row, "reg_q_mean", 0.0)))
     raw_energy_d = val(
         row, "raw_m_energy_d", val(row, "cmd_m_energy_d", val(row, "energy_d_mean", 0.0))
@@ -102,7 +111,7 @@ def featurize(row: dict[str, Any], sweep: str) -> tuple[list[float], list[float]
     feature = [
         1.0 if topology == "topology1" else 0.0,
         1.0 if topology == "topology2" else 0.0,
-        val(row, "grid_pu", val(row, "grid_V", 10000.0) / 10000.0),
+        val(row, "grid_pu", val(row, "fault_pu", val(row, "grid_V", 10000.0) / 10000.0)),
         raw_reg_d,
         raw_reg_q,
         raw_energy_d,
@@ -111,11 +120,17 @@ def featurize(row: dict[str, Any], sweep: str) -> tuple[list[float], list[float]
         effective(row, "effective_m_reg_q_mean", "reg_q_mean"),
         effective(row, "effective_m_energy_d_mean", "energy_d_mean"),
         effective(row, "effective_m_energy_q_mean", "energy_q_mean"),
+        controller_enabled,
         1.0 if sweep == "reg" else 0.0,
         1.0 if sweep == "energy" else 0.0,
+        1.0 if sweep == "fault" else 0.0,
     ]
     target = [
-        val(row, "lv_pu_mean", val(row, "lv_rms_mean", target_phase) / target_phase),
+        val(
+            row,
+            "lv_pu_mean",
+            val(row, "lv_fault_rms_mean", val(row, "lv_rms_mean", target_phase)) / target_phase,
+        ),
         vdc_mean,
         vdc_min,
         vdc_max,
@@ -127,7 +142,7 @@ def featurize(row: dict[str, Any], sweep: str) -> tuple[list[float], list[float]
         "model": str(row.get("model", "")),
         "topology": topology,
         "grid_pu": feature[2],
-        "action_semantics": str(row.get("action_semantics", "")),
+        "action_semantics": action_semantics,
     }
     return feature, target, meta
 
@@ -152,8 +167,11 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--proxy-sweep-csv", type=Path, default=None)
     parser.add_argument("--energy-sweep-csv", type=Path, default=None)
+    parser.add_argument("--fault-sweep-csv", type=Path, default=None)
+    parser.add_argument("--include-fault-sweep", action="store_true")
     parser.add_argument("--proxy-sweep-dir", type=Path, default=DEFAULT_PROXY_SWEEP_DIR)
     parser.add_argument("--energy-sweep-dir", type=Path, default=DEFAULT_ENERGY_SWEEP_DIR)
+    parser.add_argument("--fault-sweep-dir", type=Path, default=DEFAULT_FAULT_SWEEP_DIR)
     parser.add_argument("--out-root", type=Path, default=DEFAULT_DATA_ROOT)
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--seed", type=int, default=20260715)
@@ -163,6 +181,11 @@ def main() -> None:
     energy_csv = args.energy_sweep_csv or latest_csv(
         args.energy_sweep_dir, "hpt_v2_sac_energy_sweep_*.csv"
     )
+    fault_csv = None
+    if args.fault_sweep_csv is not None:
+        fault_csv = args.fault_sweep_csv
+    elif args.include_fault_sweep:
+        fault_csv = latest_csv(args.fault_sweep_dir, "hpt_v2_fault_fixed_reg_sweep_*.csv")
     features: list[list[float]] = []
     targets: list[list[float]] = []
     metas: list[dict[str, Any]] = []
@@ -176,6 +199,12 @@ def main() -> None:
         features.append(x)
         targets.append(y)
         metas.append(meta)
+    if fault_csv is not None:
+        for row in read_rows(fault_csv):
+            x, y, meta = featurize(row, "fault")
+            features.append(x)
+            targets.append(y)
+            metas.append(meta)
 
     X = np.asarray(features, dtype=np.float32)
     Y = np.asarray(targets, dtype=np.float32)
@@ -193,15 +222,20 @@ def main() -> None:
         feature_names=np.asarray(FEATURE_NAMES, dtype=object),
         target_names=np.asarray(TARGET_NAMES, dtype=object),
     )
+    row_meta_path = out_dir / "row_meta.json"
+    row_meta_path.write_text(json.dumps(metas, indent=2), encoding="utf-8")
     manifest = {
         "schema": "hpt-v2-switch-dataset-v1",
         "run_id": run_id,
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "proxy_sweep_csv": str(proxy_csv),
         "energy_sweep_csv": str(energy_csv),
+        "fault_sweep_csv": str(fault_csv) if fault_csv is not None else None,
         "proxy_sweep_hash": sha256_file(proxy_csv),
         "energy_sweep_hash": sha256_file(energy_csv),
+        "fault_sweep_hash": sha256_file(fault_csv) if fault_csv is not None else None,
         "dataset_npz": str(out_dir / "dataset.npz"),
+        "row_meta_json": str(row_meta_path),
         "feature_names": FEATURE_NAMES,
         "target_names": TARGET_NAMES,
         "row_count": int(X.shape[0]),
@@ -218,6 +252,7 @@ def main() -> None:
             "seed": args.seed,
             "proxy_sweep_csv": str(proxy_csv),
             "energy_sweep_csv": str(energy_csv),
+            "fault_sweep_csv": str(fault_csv) if fault_csv is not None else None,
         },
         dataset_manifest=out_dir / "manifest.json",
         extra={"manifest": manifest},
