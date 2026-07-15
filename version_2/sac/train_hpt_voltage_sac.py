@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -15,10 +16,16 @@ import numpy as np
 from stable_baselines3 import SAC
 from stable_baselines3.common.vec_env import DummyVecEnv
 
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+if SRC.exists() and str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
 from .hpt_voltage_sac_env import (
     ACT_DIM_HPT,
     DEFAULT_PROXY_CALIBRATION,
     OBS_DIM_HPT,
+    HPTVoltageEnvConfig,
     HPTVoltageScenario,
     HPTVoltageSACEnv,
     default_hpt_voltage_scenarios,
@@ -28,7 +35,6 @@ from .experiment_metadata import write_experiment_metadata
 from hpt_frt.device.train_common import pick_device
 
 
-ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "lab" / "results"
 MODELS = ROOT / "data" / "models"
 SIMULINK_V2 = ROOT / "version_2" / "simulink"
@@ -85,9 +91,14 @@ def scenario_summary(scenarios: list[HPTVoltageScenario]) -> dict:
     return out
 
 
-def evaluate_teacher_or_policy(model, scenarios: list[HPTVoltageScenario], n_rollouts: int = 20) -> dict:
+def evaluate_teacher_or_policy(
+    model,
+    scenarios: list[HPTVoltageScenario],
+    n_rollouts: int = 20,
+    config: HPTVoltageEnvConfig | None = None,
+) -> dict:
     eval_scenarios = scenarios if n_rollouts <= 0 else scenarios[:n_rollouts]
-    env = HPTVoltageSACEnv(scenarios, train_mode=False)
+    env = HPTVoltageSACEnv(scenarios, config=config, train_mode=False)
     returns = []
     final_v = []
     final_vdc = []
@@ -156,6 +167,14 @@ def main() -> None:
         help="Optional existing SAC checkpoint to fine-tune instead of training from scratch.",
     )
     parser.add_argument("--eval-rollouts", type=int, default=20)
+    parser.add_argument(
+        "--safety-classifier",
+        type=Path,
+        default=None,
+        help="Optional classifier.joblib support mask from switch-level data.",
+    )
+    parser.add_argument("--safety-penalty-weight", type=float, default=8.0)
+    parser.add_argument("--safety-unsafe-terminal", action="store_true")
     parser.add_argument("--export", action="store_true")
     parser.add_argument(
         "--export-out",
@@ -170,9 +189,19 @@ def main() -> None:
     run_dir.mkdir(parents=True, exist_ok=True)
     MODELS.mkdir(parents=True, exist_ok=True)
     scenarios = select_scenarios(args.curriculum)
+    env_config = HPTVoltageEnvConfig(
+        safety_classifier_path=str(args.safety_classifier) if args.safety_classifier else "",
+        safety_penalty_weight=args.safety_penalty_weight,
+        safety_unsafe_terminal=bool(args.safety_unsafe_terminal),
+    )
 
     def make_env(idx: int):
-        return lambda: HPTVoltageSACEnv(scenarios, seed=args.seed + idx, train_mode=True)
+        return lambda: HPTVoltageSACEnv(
+            scenarios,
+            config=env_config,
+            seed=args.seed + idx,
+            train_mode=True,
+        )
 
     vec = DummyVecEnv([make_env(i) for i in range(args.n_envs)])
     assert vec.observation_space.shape == (OBS_DIM_HPT,)
@@ -203,7 +232,12 @@ def main() -> None:
     model_path = args.model_out
     model_path.parent.mkdir(parents=True, exist_ok=True)
     model.save(str(model_path))
-    metrics = evaluate_teacher_or_policy(model, scenarios, n_rollouts=args.eval_rollouts)
+    metrics = evaluate_teacher_or_policy(
+        model,
+        scenarios,
+        n_rollouts=args.eval_rollouts,
+        config=env_config,
+    )
     calibration_meta = {}
     if DEFAULT_PROXY_CALIBRATION.exists():
         cal = json.loads(DEFAULT_PROXY_CALIBRATION.read_text(encoding="utf-8"))
@@ -247,6 +281,9 @@ def main() -> None:
             "eval_rollouts": args.eval_rollouts,
             "export": bool(args.export),
             "export_out": str(args.export_out),
+            "safety_classifier": str(args.safety_classifier) if args.safety_classifier else None,
+            "safety_penalty_weight": args.safety_penalty_weight,
+            "safety_unsafe_terminal": bool(args.safety_unsafe_terminal),
             "observation_dim": OBS_DIM_HPT,
             "action_dim": ACT_DIM_HPT,
         },

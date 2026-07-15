@@ -11,16 +11,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
 import scipy.io as sio
 
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+if SRC.exists() and str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
 from .hpt_voltage_sac_env import ACT_DIM_HPT, OBS_DIM_HPT
 from hpt_frt.device.model_io import load_sac
 
 
-ROOT = Path(__file__).resolve().parents[2]
 MODELS = ROOT / "data" / "models"
 SIMULINK_V2 = ROOT / "version_2" / "simulink"
 

@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Iterable
 
 import gymnasium as gym
+import joblib
 import numpy as np
 from gymnasium import spaces
 
@@ -108,6 +109,9 @@ class HPTVoltageEnvConfig:
     topology2_dynamic_soft_reg_limit: float = 0.25
     topology2_dynamic_stress_weight: float = 35.0
     topology2_dynamic_slew_weight: float = 8.0
+    safety_classifier_path: str = ""
+    safety_penalty_weight: float = 8.0
+    safety_unsafe_terminal: bool = False
 
 
 @lru_cache(maxsize=4)
@@ -119,6 +123,19 @@ def _load_proxy_calibration(path: str) -> dict:
         return {}
     data = json.loads(p.read_text(encoding="utf-8"))
     if data.get("schema") != "hpt_proxy_calibration_v1":
+        return {}
+    return data
+
+
+@lru_cache(maxsize=4)
+def _load_safety_classifier(path: str) -> dict:
+    if not path:
+        return {}
+    p = Path(path)
+    if not p.exists():
+        return {}
+    data = joblib.load(p)
+    if data.get("schema") != "hpt-safety-classifier-v1":
         return {}
     return data
 
@@ -403,6 +420,7 @@ class HPTVoltageSACEnv(gym.Env):
             if self.config.use_switch_calibration
             else {}
         )
+        self._safety_classifier = _load_safety_classifier(self.config.safety_classifier_path)
         self.scenarios = list(scenarios or default_hpt_voltage_scenarios())
         if not self.scenarios:
             raise ValueError("HPTVoltageSACEnv requires at least one scenario")
@@ -454,7 +472,7 @@ class HPTVoltageSACEnv(gym.Env):
             self.v_lv = calibrated_lv if calibrated_lv is not None else self._source_base_voltage(grid_now)
         self.v_pos = self.v_lv
         self.v_neg = neg_now
-        self._detector.update(self.t, self.v_pos, self.v_neg, self.vdc, self.config.dt)
+        self._detector.update(self.t, grid_now, neg_now, self.vdc, self.config.dt)
         return self._obs(), {}
 
     def _fault_duration(self) -> float:
@@ -589,11 +607,68 @@ class HPTVoltageSACEnv(gym.Env):
             projected[0] = float(np.clip(projected[0], -dyn_limit, dyn_limit))
         return projected
 
+    def _safety_feature(
+        self,
+        *,
+        grid_pu: float,
+        raw_action: np.ndarray,
+        projected_action: np.ndarray,
+        sweep: str,
+    ) -> np.ndarray:
+        names = list(self._safety_classifier.get("feature_names", []))
+        values = {
+            "topology1": 1.0 if self._topology_name() == "topology1" else 0.0,
+            "topology2": 1.0 if self._topology_name() == "topology2" else 0.0,
+            "grid_pu": float(grid_pu),
+            "raw_m_reg_d": float(raw_action[0]),
+            "raw_m_reg_q": float(raw_action[1]),
+            "raw_m_energy_d": float(raw_action[2]),
+            "raw_m_energy_q": float(raw_action[3]),
+            "effective_m_reg_d": float(projected_action[0]),
+            "effective_m_reg_q": float(projected_action[1]),
+            "effective_m_energy_d": float(projected_action[2]),
+            "effective_m_energy_q": float(projected_action[3]),
+            "controller_enabled": 1.0,
+            "is_reg_sweep": 1.0 if sweep == "reg" else 0.0,
+            "is_energy_sweep": 1.0 if sweep == "energy" else 0.0,
+            "is_fault_sweep": 1.0 if sweep == "fault" else 0.0,
+        }
+        return np.asarray([values.get(name, 0.0) for name in names], dtype=np.float32).reshape(1, -1)
+
+    def _safety_score(
+        self,
+        *,
+        grid_pu: float,
+        raw_action: np.ndarray,
+        projected_action: np.ndarray,
+        fault_or_recovery: float,
+    ) -> tuple[float, float, bool]:
+        if not self._safety_classifier:
+            return 1.0, 0.0, False
+        clf = self._safety_classifier["classifier"]
+        threshold = float(self._safety_classifier.get("safe_probability_threshold", 0.75))
+        reg_mag = float(np.hypot(projected_action[0], projected_action[1]))
+        energy_mag = float(np.hypot(projected_action[2], projected_action[3]))
+        sweeps = ["fault"] if fault_or_recovery > 0.5 else ["reg"]
+        if energy_mag > 0.05 or energy_mag >= reg_mag:
+            sweeps.append("energy")
+        probs = []
+        for sweep in dict.fromkeys(sweeps):
+            feature = self._safety_feature(
+                grid_pu=grid_pu,
+                raw_action=raw_action,
+                projected_action=projected_action,
+                sweep=sweep,
+            )
+            probs.append(float(clf.predict_proba(feature)[0, 1]))
+        safe_probability = min(probs) if probs else 1.0
+        return safe_probability, threshold, bool(safe_probability < threshold)
+
     def step(self, action):
         cfg = self.config
-        action = np.asarray(action, dtype=np.float32)
-        action = np.clip(action, self.action_space.low, self.action_space.high)
-        action = self._project_action(action)
+        raw_action = np.asarray(action, dtype=np.float32)
+        raw_action = np.clip(raw_action, self.action_space.low, self.action_space.high)
+        action = self._project_action(raw_action)
         m_reg_d, m_reg_q, m_energy_d, m_energy_q = [float(v) for v in action]
 
         grid_now, neg_now = self._grid_profile(self.t)
@@ -647,7 +722,8 @@ class HPTVoltageSACEnv(gym.Env):
         self.vdc = float(np.clip(self.vdc, 0.05, 1.30))
 
         self.t += cfg.dt
-        self._detector.update(self.t, self.v_pos, self.v_neg, self.vdc, cfg.dt)
+        detector_grid, detector_neg = self._grid_profile(self.t)
+        self._detector.update(self.t, detector_grid, detector_neg, self.vdc, cfg.dt)
 
         voltage_err = self.v_lv - 1.0
         unbalance = self.v_neg
@@ -658,6 +734,13 @@ class HPTVoltageSACEnv(gym.Env):
         energy_weight = 0.60 if self._calibration else 0.08
         slew = float(np.linalg.norm(action - self._last_action))
         fault_or_recovery = float(self._detector.fault_active or self._detector.recovery_active)
+        safe_probability, safety_threshold, safety_unsafe = self._safety_score(
+            grid_pu=grid_now,
+            raw_action=raw_action,
+            projected_action=action,
+            fault_or_recovery=fault_or_recovery,
+        )
+        safety_gap = max(0.0, safety_threshold - safe_probability)
         wrong_sign = float(
             (self.v_pos < cfg.sag_entry and m_reg_d < -1e-4)
             or (self.v_pos > cfg.swell_entry and m_reg_d > 1e-4)
@@ -678,6 +761,7 @@ class HPTVoltageSACEnv(gym.Env):
             -0.20 * reg_mag * reg_mag
             -energy_weight * energy_mag * energy_mag
             -cfg.action_slew_weight * slew * slew
+            -cfg.safety_penalty_weight * safety_gap * safety_gap
             + 1.0
         )
         if 0.98 <= self.v_lv <= 1.02 and 0.85 <= self.vdc <= 1.10:
@@ -687,6 +771,8 @@ class HPTVoltageSACEnv(gym.Env):
 
         self._last_action = action.copy()
         terminated = bool(self.vdc < 0.65 or self.vdc > 1.25 or self.v_lv < 0.45 or self.v_lv > 1.40)
+        if cfg.safety_unsafe_terminal and safety_unsafe:
+            terminated = True
         truncated = bool(self.t >= float(self._sc.duration_s))
         info = {
             "topology": self._sc.topology,
@@ -702,6 +788,9 @@ class HPTVoltageSACEnv(gym.Env):
             "uses_switch_calibration": bool(self._calibration),
             "fault_active_est": self._detector.fault_active,
             "recovery_active_est": self._detector.recovery_active,
+            "safety_safe_probability": safe_probability,
+            "safety_threshold": safety_threshold,
+            "safety_unsafe": safety_unsafe,
             "action": action.copy(),
         }
         return self._obs(), float(reward), terminated, truncated, info
