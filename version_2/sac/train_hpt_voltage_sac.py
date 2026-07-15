@@ -28,6 +28,7 @@ from .hpt_voltage_sac_env import (
     HPTVoltageEnvConfig,
     HPTVoltageScenario,
     HPTVoltageSACEnv,
+    _neg_seq_for_fault,
     default_hpt_voltage_scenarios,
 )
 from .export_hpt_sac_actor import export_hpt_actor
@@ -84,6 +85,39 @@ def select_scenarios(curriculum: str) -> list[HPTVoltageScenario]:
                 (1.10, "HVRT", "swell_3ph"),
             )
         ]
+    elif curriculum == "expanded_fault_transition":
+        selected = []
+        for topology in ("topology1", "topology2"):
+            for target in (0.20, 0.50, 0.75, 0.85, 0.90):
+                for fault_type in ("sym3ph", "1ph_g", "2ph", "2ph_g"):
+                    selected.append(
+                        HPTVoltageScenario(
+                            topology=topology,
+                            grid_pu=target,
+                            neg_seq_pu=_neg_seq_for_fault(fault_type, target),
+                            duration_s=0.26,
+                            category="LVRT",
+                            fault_type=fault_type,
+                            fault_start_s=0.035,
+                            fault_duration_s=0.090,
+                            recovery_tau_s=0.035,
+                        )
+                    )
+            for target in (1.10, 1.20, 1.25, 1.30):
+                for fault_type in ("swell_3ph", "swell_1ph"):
+                    selected.append(
+                        HPTVoltageScenario(
+                            topology=topology,
+                            grid_pu=target,
+                            neg_seq_pu=_neg_seq_for_fault(fault_type, target),
+                            duration_s=0.26,
+                            category="HVRT",
+                            fault_type=fault_type,
+                            fault_start_s=0.035,
+                            fault_duration_s=0.090,
+                            recovery_tau_s=0.035,
+                        )
+                    )
     else:
         raise ValueError(f"Unknown HPT SAC curriculum: {curriculum}")
 
@@ -163,7 +197,7 @@ def main() -> None:
     parser.add_argument("--run-id", default=None)
     parser.add_argument(
         "--curriculum",
-        choices=["all", "steady_step4", "topology2_fault", "switch_fault_transition"],
+        choices=["all", "steady_step4", "topology2_fault", "switch_fault_transition", "expanded_fault_transition"],
         default="all",
     )
     parser.add_argument(

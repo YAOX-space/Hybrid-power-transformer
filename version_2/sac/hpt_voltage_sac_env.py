@@ -876,3 +876,61 @@ def teacher_action(obs: np.ndarray, *, reg_limit: float = 0.80, energy_limit: fl
         m_energy_d = max(m_energy_d, min(energy_limit, 0.10 + 0.25 * (0.92 - vpu)))
     m_energy_q = np.clip(0.25 * v_err - 0.35 * vneg, -energy_limit, energy_limit)
     return np.array([m_reg_d, m_reg_q, m_energy_d, m_energy_q], dtype=np.float32)
+
+
+def execution_guard_teacher_action(
+    obs: np.ndarray,
+    *,
+    reg_limit: float = 0.80,
+    energy_limit: float = 0.95,
+    dynamic_mode: bool = False,
+    dynamic_reg_limit_topology1: float = 0.80,
+    dynamic_reg_limit_topology2: float = 0.60,
+) -> np.ndarray:
+    """Teacher target copied from the guarded Simulink execution layer.
+
+    This function exists only to create training labels.  Final switch-level
+    promotion must run with the corresponding Simulink guard disabled.
+    """
+
+    obs = np.asarray(obs, dtype=np.float32)
+    vpu = float(obs[0])
+    vpos = float(obs[1])
+    vdcpu = float(obs[3])
+    topology1 = bool(obs.size > 14 and obs[14] > 0.5)
+    topology2 = bool(obs.size > 15 and obs[15] > 0.5)
+
+    if topology2 and dynamic_mode:
+        dyn_lim = float(np.clip(dynamic_reg_limit_topology2, 0.0, reg_limit))
+        m_reg_d = float(np.clip(20.0 * (1.0 - vpu), -dyn_lim, dyn_lim))
+        return np.asarray([m_reg_d, 0.0, 0.0, 0.0], dtype=np.float32)
+
+    if topology1 and not dynamic_mode:
+        m_reg_d = 0.32 + 2.35 * (1.0 - vpu)
+        if vpu > 0.995:
+            m_reg_d = 0.26
+        m_reg_d = float(np.clip(m_reg_d, 0.22, 0.46))
+        return np.asarray([m_reg_d, 0.0, 0.0, 0.0], dtype=np.float32)
+
+    action = teacher_action(obs, reg_limit=reg_limit, energy_limit=energy_limit)
+    if vpos < 0.92 and action[0] < 0.0:
+        action[0] = 0.0
+    if vpos > 1.08 and action[0] > 0.0:
+        action[0] = 0.0
+    if vpu < 0.98 and action[0] < 0.0:
+        action[0] = 0.0
+    if vdcpu < 0.95:
+        action[0] *= float(np.clip((vdcpu - 0.75) / 0.20, 0.0, 1.0))
+        action[2] = max(action[2], min(energy_limit, 0.20 + 1.2 * (0.82 - vdcpu)))
+    elif vdcpu > 1.12:
+        action[2] = min(action[2], -0.05)
+    if dynamic_mode:
+        dyn_lim = dynamic_reg_limit_topology2 if topology2 else dynamic_reg_limit_topology1
+        dyn_lim = float(np.clip(dyn_lim, 0.0, reg_limit))
+        action[0] = float(np.clip(action[0], -dyn_lim, dyn_lim))
+        action[1] = float(np.clip(action[1], -dyn_lim, dyn_lim))
+    action[0] = float(np.clip(action[0], -reg_limit, reg_limit))
+    action[1] = float(np.clip(action[1], -reg_limit, reg_limit))
+    action[2] = float(np.clip(action[2], -energy_limit, energy_limit))
+    action[3] = float(np.clip(action[3], -energy_limit, energy_limit))
+    return action.astype(np.float32)

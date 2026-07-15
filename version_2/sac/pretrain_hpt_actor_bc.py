@@ -30,6 +30,7 @@ from .hpt_voltage_sac_env import (
     OBS_DIM_HPT,
     HPTVoltageEnvConfig,
     HPTVoltageSACEnv,
+    execution_guard_teacher_action,
 )
 from .train_hpt_voltage_sac import MODELS, RESULTS, TOPOLOGY_MODELS, scenario_summary, select_scenarios
 
@@ -52,6 +53,7 @@ def collect_teacher_samples(
     feedback_gain_topology2: float,
     feedforward_scale_topology1: float,
     feedforward_scale_topology2: float,
+    teacher_source: str,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
@@ -65,14 +67,25 @@ def collect_teacher_samples(
             done = False
             while not done:
                 grid_now, _ = env._grid_profile(env.t)
-                target = env._table_teacher_action(grid_now)
-                if scenario.topology.lower() == "topology1":
-                    target[0] *= feedforward_scale_topology1
-                    target[0] += feedback_gain_topology1 * (1.0 - float(obs[0]))
-                elif scenario.topology.lower() == "topology2":
-                    target[0] *= feedforward_scale_topology2
-                    target[0] += feedback_gain_topology2 * (1.0 - float(obs[0]))
-                target = env._project_action(target)
+                dynamic_mode = float(scenario.fault_start_s) > 0.02 and scenario.category != "steady"
+                if teacher_source == "execution_guard":
+                    target = execution_guard_teacher_action(
+                        obs,
+                        reg_limit=config.reg_limit,
+                        energy_limit=config.energy_limit,
+                        dynamic_mode=dynamic_mode,
+                        dynamic_reg_limit_topology1=config.dynamic_reg_limit_topology1,
+                        dynamic_reg_limit_topology2=config.dynamic_reg_limit_topology2,
+                    )
+                else:
+                    target = env._table_teacher_action(grid_now)
+                    if scenario.topology.lower() == "topology1":
+                        target[0] *= feedforward_scale_topology1
+                        target[0] += feedback_gain_topology1 * (1.0 - float(obs[0]))
+                    elif scenario.topology.lower() == "topology2":
+                        target[0] *= feedforward_scale_topology2
+                        target[0] += feedback_gain_topology2 * (1.0 - float(obs[0]))
+                    target = env._project_action(target)
                 observations.append(np.asarray(obs, dtype=np.float32))
                 targets.append(np.asarray(target, dtype=np.float32))
                 noisy_action = target + rng.normal(0.0, noise_std, size=ACT_DIM_HPT).astype(np.float32)
@@ -156,6 +169,149 @@ def append_step4_corrections(
     )
 
 
+def append_switch_trace_samples(
+    X: np.ndarray,
+    Y: np.ndarray,
+    csv_path: Path | None,
+    *,
+    repeat: int,
+    topology2_phase_equivalent: bool,
+    phase_shift_rad: float,
+) -> tuple[np.ndarray, np.ndarray, int]:
+    if csv_path is None:
+        return X, Y, 0
+    if not csv_path.exists():
+        raise FileNotFoundError(csv_path)
+
+    extra_x: list[np.ndarray] = []
+    extra_y: list[np.ndarray] = []
+    with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
+        for row in csv.DictReader(f):
+            obs = np.asarray(
+                [float(row[f"obs_{idx:02d}"]) for idx in range(1, OBS_DIM_HPT + 1)],
+                dtype=np.float32,
+            )
+            target = np.asarray(
+                [float(row[f"action_{idx:02d}"]) for idx in range(1, ACT_DIM_HPT + 1)],
+                dtype=np.float32,
+            )
+            if (
+                topology2_phase_equivalent
+                and str(row.get("topology", "")).lower() == "topology2"
+                and float(row.get("actor_select_mode", 0.0) or 0.0) >= 1.5
+                and target[0] < 0.0
+            ):
+                reg_d = float(target[0])
+                target[0] = reg_d * np.cos(phase_shift_rad)
+                target[1] = reg_d * np.sin(phase_shift_rad)
+            for _ in range(max(1, repeat)):
+                extra_x.append(obs)
+                extra_y.append(target)
+
+    if not extra_x:
+        return X, Y, 0
+    return (
+        np.concatenate([X, np.asarray(extra_x, dtype=np.float32)], axis=0),
+        np.concatenate([Y, np.asarray(extra_y, dtype=np.float32)], axis=0),
+        len(extra_x),
+    )
+
+
+def append_raw_smoke_corrections(
+    X: np.ndarray,
+    Y: np.ndarray,
+    csv_path: Path | None,
+    *,
+    repeat: int,
+    energy_limit: float,
+    topology2_phase_equivalent: bool,
+    phase_shift_rad: float,
+) -> tuple[np.ndarray, np.ndarray, int]:
+    if csv_path is None:
+        return X, Y, 0
+    if not csv_path.exists():
+        raise FileNotFoundError(csv_path)
+
+    extra_x: list[np.ndarray] = []
+    extra_y: list[np.ndarray] = []
+    with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
+        for row in csv.DictReader(f):
+            if row.get("mode") != "sac_actor_raw_guard0":
+                continue
+            topology = str(row.get("topology", "")).lower()
+            scenario_type = str(row.get("scenario_type", "")).lower()
+            vpu = float(row.get("obs_vpu_mean") or float(row.get("lv_mean", 207.0)) / 207.0)
+            vpos = float(row.get("obs_vpos_mean") or vpu)
+            vdcpu = float(row.get("obs_vdcpu_mean") or float(row.get("vdc_min", 800.0)) / 800.0)
+            lv_mean = float(row.get("lv_mean") or 207.0)
+            current_reg_d = float(row.get("reg_d_mean") or 0.0)
+            current_reg_q = float(row.get("reg_q_mean") or 0.0)
+            current_energy_d = float(row.get("energy_d_mean") or 0.0)
+            current_energy_q = float(row.get("energy_q_mean") or 0.0)
+
+            obs = np.zeros(OBS_DIM_HPT, dtype=np.float32)
+            obs[0] = vpu
+            obs[1] = vpos
+            obs[2] = 0.0
+            obs[3] = vdcpu
+            obs[4] = 1.0 - vdcpu
+            obs[5] = float(row.get("obs_verr_mean") or (1.0 - vpu))
+            obs[8] = current_reg_d
+            obs[9] = current_reg_q
+            obs[10] = current_energy_d
+            obs[11] = current_energy_q
+            obs[12] = 1.0 if vpos < 0.92 else 0.0
+            obs[13] = 1.0 if vpos > 1.08 else 0.0
+            obs[14] = 1.0 if topology == "topology1" else 0.0
+            obs[15] = 1.0 if topology == "topology2" else 0.0
+            obs[16] = float(row.get("obs_fault_flag_mean") or 0.0)
+            obs[17] = float(row.get("obs_recovery_flag_mean") or 0.0)
+            obs[20] = min(vpos, 1.0)
+            obs[21] = max(vpos, 1.0)
+
+            if topology == "topology1":
+                reg_d = 0.32 + 2.35 * (1.0 - vpu)
+                if vpu > 0.995:
+                    reg_d = 0.26
+                reg_d = float(np.clip(reg_d, 0.22, 0.46))
+            elif scenario_type == "fault":
+                reg_d = float(np.clip(20.0 * (1.0 - vpu), -0.60, 0.60))
+            else:
+                reg_d = current_reg_d + 1.8 * ((207.0 - lv_mean) / 207.0)
+                reg_d = float(np.clip(reg_d, -0.60, 0.60))
+
+            energy_d = 0.0
+            if vdcpu < 0.95:
+                dc_scale = float(np.clip((vdcpu - 0.75) / 0.20, 0.0, 1.0))
+                reg_d *= dc_scale
+                energy_d = min(energy_limit, 0.20 + 1.2 * (0.82 - vdcpu))
+            elif vdcpu > 1.12:
+                energy_d = max(-energy_limit, -0.05)
+
+            target = np.asarray([reg_d, 0.0, energy_d, 0.0], dtype=np.float32)
+            if (
+                topology2_phase_equivalent
+                and topology == "topology2"
+                and scenario_type == "fault"
+                and target[0] < 0.0
+            ):
+                raw_reg = float(target[0])
+                target[0] = raw_reg * np.cos(phase_shift_rad)
+                target[1] = raw_reg * np.sin(phase_shift_rad)
+
+            for _ in range(max(1, repeat)):
+                extra_x.append(obs)
+                extra_y.append(target)
+
+    if not extra_x:
+        return X, Y, 0
+    return (
+        np.concatenate([X, np.asarray(extra_x, dtype=np.float32)], axis=0),
+        np.concatenate([Y, np.asarray(extra_y, dtype=np.float32)], axis=0),
+        len(extra_x),
+    )
+
+
 def build_or_load_model(args: argparse.Namespace, scenarios, config: HPTVoltageEnvConfig) -> SAC:
     vec = DummyVecEnv(
         [
@@ -234,7 +390,12 @@ def train_actor_bc(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-id", default=None)
-    parser.add_argument("--curriculum", choices=["all", "steady_step4", "topology2_fault", "switch_fault_transition"], default="steady_step4")
+    parser.add_argument(
+        "--curriculum",
+        choices=["all", "steady_step4", "topology2_fault", "switch_fault_transition", "expanded_fault_transition"],
+        default="steady_step4",
+    )
+    parser.add_argument("--teacher-source", choices=["table", "execution_guard"], default="table")
     parser.add_argument("--seed", type=int, default=20260715)
     parser.add_argument("--episodes-per-scenario", type=int, default=24)
     parser.add_argument("--noise-std", type=float, default=0.08)
@@ -244,6 +405,12 @@ def main() -> None:
     parser.add_argument("--feedforward-scale-topology2", type=float, default=1.0)
     parser.add_argument("--step4-correction-csv", type=Path, default=None)
     parser.add_argument("--step4-correction-repeat", type=int, default=512)
+    parser.add_argument("--switch-trace-csv", type=Path, default=None)
+    parser.add_argument("--switch-trace-repeat", type=int, default=4)
+    parser.add_argument("--switch-trace-topology2-phase-equivalent", action="store_true")
+    parser.add_argument("--switch-trace-phase-shift-rad", type=float, default=0.55)
+    parser.add_argument("--raw-smoke-correction-csv", type=Path, default=None)
+    parser.add_argument("--raw-smoke-correction-repeat", type=int, default=512)
     parser.add_argument("--epochs", type=int, default=240)
     parser.add_argument("--batch-size", type=int, default=512)
     parser.add_argument("--lr", type=float, default=1e-4)
@@ -270,6 +437,7 @@ def main() -> None:
         feedback_gain_topology2=args.feedback_gain_topology2,
         feedforward_scale_topology1=args.feedforward_scale_topology1,
         feedforward_scale_topology2=args.feedforward_scale_topology2,
+        teacher_source=args.teacher_source,
         seed=args.seed,
     )
     X, Y = append_step4_corrections(
@@ -278,6 +446,23 @@ def main() -> None:
         args.step4_correction_csv,
         repeat=args.step4_correction_repeat,
         reg_limit=args.reg_limit,
+    )
+    X, Y, switch_trace_samples = append_switch_trace_samples(
+        X,
+        Y,
+        args.switch_trace_csv,
+        repeat=args.switch_trace_repeat,
+        topology2_phase_equivalent=args.switch_trace_topology2_phase_equivalent,
+        phase_shift_rad=args.switch_trace_phase_shift_rad,
+    )
+    X, Y, raw_smoke_samples = append_raw_smoke_corrections(
+        X,
+        Y,
+        args.raw_smoke_correction_csv,
+        repeat=args.raw_smoke_correction_repeat,
+        energy_limit=args.energy_limit,
+        topology2_phase_equivalent=args.switch_trace_topology2_phase_equivalent,
+        phase_shift_rad=args.switch_trace_phase_shift_rad,
     )
     model = build_or_load_model(args, scenarios, config)
     metrics = train_actor_bc(
@@ -304,7 +489,11 @@ def main() -> None:
             key: str(value) if isinstance(value, Path) else value
             for key, value in vars(args).items()
         },
-        "metrics": metrics,
+        "metrics": {
+            **metrics,
+            "switch_trace_augmented_samples": int(switch_trace_samples),
+            "raw_smoke_correction_samples": int(raw_smoke_samples),
+        },
     }
     args.model_out.with_suffix(".json").write_text(json.dumps(sidecar, indent=2), encoding="utf-8")
     (run_dir / "summary.json").write_text(json.dumps(sidecar, indent=2), encoding="utf-8")

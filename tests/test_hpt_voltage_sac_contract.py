@@ -1,5 +1,6 @@
 import numpy as np
 import joblib
+import pytest
 
 from version_2.sac.build_hpt_switch_dataset import FEATURE_NAMES
 from version_2.sac.hpt_voltage_sac_env import (
@@ -9,6 +10,7 @@ from version_2.sac.hpt_voltage_sac_env import (
     HPTVoltageSACEnv,
     HPTVoltageScenario,
     classify_hpt_operating_condition,
+    execution_guard_teacher_action,
     teacher_action,
 )
 
@@ -67,6 +69,45 @@ def test_teacher_boosts_sag_and_absorbs_swell():
     assert swell_action.shape == (4,)
     assert sag_action[0] > 0.0
     assert swell_action[0] < 0.0
+
+
+def test_execution_guard_teacher_matches_topology1_steady_projection():
+    env = HPTVoltageSACEnv(
+        [HPTVoltageScenario(topology="topology1", grid_pu=0.90)],
+        train_mode=False,
+    )
+    obs, _ = env.reset()
+
+    action = execution_guard_teacher_action(obs, dynamic_mode=False)
+
+    assert action.shape == (4,)
+    assert action[0] == pytest.approx(0.46)
+    assert np.allclose(action[1:], 0.0)
+
+
+def test_execution_guard_teacher_matches_topology2_dynamic_law():
+    env = HPTVoltageSACEnv(
+        [
+            HPTVoltageScenario(
+                topology="topology2",
+                grid_pu=0.90,
+                category="LVRT",
+                fault_type="sym3ph",
+                fault_start_s=0.035,
+                fault_duration_s=0.09,
+            )
+        ],
+        train_mode=False,
+    )
+    obs, _ = env.reset()
+    obs = obs.copy()
+    obs[0] = 0.98
+
+    action = execution_guard_teacher_action(obs, dynamic_mode=True)
+
+    assert action.shape == (4,)
+    assert action[0] == pytest.approx(0.40, abs=1e-6)
+    assert np.allclose(action[1:], 0.0)
 
 
 def test_corrective_action_improves_voltage_error_on_sag():
