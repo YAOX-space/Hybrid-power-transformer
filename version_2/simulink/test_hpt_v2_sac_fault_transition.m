@@ -196,6 +196,21 @@ function row = run_fault_case(M, topology, faultName, faultPu, mode, sacEnable, 
     row.fault = string(faultName);
     row.fault_pu = faultPu;
     row.mode = string(mode);
+    if sacEnable <= 0.5
+        row.action_semantics = "controller_disabled";
+    else
+        row.action_semantics = "actor_raw_unlogged_controller_projected";
+    end
+    row.action_raw_available = false;
+    row.action_projected_available = true;
+    row.action_effective_available = true;
+    row.action_raw_source = "unlogged_actor_or_disabled";
+    row.action_projected_source = "HPTSAC_action";
+    row.action_effective_source = "HPTSAC_action";
+    row.raw_m_reg_d = NaN;
+    row.raw_m_reg_q = NaN;
+    row.raw_m_energy_d = NaN;
+    row.raw_m_energy_q = NaN;
     row.lv_fault_rms_mean = mean(phaseRmsInst(faultIdx));
     row.lv_recovery_rms_mean = mean(phaseRmsInst(recoveryIdx));
     row.lv_peak_rms = max(phaseRmsInst(t > faultStart & t < stopTime));
@@ -206,6 +221,16 @@ function row = run_fault_case(M, topology, faultName, faultPu, mode, sacEnable, 
     row.action_max_abs = max(abs(actRows), [], 'all');
     row.reg_d_mean = mean(actRows(1, round(end*0.7):end));
     row.energy_d_mean = mean(actRows(3, round(end*0.7):end));
+    row.reg_q_mean = mean(actRows(2, round(end*0.7):end));
+    row.energy_q_mean = mean(actRows(4, round(end*0.7):end));
+    row.projected_m_reg_d_mean = row.reg_d_mean;
+    row.projected_m_reg_q_mean = row.reg_q_mean;
+    row.projected_m_energy_d_mean = row.energy_d_mean;
+    row.projected_m_energy_q_mean = row.energy_q_mean;
+    row.effective_m_reg_d_mean = row.reg_d_mean;
+    row.effective_m_reg_q_mean = row.reg_q_mean;
+    row.effective_m_energy_d_mean = row.energy_d_mean;
+    row.effective_m_energy_q_mean = row.energy_q_mean;
 end
 
 function p = ph(blockPath, portKind, idx)

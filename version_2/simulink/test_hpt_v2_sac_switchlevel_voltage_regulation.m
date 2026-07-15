@@ -125,6 +125,25 @@ function row = run_case(M, modelName, mode, gridVoltage, sacEnable, policyMode, 
     row.model = string(modelName);
     row.mode = string(mode);
     row.grid_V = gridVoltage;
+    if sacEnable <= 0.5
+        row.action_semantics = "controller_disabled";
+    elseif policyMode >= 0.5
+        row.action_semantics = "actor_raw_unlogged_controller_projected";
+    elseif policyMode <= -0.5
+        row.action_semantics = "fixed_command_through_controller_projection";
+    else
+        row.action_semantics = "teacher_raw_unlogged_controller_projected";
+    end
+    row.action_raw_available = policyMode <= -0.5;
+    row.action_projected_available = true;
+    row.action_effective_available = true;
+    row.action_raw_source = "unlogged_except_fixed_mode";
+    row.action_projected_source = "HPTSAC_action";
+    row.action_effective_source = "HPTSAC_action";
+    row.raw_m_reg_d = NaN;
+    row.raw_m_reg_q = NaN;
+    row.raw_m_energy_d = NaN;
+    row.raw_m_energy_q = NaN;
     row.lv_rms_mean = mean(phaseRms);
     row.lv_rms_a = phaseRms(1);
     row.lv_rms_b = phaseRms(2);
@@ -143,6 +162,14 @@ function row = run_case(M, modelName, mode, gridVoltage, sacEnable, policyMode, 
     row.reg_q_mean = mean(actRows(2, round(end*0.7):end));
     row.energy_d_mean = mean(actRows(3, round(end*0.7):end));
     row.energy_q_mean = mean(actRows(4, round(end*0.7):end));
+    row.projected_m_reg_d_mean = row.reg_d_mean;
+    row.projected_m_reg_q_mean = row.reg_q_mean;
+    row.projected_m_energy_d_mean = row.energy_d_mean;
+    row.projected_m_energy_q_mean = row.energy_q_mean;
+    row.effective_m_reg_d_mean = row.reg_d_mean;
+    row.effective_m_reg_q_mean = row.reg_q_mean;
+    row.effective_m_energy_d_mean = row.energy_d_mean;
+    row.effective_m_energy_q_mean = row.energy_q_mean;
 end
 
 function y = orient_channels(x, nChannels)
