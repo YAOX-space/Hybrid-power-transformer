@@ -90,6 +90,7 @@ assignin(mw, 'hpt_sac_reg_polarity', 1.0);
 assignin(mw, 'hpt_sac_reg_d_gain', 1.00);
 assignin(mw, 'hpt_sac_reg_q_gain', 0.0);
 assignin(mw, 'hpt_sac_dynamic_reg_limit', 0.605);
+assignin(mw, 'hpt_sac_topology_id', 2.0);
 assignin(mw, 'hpt_sac_fixed_reg_d', 0.0);
 assignin(mw, 'hpt_sac_fixed_reg_q', 0.0);
 assignin(mw, 'hpt_sac_fixed_energy_d', 0.0);

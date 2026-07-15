@@ -32,6 +32,20 @@ def test_hpt_sac_env_contract_is_24_obs_4_action():
     assert env.action_space.shape == (ACT_DIM_HPT,) == (4,)
     assert obs.shape == (24,)
     assert np.all(np.isfinite(obs))
+    assert obs[14] == 1.0
+    assert obs[15] == 0.0
+
+
+def test_hpt_sac_obs_marks_topology2_context():
+    env = HPTVoltageSACEnv(
+        [HPTVoltageScenario(topology="topology2", grid_pu=1.1)],
+        train_mode=False,
+    )
+
+    obs, _ = env.reset()
+
+    assert obs[14] == 0.0
+    assert obs[15] == 1.0
 
 
 def test_teacher_boosts_sag_and_absorbs_swell():
@@ -71,6 +85,18 @@ def test_corrective_action_improves_voltage_error_on_sag():
             break
 
     assert abs(1.0 - obs[0]) < initial_error
+
+
+def test_table_teacher_prior_reports_switch_sweep_regulation_target():
+    env = HPTVoltageSACEnv(
+        [HPTVoltageScenario(topology="topology1", grid_pu=0.90)],
+        train_mode=False,
+    )
+    env.reset()
+
+    _, _, _, _, info = env.step(np.asarray([0.0, 0.0, 0.0, 0.0], dtype=np.float32))
+
+    assert info["teacher_m_reg_d"] > 0.50
 
 
 def test_fault_transition_features_latch_and_recover():

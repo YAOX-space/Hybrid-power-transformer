@@ -48,7 +48,19 @@ def select_scenarios(curriculum: str) -> list[HPTVoltageScenario]:
     scenarios = default_hpt_voltage_scenarios()
     if curriculum == "all":
         return scenarios
-    if curriculum == "topology2_fault":
+    if curriculum == "steady_step4":
+        selected = [
+            HPTVoltageScenario(
+                topology=topology,
+                grid_pu=grid_pu,
+                duration_s=0.18,
+                category="steady",
+                fault_type="steady",
+            )
+            for topology in ("topology1", "topology2")
+            for grid_pu in (0.90, 1.00, 1.10)
+        ]
+    elif curriculum == "topology2_fault":
         selected = [
             s
             for s in scenarios
@@ -151,7 +163,7 @@ def main() -> None:
     parser.add_argument("--run-id", default=None)
     parser.add_argument(
         "--curriculum",
-        choices=["all", "topology2_fault", "switch_fault_transition"],
+        choices=["all", "steady_step4", "topology2_fault", "switch_fault_transition"],
         default="all",
     )
     parser.add_argument(
@@ -175,6 +187,14 @@ def main() -> None:
     )
     parser.add_argument("--safety-penalty-weight", type=float, default=8.0)
     parser.add_argument("--safety-unsafe-terminal", action="store_true")
+    parser.add_argument("--reg-limit", type=float, default=0.80)
+    parser.add_argument("--energy-limit", type=float, default=0.95)
+    parser.add_argument(
+        "--teacher-prior-weight",
+        type=float,
+        default=0.0,
+        help="Penalty weight for deviating from the switch-sweep table teacher.",
+    )
     parser.add_argument("--export", action="store_true")
     parser.add_argument(
         "--export-out",
@@ -190,9 +210,12 @@ def main() -> None:
     MODELS.mkdir(parents=True, exist_ok=True)
     scenarios = select_scenarios(args.curriculum)
     env_config = HPTVoltageEnvConfig(
+        reg_limit=args.reg_limit,
+        energy_limit=args.energy_limit,
         safety_classifier_path=str(args.safety_classifier) if args.safety_classifier else "",
         safety_penalty_weight=args.safety_penalty_weight,
         safety_unsafe_terminal=bool(args.safety_unsafe_terminal),
+        teacher_prior_weight=args.teacher_prior_weight,
     )
 
     def make_env(idx: int):
@@ -284,6 +307,9 @@ def main() -> None:
             "safety_classifier": str(args.safety_classifier) if args.safety_classifier else None,
             "safety_penalty_weight": args.safety_penalty_weight,
             "safety_unsafe_terminal": bool(args.safety_unsafe_terminal),
+            "reg_limit": args.reg_limit,
+            "energy_limit": args.energy_limit,
+            "teacher_prior_weight": args.teacher_prior_weight,
             "observation_dim": OBS_DIM_HPT,
             "action_dim": ACT_DIM_HPT,
         },

@@ -9,7 +9,7 @@ fault-transition-aware 24-D vector:
         v_lv_rms_pu, v_pos_pu, v_neg_pu, vdc_pu, vdc_err_pu, v_err_pu,
         energy_id_pu, energy_iq_pu,
         last_m_reg_d, last_m_reg_q, last_m_energy_d, last_m_energy_q,
-        sag_flag, swell_flag, reg_headroom, energy_headroom,
+        sag_flag, swell_flag, topology1_flag, topology2_flag,
         fault_active_est, recovery_active_est, t_fault_est_pu, t_recovery_est_pu,
         v_fault_min_pu, v_fault_max_pu, dv_pos_dt_pu, d_vdc_dt_pu,
     ]
@@ -112,6 +112,7 @@ class HPTVoltageEnvConfig:
     safety_classifier_path: str = ""
     safety_penalty_weight: float = 8.0
     safety_unsafe_terminal: bool = False
+    teacher_prior_weight: float = 0.0
 
 
 @lru_cache(maxsize=4)
@@ -557,8 +558,8 @@ class HPTVoltageSACEnv(gym.Env):
         cfg = self.config
         v_err = 1.0 - self.v_lv
         vdc_err = 1.0 - self.vdc
-        reg_mag = float(np.hypot(self._last_action[0], self._last_action[1]))
-        energy_mag = float(np.hypot(self._last_action[2], self._last_action[3]))
+        topology1_flag = 1.0 if self._topology_name() == "topology1" else 0.0
+        topology2_flag = 1.0 if self._topology_name() == "topology2" else 0.0
         obs = np.array(
             [
                 self.v_lv,
@@ -572,14 +573,53 @@ class HPTVoltageSACEnv(gym.Env):
                 *self._last_action,
                 float(self.v_pos < cfg.sag_entry),
                 float(self.v_pos > cfg.swell_entry),
-                max(0.0, 1.0 - reg_mag / max(cfg.reg_limit, 1e-6)),
-                max(0.0, 1.0 - energy_mag / max(cfg.energy_limit, 1e-6)),
+                topology1_flag,
+                topology2_flag,
                 *self._detector.features(self.t),
             ],
             dtype=np.float32,
         )
         assert obs.shape == (OBS_DIM_HPT,), obs.shape
         return np.clip(obs, -5.0, 5.0)
+
+    def _table_teacher_action(self, grid_pu: float) -> np.ndarray:
+        """Best supported regulation command from the calibrated switch sweep.
+
+        The table is intentionally based on switch-level fixed-action data, not
+        on the learned/SAC proxy.  It gives SAC a local action prior while still
+        allowing the actor to learn deviations when the reward supports them.
+        """
+
+        candidates = np.linspace(-self.config.reg_limit, self.config.reg_limit, 81)
+        best_score = float("inf")
+        best_reg_d = 0.0
+        for raw_reg_d in candidates:
+            projected = self._project_action(
+                np.asarray([raw_reg_d, 0.0, 0.0, 0.0], dtype=np.float32)
+            )
+            reg_d = float(projected[0])
+            lv_target = self._calibrated_lv_target(grid_pu, reg_d)
+            vdc_target = self._calibrated_vdc_target(grid_pu, reg_d)
+            if lv_target is None:
+                continue
+            vdc_target = 1.0 if vdc_target is None else float(vdc_target)
+            vdc_penalty = 8.0 * max(0.0, 0.90 - vdc_target) ** 2
+            vdc_penalty += 4.0 * max(0.0, vdc_target - 1.18) ** 2
+            action_penalty = 0.015 * abs(reg_d)
+            score = abs(float(lv_target) - 1.0) + vdc_penalty + action_penalty
+            if score < best_score:
+                best_score = score
+                best_reg_d = reg_d
+
+        if not np.isfinite(best_score):
+            fallback = teacher_action(
+                self._obs(),
+                reg_limit=self.config.reg_limit,
+                energy_limit=self.config.energy_limit,
+            )
+            return fallback.astype(np.float32)
+
+        return np.asarray([best_reg_d, 0.0, 0.0, 0.0], dtype=np.float32)
 
     def _project_action(self, action: np.ndarray) -> np.ndarray:
         projected = np.asarray(action, dtype=np.float32).copy()
@@ -734,6 +774,8 @@ class HPTVoltageSACEnv(gym.Env):
         energy_weight = 0.60 if self._calibration else 0.08
         slew = float(np.linalg.norm(action - self._last_action))
         fault_or_recovery = float(self._detector.fault_active or self._detector.recovery_active)
+        teacher_prior = self._table_teacher_action(grid_now)
+        teacher_gap = float((m_reg_d - teacher_prior[0]) ** 2)
         safe_probability, safety_threshold, safety_unsafe = self._safety_score(
             grid_pu=grid_now,
             raw_action=raw_action,
@@ -762,6 +804,7 @@ class HPTVoltageSACEnv(gym.Env):
             -energy_weight * energy_mag * energy_mag
             -cfg.action_slew_weight * slew * slew
             -cfg.safety_penalty_weight * safety_gap * safety_gap
+            -cfg.teacher_prior_weight * teacher_gap
             + 1.0
         )
         if 0.98 <= self.v_lv <= 1.02 and 0.85 <= self.vdc <= 1.10:
@@ -791,6 +834,7 @@ class HPTVoltageSACEnv(gym.Env):
             "safety_safe_probability": safe_probability,
             "safety_threshold": safety_threshold,
             "safety_unsafe": safety_unsafe,
+            "teacher_m_reg_d": float(teacher_prior[0]),
             "action": action.copy(),
         }
         return self._obs(), float(reward), terminated, truncated, info
