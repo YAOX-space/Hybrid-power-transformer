@@ -89,6 +89,49 @@ def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
+def _score_from_dict(data: dict | None) -> CaseScore | None:
+    if not data:
+        return None
+    return CaseScore(
+        csv_path=str(data.get("csv_path", "")),
+        passed=bool(data.get("passed", False)),
+        score=float(data.get("score", 0.0)),
+        fail_reason=str(data.get("fail_reason", "")),
+        lv_mean=float(data.get("lv_mean", 0.0)),
+        lv_recovery_mean=float(data.get("lv_recovery_mean", 0.0)),
+        lv_peak=float(data.get("lv_peak", 0.0)),
+        lv_min=float(data.get("lv_min", 0.0)),
+        vdc_mean=float(data.get("vdc_mean", 0.0)),
+        vdc_min=float(data.get("vdc_min", 0.0)),
+        action_max_abs=float(data.get("action_max_abs", 0.0)),
+        reg_d_mean=float(data.get("reg_d_mean", 0.0)),
+        reg_q_mean=float(data.get("reg_q_mean", 0.0)),
+        energy_d_mean=float(data.get("energy_d_mean", 0.0)),
+        energy_q_mean=float(data.get("energy_q_mean", 0.0)),
+    )
+
+
+def _record_from_dict(data: dict) -> SpecialistRecord:
+    return SpecialistRecord(
+        spec=dict(data.get("spec", {})),
+        baseline=_score_from_dict(data.get("baseline")),
+        model_path=str(data.get("model_path", "")),
+        actor_mat=str(data.get("actor_mat", "")),
+        candidate=_score_from_dict(data.get("candidate")),
+        promoted=bool(data.get("promoted", False)),
+        elapsed_s=float(data.get("elapsed_s", 0.0)),
+        notes=[str(x) for x in data.get("notes", [])],
+    )
+
+
+def load_existing_records(run_dir: Path) -> list[SpecialistRecord]:
+    status_path = run_dir / "status.json"
+    if not status_path.exists():
+        return []
+    data = json.loads(status_path.read_text(encoding="utf-8"))
+    return [_record_from_dict(row) for row in data.get("records", [])]
+
+
 def run_cmd(cmd: list[str], log_path: Path, timeout_s: int | None = None) -> int:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w", encoding="utf-8", errors="replace") as log:
@@ -415,6 +458,12 @@ def main() -> None:
     parser.add_argument("--repeat", type=int, default=512)
     parser.add_argument("--seed", type=int, default=20260716)
     parser.add_argument(
+        "--resume-run-dir",
+        type=Path,
+        default=None,
+        help="Continue an interrupted run directory by loading status.json and skipping completed specialist names.",
+    )
+    parser.add_argument(
         "--energy-enable",
         type=float,
         default=0.0,
@@ -422,7 +471,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    run_dir = RESULTS / f"hpt_case_specialists_{now_stamp()}"
+    run_dir = args.resume_run_dir or RESULTS / f"hpt_case_specialists_{now_stamp()}"
     run_dir.mkdir(parents=True, exist_ok=True)
     trace_csv = args.trace_csv or latest_csv(TRACE_DIR, "step_traces_*.csv")
     frt_trace_csv = args.frt_trace_csv or latest_csv(FRT_TEACHER_TRACE_DIR, "frt_teacher_*_traces.csv")
@@ -435,9 +484,23 @@ def main() -> None:
         specs = [s for s in specs if s.case_name == args.case_name]
     specs = specs[: max(0, int(args.max_specialists))]
 
+    records: list[SpecialistRecord] = load_existing_records(run_dir)
+    completed_names = {
+        str(record.spec.get("name", ""))
+        for record in records
+        if str(record.spec.get("name", ""))
+    }
+    if completed_names:
+        specs = [s for s in specs if s.name not in completed_names]
+    seed_offset = len(records)
+
     backup = run_dir / "actor_backups"
-    copy_file(STEADY_MAT, backup / "hpt_sac_actor_weights_start.mat")
-    copy_file(DYNAMIC_MAT, backup / "hpt_sac_actor_weights_dynamic_start.mat")
+    steady_backup = backup / "hpt_sac_actor_weights_start.mat"
+    dynamic_backup = backup / "hpt_sac_actor_weights_dynamic_start.mat"
+    if not steady_backup.exists():
+        copy_file(STEADY_MAT, steady_backup)
+    if not dynamic_backup.exists():
+        copy_file(DYNAMIC_MAT, dynamic_backup)
     (RESULTS / ".hpt_case_specialists_current.json").write_text(
         json.dumps(
             {
@@ -453,7 +516,6 @@ def main() -> None:
         encoding="utf-8",
     )
 
-    records: list[SpecialistRecord] = []
     write_report(run_dir, records, "running")
 
     for i, spec in enumerate(specs):
@@ -476,7 +538,7 @@ def main() -> None:
                 frt_trace_csv if spec.scenario_type == "fault" else trace_csv,
                 epochs=args.epochs,
                 repeat=args.repeat,
-                seed=args.seed + i,
+                seed=args.seed + seed_offset + i,
             )
             if rc != 0:
                 notes.append(f"train failed rc={rc}")
@@ -507,8 +569,8 @@ def main() -> None:
         except Exception as exc:
             notes.append(f"exception={type(exc).__name__}:{exc}")
         finally:
-            copy_file(backup / "hpt_sac_actor_weights_start.mat", STEADY_MAT)
-            copy_file(backup / "hpt_sac_actor_weights_dynamic_start.mat", DYNAMIC_MAT)
+            copy_file(steady_backup, STEADY_MAT)
+            copy_file(dynamic_backup, DYNAMIC_MAT)
 
         records.append(
             SpecialistRecord(
