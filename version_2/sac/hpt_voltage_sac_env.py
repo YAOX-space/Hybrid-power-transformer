@@ -249,6 +249,64 @@ def _interp_energy_response(
     return float(baseline + (d_axis - baseline) + (q_axis - baseline))
 
 
+def _interp_axes(rows: list[dict], axis_keys: list[str], axis_values: list[float], value_key: str) -> float | None:
+    if not rows:
+        return None
+    if not axis_keys:
+        vals = [float(row[value_key]) for row in rows if value_key in row]
+        if not vals:
+            return None
+        return float(np.mean(vals))
+
+    axis_key = axis_keys[0]
+    target = float(axis_values[0])
+    bucket: dict[float, list[dict]] = {}
+    for row in rows:
+        if axis_key not in row:
+            continue
+        bucket.setdefault(float(row[axis_key]), []).append(row)
+    if not bucket:
+        return None
+
+    xs: list[float] = []
+    ys: list[float] = []
+    for x in sorted(bucket):
+        value = _interp_axes(bucket[x], axis_keys[1:], axis_values[1:], value_key)
+        if value is None:
+            continue
+        xs.append(float(x))
+        ys.append(float(value))
+    if not xs:
+        return None
+    return float(np.interp(target, np.asarray(xs, dtype=float), np.asarray(ys, dtype=float)))
+
+
+def _interp_grid_axes_table(
+    table: list[dict],
+    grid_pu: float,
+    axis_keys: list[str],
+    axis_values: list[float],
+    value_key: str,
+) -> float | None:
+    if not table:
+        return None
+    grids = sorted({float(row["grid_pu"]) for row in table if "grid_pu" in row})
+    if not grids:
+        return None
+    xs: list[float] = []
+    ys: list[float] = []
+    for grid in grids:
+        rows = [row for row in table if abs(float(row["grid_pu"]) - grid) <= 1e-9]
+        value = _interp_axes(rows, axis_keys, axis_values, value_key)
+        if value is None:
+            continue
+        xs.append(float(grid))
+        ys.append(float(value))
+    if not xs:
+        return None
+    return float(np.interp(float(grid_pu), np.asarray(xs, dtype=float), np.asarray(ys, dtype=float)))
+
+
 def _neg_seq_for_fault(fault_type: str, target: float) -> float:
     depth = abs(1.0 - target)
     if fault_type in {"1ph_g", "swell_1ph"}:
@@ -535,25 +593,64 @@ class HPTVoltageSACEnv(gym.Env):
             return float(cal.get("vdc_reg_abs_cost", self.config.reg_dc_cost))
         return self.config.reg_dc_cost
 
-    def _calibrated_lv_target(self, grid_pu: float, reg_d: float) -> float | None:
+    def _calibrated_lv_target(self, grid_pu: float, reg_d: float, reg_q: float = 0.0) -> float | None:
         cal = self._topology_calibration()
-        table = []
+        table: list[dict] = []
         if cal:
             if self._sc.category != "steady":
+                reg_table = cal.get("fault_reg_response_table", [])
+                value = _interp_grid_axes_table(
+                    reg_table,
+                    grid_pu,
+                    ["reg_d_mean", "reg_q_mean"],
+                    [reg_d, reg_q],
+                    "lv_pu_mean",
+                )
+                if value is not None:
+                    return value
                 table = cal.get("fault_response_table", [])
             if not table:
                 table = cal.get("response_table", [])
         return _interp_response_table(table, grid_pu, reg_d, "lv_pu_mean")
 
-    def _calibrated_vdc_target(self, grid_pu: float, reg_d: float) -> float | None:
+    def _calibrated_vdc_target(self, grid_pu: float, reg_d: float, reg_q: float = 0.0) -> float | None:
         cal = self._topology_calibration()
-        table = []
+        table: list[dict] = []
         if cal:
             if self._sc.category != "steady":
+                reg_table = cal.get("fault_reg_response_table", [])
+                value = _interp_grid_axes_table(
+                    reg_table,
+                    grid_pu,
+                    ["reg_d_mean", "reg_q_mean"],
+                    [reg_d, reg_q],
+                    "vdc_pu_mean",
+                )
+                if value is not None:
+                    return value
                 table = cal.get("fault_response_table", [])
             if not table:
                 table = cal.get("response_table", [])
         return _interp_response_table(table, grid_pu, reg_d, "vdc_pu_mean")
+
+    def _calibrated_joint_target(
+        self,
+        grid_pu: float,
+        reg_d: float,
+        energy_d: float,
+        energy_q: float,
+        value_key: str,
+    ) -> float | None:
+        cal = self._topology_calibration()
+        if not cal or self._sc.category == "steady":
+            return None
+        return _interp_grid_axes_table(
+            cal.get("fault_joint_response_table", []),
+            grid_pu,
+            ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
+            [reg_d, energy_d, energy_q],
+            value_key,
+        )
 
     def _calibrated_energy_target(
         self,
@@ -740,17 +837,28 @@ class HPTVoltageSACEnv(gym.Env):
         m_reg_d, m_reg_q, m_energy_d, m_energy_q = [float(v) for v in action]
 
         grid_now, neg_now = self._grid_profile(self.t)
-        calibrated_lv = self._calibrated_lv_target(grid_now, m_reg_d)
+        calibrated_lv = self._calibrated_lv_target(grid_now, m_reg_d, m_reg_q)
         load_drop = 0.010 * max(0.0, float(self._sc.load_pu) - 1.0)
         if calibrated_lv is None:
             base_lv = self._source_base_voltage(grid_now)
             reg_effect = self._reg_gain() * m_reg_d
             q_effect = 0.0 if self._calibration else cfg.energy_q_gain * m_energy_q
             calibrated_lv = base_lv + reg_effect + q_effect
-        energy_lv = self._calibrated_energy_target(grid_now, m_energy_d, m_energy_q, "lv_pu_mean")
-        energy_lv_zero = self._calibrated_energy_target(grid_now, 0.0, 0.0, "lv_pu_mean")
-        if energy_lv is not None and energy_lv_zero is not None:
-            calibrated_lv += energy_lv - energy_lv_zero
+        joint_lv = self._calibrated_joint_target(
+            grid_now, m_reg_d, m_energy_d, m_energy_q, "lv_pu_mean"
+        )
+        joint_lv_zero = self._calibrated_joint_target(
+            grid_now, m_reg_d, 0.0, 0.0, "lv_pu_mean"
+        )
+        if joint_lv is not None and abs(m_reg_q) <= 1e-6:
+            calibrated_lv = joint_lv
+        elif joint_lv is not None and joint_lv_zero is not None:
+            calibrated_lv += joint_lv - joint_lv_zero
+        else:
+            energy_lv = self._calibrated_energy_target(grid_now, m_energy_d, m_energy_q, "lv_pu_mean")
+            energy_lv_zero = self._calibrated_energy_target(grid_now, 0.0, 0.0, "lv_pu_mean")
+            if energy_lv is not None and energy_lv_zero is not None:
+                calibrated_lv += energy_lv - energy_lv_zero
         v_target = max(0.0, calibrated_lv - load_drop)
         self.v_lv += (v_target - self.v_lv) * (cfg.dt / cfg.v_tau)
         self.v_pos = max(0.0, self.v_lv)
@@ -769,21 +877,34 @@ class HPTVoltageSACEnv(gym.Env):
             target_energy_iq = np.sign(m_energy_q) * min(2.0, abs(calibrated_i) / current_scale)
         self.energy_id += (target_energy_id - self.energy_id) * 0.25
         self.energy_iq += (target_energy_iq - self.energy_iq) * 0.25
-        calibrated_vdc = self._calibrated_vdc_target(grid_now, m_reg_d)
+        calibrated_vdc = self._calibrated_vdc_target(grid_now, m_reg_d, m_reg_q)
         if calibrated_vdc is None:
             calibrated_vdc = (
                 self._vdc_base_pu()
                 - self._reg_dc_cost() * max(0.0, abs(m_reg_d))
                 - 0.04 * max(0.0, 1.0 - grid_now)
             )
-        energy_vdc = self._calibrated_energy_target(grid_now, m_energy_d, m_energy_q, "vdc_pu_mean")
-        energy_vdc_zero = self._calibrated_energy_target(grid_now, 0.0, 0.0, "vdc_pu_mean")
-        if energy_vdc is not None and energy_vdc_zero is not None:
+        joint_vdc = self._calibrated_joint_target(
+            grid_now, m_reg_d, m_energy_d, m_energy_q, "vdc_pu_mean"
+        )
+        joint_vdc_zero = self._calibrated_joint_target(
+            grid_now, m_reg_d, 0.0, 0.0, "vdc_pu_mean"
+        )
+        if joint_vdc is not None and abs(m_reg_q) <= 1e-6:
             energy_direct_scale = 0.0
-            energy_vdc_delta = energy_vdc - energy_vdc_zero
+            energy_vdc_delta = joint_vdc - calibrated_vdc
+        elif joint_vdc is not None and joint_vdc_zero is not None:
+            energy_direct_scale = 0.0
+            energy_vdc_delta = joint_vdc - joint_vdc_zero
         else:
-            energy_direct_scale = 0.0 if self._calibration else 1.0
-            energy_vdc_delta = energy_direct_scale * cfg.energy_d_dc_gain * m_energy_d
+            energy_vdc = self._calibrated_energy_target(grid_now, m_energy_d, m_energy_q, "vdc_pu_mean")
+            energy_vdc_zero = self._calibrated_energy_target(grid_now, 0.0, 0.0, "vdc_pu_mean")
+            if energy_vdc is not None and energy_vdc_zero is not None:
+                energy_direct_scale = 0.0
+                energy_vdc_delta = energy_vdc - energy_vdc_zero
+            else:
+                energy_direct_scale = 0.0 if self._calibration else 1.0
+                energy_vdc_delta = energy_direct_scale * cfg.energy_d_dc_gain * m_energy_d
         vdc_target = (
             calibrated_vdc
             + energy_vdc_delta

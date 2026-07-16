@@ -97,6 +97,34 @@ def fault_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(table, key=lambda x: (x["grid_pu"], x["reg_d_mean"], x["cmd_m_reg_d"]))
 
 
+def fault_reg_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    table: list[dict[str, Any]] = []
+    for row in rows:
+        if s(row, "mode") != "reg_sweep":
+            continue
+        table.append(
+            {
+                "fault": s(row, "fault", s(row, "case_name")),
+                "category": s(row, "category"),
+                "grid_pu": f(row, "grid_pu", f(row, "fault_pu")),
+                "cmd_m_reg_d": f(row, "raw_m_reg_d"),
+                "cmd_m_reg_q": f(row, "raw_m_reg_q"),
+                "reg_d_mean": f(row, "reg_d_mean"),
+                "reg_q_mean": f(row, "reg_q_mean"),
+                "lv_pu_mean": f(row, "lv_pu_mean"),
+                "lv_recovery_pu_mean": f(row, "lv_recovery_pu_mean"),
+                "lv_peak_pu": f(row, "lv_peak_pu"),
+                "lv_min_pu": f(row, "lv_min_pu"),
+                "lv_unbalance_pu": f(row, "lv_unbalance_pu"),
+                "vdc_pu_mean": f(row, "vdc_pu_mean", f(row, "vdc_mean") / 800.0),
+                "vdc_min_pu": f(row, "vdc_min_pu", f(row, "vdc_min") / 800.0),
+                "vdc_max_pu": f(row, "vdc_max_pu", f(row, "vdc_max") / 800.0),
+                "action_max_abs": f(row, "action_max_abs"),
+            }
+        )
+    return sorted(table, key=lambda x: (x["grid_pu"], x["reg_d_mean"], x["reg_q_mean"]))
+
+
 def fault_baseline_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     table: list[dict[str, Any]] = []
     for row in rows:
@@ -143,6 +171,48 @@ def fault_energy_response_table(rows: list[dict[str, Any]]) -> list[dict[str, An
             }
         )
     return sorted(table, key=lambda x: (x["grid_pu"], x["energy_d_mean"], x["energy_q_mean"]))
+
+
+def fault_joint_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    table: list[dict[str, Any]] = []
+    for row in rows:
+        if s(row, "mode") != "joint_sweep":
+            continue
+        table.append(
+            {
+                "fault": s(row, "fault", s(row, "case_name")),
+                "category": s(row, "category"),
+                "grid_pu": f(row, "grid_pu", f(row, "fault_pu")),
+                "cmd_m_reg_d": f(row, "raw_m_reg_d"),
+                "cmd_m_reg_q": f(row, "raw_m_reg_q"),
+                "cmd_m_energy_d": f(row, "raw_m_energy_d"),
+                "cmd_m_energy_q": f(row, "raw_m_energy_q"),
+                "reg_d_mean": f(row, "reg_d_mean"),
+                "reg_q_mean": f(row, "reg_q_mean"),
+                "energy_d_mean": f(row, "energy_d_mean"),
+                "energy_q_mean": f(row, "energy_q_mean"),
+                "lv_pu_mean": f(row, "lv_pu_mean"),
+                "lv_recovery_pu_mean": f(row, "lv_recovery_pu_mean"),
+                "lv_peak_pu": f(row, "lv_peak_pu"),
+                "lv_min_pu": f(row, "lv_min_pu"),
+                "lv_unbalance_pu": f(row, "lv_unbalance_pu"),
+                "vdc_pu_mean": f(row, "vdc_pu_mean", f(row, "vdc_mean") / 800.0),
+                "vdc_min_pu": f(row, "vdc_min_pu", f(row, "vdc_min") / 800.0),
+                "vdc_max_pu": f(row, "vdc_max_pu", f(row, "vdc_max") / 800.0),
+                "energy_i_rms_mean": f(row, "energy_i_rms_mean"),
+                "action_max_abs": f(row, "action_max_abs"),
+            }
+        )
+    return sorted(
+        table,
+        key=lambda x: (
+            x["grid_pu"],
+            x["reg_d_mean"],
+            x["reg_q_mean"],
+            x["energy_d_mean"],
+            x["energy_q_mean"],
+        ),
+    )
 
 
 def fit_fault_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -194,7 +264,9 @@ def merge_frt_calibration(calibration_path: Path, matrix_csv: Path) -> dict[str,
         top = calibration.setdefault("topologies", {}).setdefault(topology, {})
         top["fault_baseline_table"] = fault_baseline_table(data)
         top["fault_response_table"] = fault_response_table(data)
+        top["fault_reg_response_table"] = fault_reg_response_table(data)
         top["fault_energy_response_table"] = fault_energy_response_table(data)
+        top["fault_joint_response_table"] = fault_joint_response_table(data)
         top["fault_fit"] = fit_fault_summary(data)
     return calibration
 

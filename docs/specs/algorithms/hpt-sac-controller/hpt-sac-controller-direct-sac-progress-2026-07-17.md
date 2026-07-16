@@ -52,6 +52,40 @@ Not completed:
 - Topology2 joint regulating+energy proxy behavior still has a large Vdc gap and
   needs a joint-interaction model before proxy-only training can be trusted.
 
+## Proxy Calibration Update
+
+The resumed full fault-specialist run was stopped at the user's request and the
+work shifted back to proxy calibration.
+
+Stopped run:
+
+- `lab/results/hpt_case_specialists_20260717_011726`
+- completed `13 / 18` fault specialist records before stop
+- no specialist actor was promoted
+
+Proxy changes:
+
+- Added `fault_reg_response_table` from all FRT `reg_sweep` rows, including
+  nonzero `reg_q` cases.
+- Added `fault_joint_response_table` from FRT `joint_sweep` rows, representing
+  the coupled `(reg_d, energy_d, energy_q)` response.
+- Updated the proxy environment to use calibrated multi-axis lookup tables for
+  fault LV/Vdc targets.
+- Updated the FRT proxy-gap measurement so it evaluates the same joint lookup
+  model that the environment uses.
+
+Latest matrix-calibrated in-sample gap:
+
+- topology2 `joint_sweep` Vdc MAE improved from about `0.40-0.45 pu` to `0`.
+- topology2 `reg_q_sweep` Vdc MAE improved from about `0.26-0.33 pu` to `0`.
+- topology1 `joint_sweep` and `reg_q_sweep` are also matched in-sample.
+
+Important limitation:
+
+This is a calibration-matrix in-sample match, not yet a generalization proof.
+The next proxy step should create a small holdout or newly sampled topology2
+joint-action matrix to verify interpolation between the calibrated points.
+
 ## Next Engineering Step
 
 Use `run_hpt_sac_pipeline.py` for repeatable launches:
@@ -64,7 +98,7 @@ py -3.8 -m version_2.sac.run_hpt_sac_pipeline --stage fault-specialists-smoke
 Before another full 8-hour campaign, the next code work should be:
 
 1. Add grid-side current/reactive-current logging to the switch-level evaluator.
-2. Replace the additive topology2 FRT proxy Vdc approximation with a joint
-   lookup/regression model over regulating and energy actions.
+2. Validate the new joint lookup proxy on held-out or newly sampled topology2
+   joint regulating/energy actions.
 3. Resume specialist training only after a short smoke case proves the new
    scoring and proxy gap are consistent.

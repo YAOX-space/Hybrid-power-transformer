@@ -146,6 +146,61 @@ def interp_energy(table: list[dict[str, Any]], grid_pu: float, ed: float, eq: fl
     return float(baseline + (d_axis - baseline) + (q_axis - baseline))
 
 
+def interp_axes(rows: list[dict[str, Any]], axis_keys: list[str], axis_values: list[float], key: str) -> float | None:
+    if not rows:
+        return None
+    if not axis_keys:
+        vals = [f(row, key, np.nan) for row in rows]
+        vals = [value for value in vals if np.isfinite(value)]
+        if not vals:
+            return None
+        return float(np.mean(vals))
+
+    axis_key = axis_keys[0]
+    target = float(axis_values[0])
+    bucket: dict[float, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        bucket[f(row, axis_key)].append(row)
+    if not bucket:
+        return None
+
+    xs: list[float] = []
+    ys: list[float] = []
+    for x in sorted(bucket):
+        value = interp_axes(bucket[x], axis_keys[1:], axis_values[1:], key)
+        if value is None:
+            continue
+        xs.append(float(x))
+        ys.append(float(value))
+    if not xs:
+        return None
+    return float(np.interp(target, np.asarray(xs), np.asarray(ys)))
+
+
+def interp_grid_axes(
+    table: list[dict[str, Any]],
+    grid_pu: float,
+    axis_keys: list[str],
+    axis_values: list[float],
+    key: str,
+) -> float | None:
+    if not table:
+        return None
+    grids = sorted({round(f(row, "grid_pu"), 9) for row in table})
+    xs: list[float] = []
+    ys: list[float] = []
+    for grid in grids:
+        rows = [row for row in table if abs(f(row, "grid_pu") - grid) <= 1e-9]
+        value = interp_axes(rows, axis_keys, axis_values, key)
+        if value is None:
+            continue
+        xs.append(float(grid))
+        ys.append(float(value))
+    if not xs:
+        return None
+    return float(np.interp(float(grid_pu), np.asarray(xs), np.asarray(ys)))
+
+
 def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for row in rows:
@@ -161,11 +216,21 @@ def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dic
         reg_q = f(row, "reg_q_mean", raw_reg_q)
         ed = f(row, "energy_d_mean", f(row, "raw_m_energy_d"))
         eq = f(row, "energy_q_mean", f(row, "raw_m_energy_q"))
-        reg_table = top.get("fault_response_table", [])
+        reg_table = top.get("fault_reg_response_table", top.get("fault_response_table", []))
+        reg_d_axis_table = top.get("fault_response_table", [])
         energy_table = top.get("fault_energy_response_table", [])
+        joint_table = top.get("fault_joint_response_table", [])
         baseline_table = top.get("fault_baseline_table", [])
-        pred_lv = interp_response(reg_table, grid, reg, "lv_pu_mean")
-        pred_vdc = interp_response(reg_table, grid, reg, "vdc_pu_mean")
+        pred_lv = interp_grid_axes(
+            reg_table, grid, ["reg_d_mean", "reg_q_mean"], [reg, reg_q], "lv_pu_mean"
+        )
+        pred_vdc = interp_grid_axes(
+            reg_table, grid, ["reg_d_mean", "reg_q_mean"], [reg, reg_q], "vdc_pu_mean"
+        )
+        if pred_lv is None:
+            pred_lv = interp_response(reg_d_axis_table, grid, reg, "lv_pu_mean")
+        if pred_vdc is None:
+            pred_vdc = interp_response(reg_d_axis_table, grid, reg, "vdc_pu_mean")
         pred_lv_energy = interp_energy(energy_table, grid, ed, eq, "lv_pu_mean")
         pred_vdc_energy = interp_energy(energy_table, grid, ed, eq, "vdc_pu_mean")
         pred_i_energy = interp_energy(energy_table, grid, ed, eq, "energy_i_rms_mean")
@@ -176,11 +241,29 @@ def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dic
             pred_lv = pred_lv_energy
             pred_vdc = pred_vdc_energy
         elif mode in {"joint_sweep"}:
-            if pred_lv is not None and pred_lv_energy is not None:
+            joint_lv = interp_grid_axes(
+                joint_table,
+                grid,
+                ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
+                [reg, ed, eq],
+                "lv_pu_mean",
+            )
+            joint_vdc = interp_grid_axes(
+                joint_table,
+                grid,
+                ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
+                [reg, ed, eq],
+                "vdc_pu_mean",
+            )
+            if joint_lv is not None:
+                pred_lv = joint_lv
+            elif pred_lv is not None and pred_lv_energy is not None:
                 zero_lv = interp_energy(energy_table, grid, 0.0, 0.0, "lv_pu_mean")
                 if zero_lv is not None:
                     pred_lv = pred_lv + (pred_lv_energy - zero_lv)
-            if pred_vdc is not None and pred_vdc_energy is not None:
+            if joint_vdc is not None:
+                pred_vdc = joint_vdc
+            elif pred_vdc is not None and pred_vdc_energy is not None:
                 zero_energy = interp_energy(energy_table, grid, 0.0, 0.0, "vdc_pu_mean")
                 if zero_energy is not None:
                     pred_vdc = pred_vdc + (pred_vdc_energy - zero_energy)
