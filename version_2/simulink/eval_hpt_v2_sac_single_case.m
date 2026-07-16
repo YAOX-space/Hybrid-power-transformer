@@ -45,8 +45,15 @@ cases = {
 
 steadyGridVoltages = [9000, 10000, 11000];
 faults = {
+    'sag_0p20', 0.20;
+    'sag_0p50', 0.50;
+    'sag_0p75', 0.75;
+    'sag_0p85', 0.85;
     'sag_0p90', 0.90;
     'swell_1p10', 1.10;
+    'swell_1p20', 1.20;
+    'swell_1p25', 1.25;
+    'swell_1p30', 1.30;
 };
 
 targetPhaseRms = 207.0;
@@ -55,7 +62,7 @@ steadyStopTime = 0.08;
 steadySettleStart = 0.05;
 faultStart = 0.035;
 faultClear = 0.095;
-faultStopTime = 0.16;
+faultStopTime = 0.22;
 Ts = 20e-6;
 
 oldDir = pwd;
@@ -194,6 +201,8 @@ function [row, traceRows] = run_steady_case(M, topology, mode, gridVoltage, sacE
     row.obs_verr_mean = mean(obsRows(6, round(end*0.7):end));
     row.obs_fault_flag_mean = mean(obsRows(17, round(end*0.7):end));
     row.obs_recovery_flag_mean = mean(obsRows(18, round(end*0.7):end));
+    row.gbt_reactive_status = "not_applicable_steady";
+    row.gbt_limit_status = "action_surrogate";
 
     [row.within_window, row.window_reason] = assess_steady(row, caseSpec);
     traceRows = make_trace_rows(M, topology, "steady", row.case_name, gridVoltage, ...
@@ -244,6 +253,8 @@ function [row, traceRows] = run_fault_case(M, topology, faultName, faultPu, mode
     row.obs_verr_mean = mean(obsRows(6, round(end*0.7):end));
     row.obs_fault_flag_mean = mean(obsRows(17, round(end*0.7):end));
     row.obs_recovery_flag_mean = mean(obsRows(18, round(end*0.7):end));
+    row = add_gbt_fault_metrics(row, phaseRmsInst, Vdc(:, 1), actRows, t, ...
+        targetPhaseRms, faultPu, faultStart, faultClear, stopTime);
 
     [row.within_window, row.window_reason] = assess_fault(row, caseSpec);
     traceRows = make_trace_rows(M, topology, "fault", row.case_name, NaN, ...
@@ -265,7 +276,8 @@ function traceRows = make_trace_rows(M, topology, scenarioType, caseName, ...
         lvInst = sqrt(mean(Vlv(j, 1:3).^2));
         vdcInst = Vdc(j, 1);
         [zone, windowOk, windowReason] = classify_window( ...
-            scenarioType, t(j), lvInst, vdcInst, faultStart, faultClear, stopTime, caseSpec);
+            scenarioType, t(j), lvInst, vdcInst, faultPu, targetPhaseRms, ...
+            faultStart, faultClear, stopTime, caseSpec);
         target = dagger_target(topology, scenarioType, obsRows(:, j), actRows(:, j));
 
         row = struct();
@@ -344,8 +356,60 @@ function c = condition_class(scenarioType, faultPu)
     end
 end
 
+function row = add_gbt_fault_metrics(row, lvRmsInst, vdc, actRows, t, ...
+    targetPhaseRms, faultPu, faultStart, faultClear, stopTime)
+
+    solverTol = 1e-3;
+    vdcBase = 800.0;
+    lvPu = lvRmsInst ./ targetPhaseRms;
+    tRel = t - faultStart;
+    assessIdx = t >= faultStart & t <= stopTime;
+    if faultPu < 1.0
+        row.gbt_category = "LVRT";
+        env = arrayfun(@(x) lvrt_lower_env(x, faultPu), tRel);
+        margin = lvPu - env;
+    else
+        row.gbt_category = "HVRT";
+        env = arrayfun(@hvrt_upper_env, tRel);
+        margin = env - lvPu;
+    end
+
+    row.gbt_voltage_margin_min = min(margin(assessIdx));
+    row.gbt_voltage_envelope_pass = row.gbt_voltage_margin_min >= -solverTol;
+    row.gbt_recover_cover_s = stopTime - faultClear;
+    row.gbt_recover_evaluated = row.gbt_recover_cover_s >= 0.10;
+    postIdx = t > faultClear;
+    if row.gbt_recover_evaluated && any(postIdx)
+        finalStart = max(faultClear, stopTime - 0.12);
+        finalIdx = t >= finalStart & t <= stopTime;
+        row.gbt_recover_final_dev = max(abs(lvPu(finalIdx) - 1.0));
+        row.gbt_recover_pass = row.gbt_recover_final_dev <= 0.07 && ...
+            min(margin(postIdx)) >= -solverTol;
+    else
+        row.gbt_recover_final_dev = NaN;
+        row.gbt_recover_pass = false;
+    end
+
+    row.gbt_vdc_pu_min = min(vdc) / vdcBase;
+    row.gbt_vdc_pu_max = max(vdc) / vdcBase;
+    row.gbt_vdc_survive_pass = row.gbt_vdc_pu_min >= 0.75 && ...
+        row.gbt_vdc_pu_max <= 1.25;
+    row.gbt_action_limit_pass = max(abs(actRows), [], 'all') <= 0.9501;
+
+    % The GB/T dynamic reactive-current criterion needs measured positive-
+    % and negative-sequence reactive current. The current switch-level HPT
+    % evaluator logs voltages, Vdc, and SAC actions, but not a certified
+    % grid-side reactive current measurement. Match the previous-version
+    % status model: missing mandatory measurements are NOT_EVALUATED.
+    row.gbt_reactive_status = "not_evaluated_no_grid_reactive_current";
+    row.gbt_reactive_pass = false;
+    row.gbt_limit_status = "action_surrogate_not_current_certification";
+    row.gbt_certifiable = false;
+end
+
 function [zone, ok, reason] = classify_window( ...
-    scenarioType, t, lvInst, vdcInst, faultStart, faultClear, stopTime, caseSpec)
+    scenarioType, t, lvInst, vdcInst, faultPu, targetPhaseRms, ...
+    faultStart, faultClear, stopTime, caseSpec)
 
     reason = "";
     ok = true;
@@ -379,26 +443,27 @@ function [zone, ok, reason] = classify_window( ...
     else
         zone = "tail";
     end
-    lvLo = caseSpec{11};
-    lvHi = caseSpec{12};
-    vdcLo = caseSpec{13};
-    lvPeakHi = caseSpec{14};
-    lvMinLo = caseSpec{15};
-    if (zone == "fault" || zone == "recovery") && (lvInst < lvLo || lvInst > lvHi)
-        ok = false;
-        reason = append_reason(reason, "fault_lv_inst");
+    if t >= faultStart
+        lvPu = lvInst / targetPhaseRms;
+        tRel = t - faultStart;
+        if faultPu < 1.0
+            env = lvrt_lower_env(tRel, faultPu);
+            if lvPu < env - 1e-3
+                ok = false;
+                reason = append_reason(reason, "gbt_lvrt_envelope_inst");
+            end
+        else
+            env = hvrt_upper_env(tRel);
+            if lvPu > env + 1e-3
+                ok = false;
+                reason = append_reason(reason, "gbt_hvrt_envelope_inst");
+            end
+        end
     end
-    if lvInst > lvPeakHi
+    vdcPu = vdcInst / 800.0;
+    if vdcPu < 0.75 || vdcPu > 1.25
         ok = false;
-        reason = append_reason(reason, "lv_peak_inst");
-    end
-    if lvInst < lvMinLo
-        ok = false;
-        reason = append_reason(reason, "lv_min_inst");
-    end
-    if vdcInst < vdcLo
-        ok = false;
-        reason = append_reason(reason, "vdc_min_inst");
+        reason = append_reason(reason, "gbt_vdc_survive_inst");
     end
 end
 
@@ -454,6 +519,21 @@ function row = base_row(M, topology, scenarioType, caseName, mode, gridVoltage, 
     row.obs_verr_mean = NaN;
     row.obs_fault_flag_mean = NaN;
     row.obs_recovery_flag_mean = NaN;
+    row.gbt_category = "";
+    row.gbt_voltage_margin_min = NaN;
+    row.gbt_voltage_envelope_pass = false;
+    row.gbt_recover_cover_s = NaN;
+    row.gbt_recover_evaluated = false;
+    row.gbt_recover_final_dev = NaN;
+    row.gbt_recover_pass = false;
+    row.gbt_vdc_pu_min = NaN;
+    row.gbt_vdc_pu_max = NaN;
+    row.gbt_vdc_survive_pass = false;
+    row.gbt_action_limit_pass = false;
+    row.gbt_reactive_status = "";
+    row.gbt_reactive_pass = false;
+    row.gbt_limit_status = "";
+    row.gbt_certifiable = false;
     row.within_window = false;
     row.window_reason = "";
 end
@@ -482,32 +562,51 @@ function [ok, reason] = assess_steady(row, caseSpec)
 end
 
 function [ok, reason] = assess_fault(row, caseSpec)
-    lvLo = caseSpec{11};
-    lvHi = caseSpec{12};
-    vdcLo = caseSpec{13};
-    lvPeakHi = caseSpec{14};
-    lvMinLo = caseSpec{15};
     reasons = strings(0, 1);
-    if ~(row.lv_mean >= lvLo && row.lv_mean <= lvHi)
-        reasons(end+1) = "fault_window_lv"; %#ok<AGROW>
+    if ~row.gbt_voltage_envelope_pass
+        reasons(end+1) = "gbt_voltage_envelope"; %#ok<AGROW>
     end
-    if ~(row.lv_recovery_mean >= lvLo && row.lv_recovery_mean <= lvHi)
-        reasons(end+1) = "recovery_lv"; %#ok<AGROW>
+    if ~row.gbt_recover_evaluated
+        reasons(end+1) = "gbt_recover_not_evaluated"; %#ok<AGROW>
+    elseif ~row.gbt_recover_pass
+        reasons(end+1) = "gbt_recover"; %#ok<AGROW>
     end
-    if ~(row.vdc_min >= vdcLo)
-        reasons(end+1) = "vdc_min"; %#ok<AGROW>
+    if ~row.gbt_vdc_survive_pass
+        reasons(end+1) = "gbt_vdc_survive"; %#ok<AGROW>
     end
-    if ~(row.lv_peak <= lvPeakHi)
-        reasons(end+1) = "lv_peak"; %#ok<AGROW>
-    end
-    if ~(row.lv_min >= lvMinLo)
-        reasons(end+1) = "lv_min"; %#ok<AGROW>
-    end
-    if ~(row.action_max_abs <= 0.9501)
+    if ~row.gbt_action_limit_pass
         reasons(end+1) = "action_limit"; %#ok<AGROW>
+    end
+    if ~row.gbt_reactive_pass
+        reasons(end+1) = string(row.gbt_reactive_status); %#ok<AGROW>
     end
     ok = isempty(reasons);
     reason = strjoin(reasons, ";");
+end
+
+function y = lvrt_lower_env(tRel, residual)
+    if tRel < 0
+        y = 0.9;
+    elseif tRel <= 0.625
+        y = max(0.20, residual);
+    elseif tRel <= 2.0
+        y = max(0.20, residual) + ...
+            (0.9 - max(0.20, residual)) * (tRel - 0.625) / (2.0 - 0.625);
+    else
+        y = 0.9;
+    end
+end
+
+function y = hvrt_upper_env(tRel)
+    if tRel < 0
+        y = 1.1;
+    elseif tRel <= 0.5
+        y = 1.30;
+    elseif tRel <= 1.0
+        y = 1.20;
+    else
+        y = 1.10;
+    end
 end
 
 function replace_grid_with_programmable_source(M, sourceBranch, nominalGridVoltage, ...

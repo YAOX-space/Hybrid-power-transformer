@@ -232,3 +232,63 @@ Important limitation:
   sag, swell, or fault-transition cases.
 - The next step is to repeat the same per-case loop for the remaining cases and
   then build a router that selects the correct specialist.
+
+## GB/T 19963.1 FRT Pass Criteria Update
+
+The switch-level fault evaluator no longer uses the old temporary fixed voltage
+windows for sag/swell cases.  It now mirrors the same standard basis used in the
+previous-version `frt-v2` metrics, with GB/T 19963.1-2021 as the voltage-time
+source and the previous-version DC-link survival criterion retained for HPT
+internal safety.
+
+Reference basis:
+
+- GB/T 19963.1-2021 section 9.2:
+  - LVRT lower envelope: 0.2 pu ride-through for 625 ms.
+  - Recover to at least 0.9 pu by 2 s.
+  - Below 0.8 pu, dynamic reactive support is required.
+- GB/T 19963.1-2021 section 9.3:
+  - HVRT upper envelope: 1.30 pu for 0.5 s, 1.25 pu for 1 s,
+    1.20 pu for 10 s, then 1.10 pu normal upper band.
+  - Dynamic reactive current absorption is required during over-voltage.
+- GB/T 19963.1-2021 section 9.4:
+  - Continuous low-to-high voltage ride-through is a separate combined case.
+- Previous-version `frt-v2` project safety criterion:
+  - Vdc survive gate: Vdc must remain in `[0.75, 1.25] pu` over the full domain.
+
+Code changes:
+
+- `version_2/simulink/eval_hpt_v2_sac_single_case.m`
+  - Fault cases now include GB/T anchor scenarios:
+    `0.2/0.5/0.75/0.85/0.9 pu` LVRT and
+    `1.1/1.2/1.25/1.3 pu` HVRT.
+  - Fault stop time is extended to allow at least 0.10 s recovery-window
+    evaluation after clearing.
+  - Fault pass now requires:
+    - GB/T LVRT/HVRT voltage-time envelope pass;
+    - recovery evaluated and passed;
+    - Vdc survive pass using `[0.75, 1.25] pu`;
+    - action limit pass;
+    - dynamic reactive-current criterion evaluated and passed.
+  - Because the current switch-level evaluator does not yet log certified
+    grid-side positive/negative-sequence reactive current, dynamic reactive
+    support is currently marked
+    `not_evaluated_no_grid_reactive_current`.
+    Following the previous-version status model, this cannot be counted as a
+    full FRT pass.
+
+Verification:
+
+- Added `tests/test_gbt19963_frt_boundaries.py`.
+- Verified:
+  - LVRT 0.2 pu / 625 ms / 2 s anchor points;
+  - HVRT 1.30 / 1.20 / 1.10 envelope anchors;
+  - previous-version Vdc survive `[0.75, 1.25] pu` full-domain gate.
+- Ran:
+  - `PYTHONPATH=src py -3.8 -m pytest tests/test_gbt19963_frt_boundaries.py -q`
+  - result: `3 passed`
+- Ran one switch-level check:
+  - `topology1 / fault / sag_0p90`
+  - new result: fail with
+    `gbt_voltage_envelope;gbt_recover;gbt_vdc_survive;not_evaluated_no_grid_reactive_current`
+  - This is expected under the stricter standard-based criterion.
