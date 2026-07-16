@@ -86,6 +86,20 @@ This is a calibration-matrix in-sample match, not yet a generalization proof.
 The next proxy step should create a small holdout or newly sampled topology2
 joint-action matrix to verify interpolation between the calibrated points.
 
+Quick leave-one-depth diagnostic:
+
+- Held-out standard depths show that interpolation is still uneven.
+- topology2 LVRT `0.50 pu` held out: joint-sweep Vdc MAE about `0.335 pu`.
+- topology2 HVRT `1.10 pu` held out: joint-sweep Vdc MAE about `0.230 pu`.
+- topology2 LVRT `0.85 pu` and HVRT `1.25 pu` interpolate much better.
+
+Operational implication:
+
+- For the next SAC runs, keep the FRT proxy curriculum on the calibrated
+  discrete GB/T depths first.
+- Do not claim continuous fault-depth generalization until additional topology2
+  joint-action samples or a better learned uncertainty-aware proxy are added.
+
 ## Next Engineering Step
 
 Use `run_hpt_sac_pipeline.py` for repeatable launches:
