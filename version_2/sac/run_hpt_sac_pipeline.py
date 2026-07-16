@@ -108,6 +108,27 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
                 "version_2.sac.train_hpt_reward_correction",
             ),
         ),
+        "control-comparison-smoke": Stage(
+            name="control-comparison-smoke",
+            description="Run a switch-level no-control/conventional/SAC comparison for topology1 sag_0p90.",
+            command=_matlab_batch(
+                "cd('E:/research_space/Hybrid-power-transformer/version_2/simulink'); "
+                "hpt_compare_topology='topology1'; "
+                "hpt_compare_scenario_type='fault'; "
+                "hpt_compare_case_name='sag_0p90'; "
+                "hpt_compare_modes={'no_control','conventional_dq','sac_actor_raw_guard0'}; "
+                "eval_hpt_v2_control_comparison;"
+            ),
+        ),
+        "control-comparison-summary": Stage(
+            name="control-comparison-summary",
+            description="Summarize the latest switch-level control comparison CSV.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.summarize_hpt_control_comparison",
+            ),
+        ),
         "fault-specialists-smoke": Stage(
             name="fault-specialists-smoke",
             description="Run a short topology2 sag_0p90 specialist smoke test.",

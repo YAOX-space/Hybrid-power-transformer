@@ -30,6 +30,8 @@ Proxy validation:
   reward-like scores and switch-level FRT matrix scores.
 - `train_hpt_reward_correction.py` - supervised correction from proxy reward to
   switch-level reward-like action ranking, with held-out action evaluation.
+- `summarize_hpt_control_comparison.py` - summarizes switch-level no-control,
+  conventional, and SAC comparison CSVs.
 
 Training:
 
@@ -83,8 +85,9 @@ The current full workflow is:
 4. Build teacher traces.
 5. Measure reward alignment.
 6. Train/evaluate reward correction for weak proxy-ranking groups.
-7. Train topology/case specialists.
-8. Validate promoted actors on switch-level cases.
+7. Run no-control/conventional/SAC switch-level comparison.
+8. Train topology/case specialists.
+9. Validate promoted actors on switch-level cases.
 
 ## Known Open Blockers
 

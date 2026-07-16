@@ -205,3 +205,56 @@ Interpretation:
   inputs.
 - It is not a final proof of controller success.  Any actor trained with this
   corrected signal still needs switch-level validation.
+
+## Conventional-Control Baseline Start
+
+Added:
+
+- `version_2/simulink/eval_hpt_v2_control_comparison.m`
+- `version_2/sac/summarize_hpt_control_comparison.py`
+
+Purpose:
+
+- Move toward the real research target: compare SAC against a traditional
+  dq/voltage-loop style controller on the same switch-level HPT plants.
+- Keep the plant, PWM, converter limits, topology, and fault definitions
+  identical across no-control, conventional, and SAC modes.
+
+Implemented control modes:
+
+- `no_control`: `hpt_sac_enable = 0`, energy bridge disabled.
+- `conventional_dq`: current HPTSACController `policy_mode = 0` conventional-like
+  voltage/DC-link feedback branch. This is a runnable baseline v0, not yet the
+  final paper-grade PLL+dq+PI controller.
+- `sac_actor_raw_guard0`: SAC actor with execution guard disabled.
+
+Important repair:
+
+- `version_2/simulink/hpt_sac_actor_weights.mat` was found incomplete; it only
+  contained five actor variables and missed `mu_*`, `act_*`, `n_obs`, and
+  `n_act`.
+- The broken file was backed up locally and the complete
+  `hpt_sac_actor_weights_step4_pass_20260715.mat` file was restored as the
+  steady actor weight file so MATLAB Function compilation can succeed.
+
+Smoke result:
+
+- Input:
+  `lab/results/hpt_v2_control_comparison/control_comparison_topology1_fault_sag_0p90_20260717_033421.csv`
+- Summary:
+  `lab/results/hpt_v2_control_comparison/control_comparison_topology1_fault_sag_0p90_20260717_033421_REPORT.md`
+
+| Mode | Score | Pass | LV recovery | Vdc min |
+| --- | ---: | --- | ---: | ---: |
+| no_control | `101.583` | false | `204.405 V` | `709.352 V` |
+| conventional_dq | `109.791` | false | `191.047 V` | `722.911 V` |
+| sac_actor_raw_guard0 | `164.422` | false | `201.956 V` | `121.095 V` |
+
+Interpretation:
+
+- Current SAC does not beat the conventional baseline in this smoke case.
+- Current conventional baseline v0 also does not beat no-control, so it needs
+  tuning or replacement by a stronger PLL+dq+PI baseline before the final paper
+  comparison.
+- The comparison infrastructure is now in place; the next work is controller
+  baseline tuning and then SAC training against that baseline.
