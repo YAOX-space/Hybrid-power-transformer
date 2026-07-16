@@ -60,6 +60,12 @@ def collect_teacher_samples(
     observations: list[np.ndarray] = []
     targets: list[np.ndarray] = []
 
+    if episodes_per_scenario <= 0:
+        return (
+            np.zeros((0, OBS_DIM_HPT), dtype=np.float32),
+            np.zeros((0, ACT_DIM_HPT), dtype=np.float32),
+        )
+
     for scenario in scenarios:
         env = HPTVoltageSACEnv([scenario], config=config, seed=seed, train_mode=False)
         for _ in range(episodes_per_scenario):
@@ -204,12 +210,14 @@ def _trace_row_allowed(
     topologies: str,
     condition_classes: str,
     case_contains: str,
+    window_zones: str,
 ) -> bool:
     return (
         _scenario_type_allowed(row, scenario_types)
         and _csv_filter_allowed(row.get("topology", ""), topologies)
         and _csv_filter_allowed(row.get("condition_class", ""), condition_classes)
         and _contains_filter_allowed(row.get("case_name", ""), case_contains)
+        and _csv_filter_allowed(row.get("window_zone", ""), window_zones)
     )
 
 
@@ -225,6 +233,8 @@ def append_switch_trace_samples(
     topologies: str,
     condition_classes: str,
     case_contains: str,
+    window_zones: str,
+    fixed_target: str | None,
 ) -> tuple[np.ndarray, np.ndarray, int]:
     if csv_path is None:
         return X, Y, 0
@@ -241,6 +251,7 @@ def append_switch_trace_samples(
                 topologies=topologies,
                 condition_classes=condition_classes,
                 case_contains=case_contains,
+                window_zones=window_zones,
             ):
                 continue
             obs = np.asarray(
@@ -251,6 +262,13 @@ def append_switch_trace_samples(
                 [float(row[f"action_{idx:02d}"]) for idx in range(1, ACT_DIM_HPT + 1)],
                 dtype=np.float32,
             )
+            if fixed_target:
+                parts = [p.strip() for p in fixed_target.split(",") if p.strip()]
+                if len(parts) != ACT_DIM_HPT:
+                    raise ValueError(
+                        f"--switch-trace-fixed-target must have {ACT_DIM_HPT} values"
+                    )
+                target = np.asarray([float(p) for p in parts], dtype=np.float32)
             if (
                 topology2_phase_equivalent
                 and str(row.get("topology", "")).lower() == "topology2"
@@ -488,6 +506,7 @@ def train_actor_bc(
     batch_size: int,
     lr: float,
     seed: int,
+    action_weights: tuple[float, float, float, float] = (4.0, 1.0, 0.5, 0.5),
 ) -> dict:
     device = model.policy.device
     obs = torch.as_tensor(X, dtype=torch.float32, device=device)
@@ -496,7 +515,7 @@ def train_actor_bc(
     act_high = torch.as_tensor(model.action_space.high, dtype=torch.float32, device=device)
     target = 2.0 * (target_action - act_low) / torch.clamp(act_high - act_low, min=1e-6) - 1.0
     target = torch.clamp(target, -1.0, 1.0)
-    weights = torch.as_tensor([4.0, 1.0, 0.5, 0.5], dtype=torch.float32, device=device)
+    weights = torch.as_tensor(action_weights, dtype=torch.float32, device=device)
     opt = torch.optim.Adam(model.policy.actor.parameters(), lr=lr)
     rng = np.random.default_rng(seed)
     losses: list[float] = []
@@ -548,6 +567,8 @@ def main() -> None:
     parser.add_argument("--switch-trace-topologies", default="all")
     parser.add_argument("--switch-trace-condition-classes", default="all")
     parser.add_argument("--switch-trace-case-contains", default="all")
+    parser.add_argument("--switch-trace-window-zones", default="all")
+    parser.add_argument("--switch-trace-fixed-target", default=None)
     parser.add_argument("--switch-trace-topology2-phase-equivalent", action="store_true")
     parser.add_argument("--switch-trace-phase-shift-rad", type=float, default=0.55)
     parser.add_argument("--raw-smoke-correction-csv", type=Path, default=None)
@@ -557,6 +578,16 @@ def main() -> None:
     parser.add_argument("--energy-teacher-trace-repeat", type=int, default=16)
     parser.add_argument("--energy-teacher-trace-scenario-types", choices=["all", "steady", "fault"], default="all")
     parser.add_argument("--energy-teacher-min-time", type=float, default=0.0)
+    parser.add_argument(
+        "--zero-energy-targets",
+        action="store_true",
+        help="Force BC targets action_03/action_04 to zero while validating regulating-bridge specialists.",
+    )
+    parser.add_argument(
+        "--action-weights",
+        default="4,1,0.5,0.5",
+        help="Comma-separated BC loss weights for action_01..04.",
+    )
     parser.add_argument("--epochs", type=int, default=240)
     parser.add_argument("--batch-size", type=int, default=512)
     parser.add_argument("--lr", type=float, default=1e-4)
@@ -604,6 +635,8 @@ def main() -> None:
         topologies=args.switch_trace_topologies,
         condition_classes=args.switch_trace_condition_classes,
         case_contains=args.switch_trace_case_contains,
+        window_zones=args.switch_trace_window_zones,
+        fixed_target=args.switch_trace_fixed_target,
     )
     X, Y, raw_smoke_samples = append_raw_smoke_corrections(
         X,
@@ -629,6 +662,8 @@ def main() -> None:
         scenario_types=args.energy_teacher_trace_scenario_types,
         min_time=args.energy_teacher_min_time,
     )
+    if args.zero_energy_targets:
+        Y[:, 2:4] = 0.0
     model = build_or_load_model(args, scenarios, config)
     metrics = train_actor_bc(
         model,
@@ -638,6 +673,7 @@ def main() -> None:
         batch_size=args.batch_size,
         lr=args.lr,
         seed=args.seed,
+        action_weights=tuple(float(v) for v in args.action_weights.split(",")),
     )
     model.save(str(args.model_out))
 

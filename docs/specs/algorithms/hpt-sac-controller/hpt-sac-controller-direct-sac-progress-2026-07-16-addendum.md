@@ -86,3 +86,122 @@ Move from one dynamic actor to classifier-routed specialist actors:
    - LV/Vdc window status
 
 3. Train specialist actors and only promote a candidate after raw guard=0 smoke reaches at least 8 / 10.
+
+## Per-Case Specialist Update
+
+After the repeated step-trace specialist loop reached about 60 iterations without
+improving the `5 / 10` raw guard=0 smoke score, the unified/single dynamic actor
+search was stopped.  The working direction is now closer to the previous SAC
+version: train separate actors for topology/case families first, then build a
+router only after individual actors pass switch-level validation.
+
+New tooling added:
+
+- `version_2/simulink/eval_hpt_v2_sac_single_case.m`
+  - Runs exactly one raw guard=0 switch-level case.
+  - Supports topology/scenario/case filters.
+  - Supports `hpt_eval_energy_enable`, so regulating-bridge SAC can be tested
+    while the energy bridge stays on the physical DC-link loop.
+- `version_2/sac/train_hpt_case_specialists.py`
+  - Trains one actor per topology/case from filtered switch-level step traces.
+  - Exports the candidate to the steady or dynamic MAT slot only for that case.
+  - Restores the previous best MAT files after each trial.
+- `version_2/sac/pretrain_hpt_actor_bc.py`
+  - Now supports `--episodes-per-scenario 0`, allowing pure switch-trace BC
+    without mixed proxy curriculum data.
+  - Now supports `--zero-energy-targets`.
+  - Now supports configurable BC action weights via `--action-weights`.
+
+First focused case:
+
+- Case: `topology1 steady grid_9000V`
+- Baseline active actor with SAC energy disabled:
+  - LV mean about `213.49 V`
+  - Vdc min about `657.64 V`
+  - Fails `steady_lv;steady_vdc`
+- Per-case switch-trace BC actor:
+  - LV mean improved in some trials, e.g. `207.54 V`, but Vdc collapsed to
+    about `394 V`.
+  - With SAC energy disabled, Vdc still stayed too low in actor mode because
+    the regulating action drifted into a high-gain region.
+- DAgger-style aggregate correction:
+  - Reduced effective `reg_d_mean` in one trial from about `0.73` to `0.61`.
+  - Still failed: LV remained about `212 V`, Vdc min about `593 V`.
+
+Action-sweep finding:
+
+- Fixed-action switch-level sweep says topology1 `grid_9000V` can be healthy:
+  - fixed raw `m_reg_d = 0.8`, `m_reg_q = 0`, SAC energy disabled
+  - LV mean about `207.00 V`
+  - Vdc mean about `823.30 V`
+  - Vdc min about `727.64 V`
+- Therefore the plant and regulating bridge can solve this case.
+- The current actor failure is a policy/trajectory-distribution problem, not a
+  topology impossibility.
+
+Interpretation:
+
+- Single-step BC from conventional trace is not enough.  Once the actor pushes
+  the plant into a different observation region, it outputs high `reg_d`,
+  nonzero `reg_q`, and sometimes energy commands that were not present in the
+  safe fixed-action sweep.
+- Aggregate smoke-row corrections are too weak because they contain only mean
+  observations.  The next useful DAgger data must be per-step actor rollout
+  traces from the failed switch-level case.
+- The first `energy disabled` specialist loop was not enough.  It improved LV
+  voltage but did not preserve the DC link.
+
+## July 16 Per-Case DAgger Run
+
+The current target is no longer a unified SAC.  The active research loop now
+trains separate SAC actors for topology/fault families, following the previous
+version's expert-routing idea.
+
+New additions:
+
+- `eval_hpt_v2_sac_single_case.m` now also writes per-step actor rollout traces:
+  `lab/results/hpt_v2_sac_single_case_actor_traces/*.csv`
+- `pretrain_hpt_actor_bc.py` can filter switch traces by:
+  - topology
+  - scenario type
+  - condition class
+  - case name
+  - window zone
+- `pretrain_hpt_actor_bc.py` can use a fixed physical target with
+  `--switch-trace-fixed-target`.
+- `sweep_hpt_v2_reg_energy_response.m` sweeps regulating and energy commands
+  together, instead of treating them independently.
+- `overnight_hpt_case_specialists.py` runs a closed-loop DAgger loop:
+  evaluate actor on switch-level Simulink, collect failed rollout trace, train
+  a per-case specialist, export it, and test it again on switch-level Simulink.
+
+Topology1 `grid_9000V` findings:
+
+- `m_reg_d = 0.8` can recover LV voltage but can deplete the DC link when the
+  actor drifts into the same high-gain region.
+- Joint fixed-action sweep found a healthier region around
+  `[reg_d, reg_q, energy_d, energy_q] = [0.55, 0, 0.4, 0]`.
+- A trained actor still drifted in closed-loop:
+  - actual `reg_d_mean` around `0.62`
+  - actual `reg_q_mean` around `-0.10`
+  - actual `energy_d_mean` around `0.34`
+  - LV entered the desired window, but VdcMean was still too low.
+
+Interpretation:
+
+- The physical switch-level topology can regulate the case, but the actor has
+  not internalized the joint regulating/energy law.
+- The current failure is mainly a closed-loop distribution shift problem:
+  the actor sees states outside its BC trace and produces non-physical q-axis
+  and energy-channel deviations.
+- Therefore the 8-hour loop is now doing DAgger-style trace refresh, not proxy
+  residual correction.
+
+Current 8-hour run:
+
+- Script: `version_2/sac/overnight_hpt_case_specialists.py`
+- Status pointer: `lab/results/.hpt_case_specialists_8h_current.json`
+- Active run at launch:
+  `lab/results/hpt_case_specialists_8h_20260716_125417`
+- Promotion rule: only a candidate with `within_window=true` in switch-level
+  single-case validation is kept under `promoted/`.
