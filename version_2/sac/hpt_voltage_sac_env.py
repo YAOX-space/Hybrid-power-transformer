@@ -271,8 +271,8 @@ def default_hpt_voltage_scenarios() -> list[HPTVoltageScenario]:
     scenarios: list[HPTVoltageScenario] = []
     lvrt_types = ("sym3ph", "1ph_g", "2ph", "2ph_g")
     hvrt_types = ("swell_3ph", "swell_1ph")
-    lvrt_residuals = (0.70, 0.85, 0.90)
-    hvrt_levels = (1.10, 1.15, 1.20)
+    lvrt_residuals = (0.20, 0.50, 0.75, 0.85, 0.90)
+    hvrt_levels = (1.10, 1.20, 1.25, 1.30)
     durations = (0.12, 0.25)
     grid_strengths = (("weak", 3.0, 1.08), ("strong", 10.0, 0.92))
 
@@ -537,12 +537,22 @@ class HPTVoltageSACEnv(gym.Env):
 
     def _calibrated_lv_target(self, grid_pu: float, reg_d: float) -> float | None:
         cal = self._topology_calibration()
-        table = cal.get("response_table", []) if cal else []
+        table = []
+        if cal:
+            if self._sc.category != "steady":
+                table = cal.get("fault_response_table", [])
+            if not table:
+                table = cal.get("response_table", [])
         return _interp_response_table(table, grid_pu, reg_d, "lv_pu_mean")
 
     def _calibrated_vdc_target(self, grid_pu: float, reg_d: float) -> float | None:
         cal = self._topology_calibration()
-        table = cal.get("response_table", []) if cal else []
+        table = []
+        if cal:
+            if self._sc.category != "steady":
+                table = cal.get("fault_response_table", [])
+            if not table:
+                table = cal.get("response_table", [])
         return _interp_response_table(table, grid_pu, reg_d, "vdc_pu_mean")
 
     def _calibrated_energy_target(
@@ -553,7 +563,12 @@ class HPTVoltageSACEnv(gym.Env):
         value_key: str,
     ) -> float | None:
         cal = self._topology_calibration()
-        table = cal.get("energy_response_table", []) if cal else []
+        table = []
+        if cal:
+            if self._sc.category != "steady":
+                table = cal.get("fault_energy_response_table", [])
+            if not table:
+                table = cal.get("energy_response_table", [])
         return _interp_energy_response(table, grid_pu, energy_d, energy_q, value_key)
 
     def _obs(self) -> np.ndarray:
