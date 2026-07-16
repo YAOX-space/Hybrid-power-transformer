@@ -30,8 +30,8 @@ Proxy validation:
   reward-like scores and switch-level FRT matrix scores.
 - `train_hpt_reward_correction.py` - supervised correction from proxy reward to
   switch-level reward-like action ranking, with held-out action evaluation.
-- `summarize_hpt_control_comparison.py` - summarizes switch-level no-control,
-  conventional, and SAC comparison CSVs.
+- `summarize_hpt_control_comparison.py` - summarizes switch-level legacy
+  conventional, strong conventional, and SAC comparison CSVs.
 
 Training:
 
@@ -85,7 +85,7 @@ The current full workflow is:
 4. Build teacher traces.
 5. Measure reward alignment.
 6. Train/evaluate reward correction for weak proxy-ranking groups.
-7. Run no-control/conventional/SAC switch-level comparison.
+7. Run legacy-conventional/strong-conventional/SAC switch-level comparison.
 8. Train topology/case specialists.
 9. Validate promoted actors on switch-level cases.
 
@@ -93,6 +93,10 @@ The current full workflow is:
 
 - Full GB/T pass/fail certification still needs grid-side reactive-current
   logging. Current fault results report `not_evaluated_no_grid_reactive_current`.
+- The strong `conventional_dq` baseline is topology-aware: topology1 uses the
+  tuned physical `VoltageRegulator`/`EnergyController` path, while topology2 uses
+  the calibrated rule/dq current-loop fallback because the physical topology2
+  `EnergyController` DC-link outer-loop sign still collapses the DC link.
 - Topology2 joint regulating+energy action still has a large Vdc proxy gap.
   Independent d-axis and energy sweeps are calibrated; joint interaction is not
   yet reliable enough for final direct-SAC claims.

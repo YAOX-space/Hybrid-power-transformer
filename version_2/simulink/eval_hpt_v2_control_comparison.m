@@ -1,15 +1,17 @@
 % eval_hpt_v2_control_comparison
-% Compare no-control, conventional dq/PI, and SAC raw guard=0 on the same
-% switch-level HPT plants and FRT scenarios.
+% Compare legacy conventional, tuned conventional dq/PI, and SAC raw guard=0
+% on the same switch-level HPT plants and FRT scenarios.
 %
 % Workspace overrides:
 %   hpt_compare_topology       "topology1" | "topology2" | "all"
 %   hpt_compare_scenario_type  "steady" | "fault" | "all"
 %   hpt_compare_case_name      e.g. "grid_10000V", "sag_0p90", "all"
-%   hpt_compare_modes          string array, default all three modes
-%   hpt_compare_energy_enable  default 1.0 for conventional/SAC energy bridge
+%   hpt_compare_modes          string array, default primary comparison modes
+%   hpt_compare_energy_enable  default 1.0 for SAC energy bridge
+%   hpt_compare_conventional_profile "tuned_v1" | "model_default"
+%   hpt_compare_conventional_params  optional struct of model-workspace overrides
 
-clearvars -except hpt_compare_topology hpt_compare_scenario_type hpt_compare_case_name hpt_compare_modes hpt_compare_energy_enable;
+clearvars -except hpt_compare_topology hpt_compare_scenario_type hpt_compare_case_name hpt_compare_modes hpt_compare_energy_enable hpt_compare_conventional_profile hpt_compare_conventional_params;
 close all;
 
 if ~exist('hpt_compare_topology', 'var')
@@ -22,16 +24,23 @@ if ~exist('hpt_compare_case_name', 'var')
     hpt_compare_case_name = "all";
 end
 if ~exist('hpt_compare_modes', 'var')
-    hpt_compare_modes = ["no_control", "conventional_dq", "sac_actor_raw_guard0"];
+    hpt_compare_modes = ["legacy_conventional", "conventional_dq", "sac_actor_raw_guard0"];
 end
 if ~exist('hpt_compare_energy_enable', 'var')
     hpt_compare_energy_enable = 1.0;
+end
+if ~exist('hpt_compare_conventional_profile', 'var')
+    hpt_compare_conventional_profile = "tuned_v1";
+end
+if ~exist('hpt_compare_conventional_params', 'var')
+    hpt_compare_conventional_params = struct();
 end
 
 hpt_compare_topology = string(hpt_compare_topology);
 hpt_compare_scenario_type = string(hpt_compare_scenario_type);
 hpt_compare_case_name = string(hpt_compare_case_name);
 hpt_compare_modes = string(hpt_compare_modes);
+hpt_compare_conventional_profile = string(hpt_compare_conventional_profile);
 
 rootDir = fileparts(mfilename('fullpath'));
 actorFile = fullfile(rootDir, 'hpt_sac_actor_weights.mat');
@@ -143,7 +152,8 @@ safeName = regexprep(sprintf('%s_%s_%s', hpt_compare_topology, ...
 outMat = fullfile(outDir, ['control_comparison_' char(safeName) '_' stamp '.mat']);
 outCsv = fullfile(outDir, ['control_comparison_' char(safeName) '_' stamp '.csv']);
 save(outMat, 'rows', 'targetPhaseRms', 'hpt_compare_topology', ...
-    'hpt_compare_scenario_type', 'hpt_compare_case_name', 'hpt_compare_modes');
+    'hpt_compare_scenario_type', 'hpt_compare_case_name', 'hpt_compare_modes', ...
+    'hpt_compare_conventional_profile', 'hpt_compare_conventional_params');
 writetable(struct2table(rows), outCsv);
 
 fprintf('HPT control comparison complete.\n');
@@ -164,14 +174,27 @@ for i = 1:numel(rows)
 end
 fprintf('Saved CSV: %s\n', outCsv);
 
-function [sacEnable, energyEnable, policyMode, actorSelectMode] = mode_settings(mode, scenarioType, energyEnableDefault)
+function [sacEnable, energyEnable, policyMode, actorSelectMode] = mode_settings(mode, scenarioType, topology, energyEnableDefault)
     mode = string(mode);
-    if mode == "no_control"
+    topology = string(topology);
+    if mode == "legacy_conventional" || mode == "no_control"
         sacEnable = 0.0;
         energyEnable = 0.0;
         policyMode = 0.0;
         actorSelectMode = 0.0;
     elseif mode == "conventional_dq"
+        if topology == "topology2"
+            sacEnable = 1.0;
+            energyEnable = energyEnableDefault;
+            policyMode = 0.0;
+            actorSelectMode = 0.0;
+        else
+            sacEnable = 0.0;
+            energyEnable = 0.0;
+            policyMode = 0.0;
+            actorSelectMode = 0.0;
+        end
+    elseif mode == "rule_fallback"
         sacEnable = 1.0;
         energyEnable = energyEnableDefault;
         policyMode = 0.0;
@@ -193,23 +216,35 @@ end
 function row = run_steady_case(M, topology, mode, gridVoltage, targetPhaseRms, ...
     stopTime, settleStart, Ts, caseSpec, energyEnableDefault)
 
-    [sacEnable, energyEnable, policyMode, actorSelectMode] = mode_settings(mode, "steady", energyEnableDefault);
+    [sacEnable, energyEnable, policyMode, actorSelectMode] = mode_settings(mode, "steady", topology, energyEnableDefault);
     in = Simulink.SimulationInput(M);
     in = in.setModelParameter('StopTime', num2str(stopTime));
     in = in.setBlockParameter([M '/Grid'], 'Voltage', num2str(gridVoltage));
     in = set_common_variables(in, M, sacEnable, energyEnable, policyMode, ...
         actorSelectMode, targetPhaseRms);
+    in = apply_conventional_profile(in, M, topology, mode);
     out = sim(in);
 
     Vlv = out.get('Vlv_abc');
     Vdc = out.get('Vdc');
     obs = out.get('HPTSAC_obs');
     act = out.get('HPTSAC_action');
+    mref = out.get('Mref6_cmd');
+    meng = out.get('Menergy_cmd');
+    mregDbg = out.get('Mreg_cmd');
+    energyDbg = out.get('Energy_dbg');
     t = (0:size(Vlv, 1)-1)' * Ts;
     idx = t > settleStart;
     phaseRms = sqrt(mean(Vlv(idx, 1:3).^2, 1));
     obsRows = orient_channels(obs, 24);
     actRows = orient_channels(act, 4);
+    mrefRows = orient_channels(mref, 6);
+    mengRows = orient_channels(meng, 3);
+    mregDbgRows = orient_channels(mregDbg, 7);
+    energyDbgRows = orient_channels(energyDbg, 12);
+    energyIdMax = getVariable(get_param(M, 'ModelWorkspace'), 'hpt_energy_id_max');
+    actualActRows = selected_action_rows(mode, topology, actRows, mrefRows, mregDbgRows, ...
+        energyDbgRows, energyIdMax);
 
     row = base_row(M, topology, "steady", sprintf("grid_%.0fV", gridVoltage), ...
         mode, gridVoltage, NaN);
@@ -224,11 +259,11 @@ function row = run_steady_case(M, topology, mode, gridVoltage, targetPhaseRms, .
     row.vdc_mean = mean(Vdc(round(end*0.7):end, 1));
     row.vdc_min = min(Vdc(:, 1));
     row.vdc_max = max(Vdc(:, 1));
-    row.action_max_abs = max(abs(actRows), [], 'all');
-    row.reg_d_mean = mean(actRows(1, round(end*0.7):end));
-    row.reg_q_mean = mean(actRows(2, round(end*0.7):end));
-    row.energy_d_mean = mean(actRows(3, round(end*0.7):end));
-    row.energy_q_mean = mean(actRows(4, round(end*0.7):end));
+    row.action_max_abs = actual_action_max(mrefRows, mengRows);
+    row.reg_d_mean = mean(actualActRows(1, round(end*0.7):end));
+    row.reg_q_mean = mean(actualActRows(2, round(end*0.7):end));
+    row.energy_d_mean = mean(actualActRows(3, round(end*0.7):end));
+    row.energy_q_mean = mean(actualActRows(4, round(end*0.7):end));
     row.obs_vpu_mean = mean(obsRows(1, round(end*0.7):end));
     row.obs_vpos_mean = mean(obsRows(2, round(end*0.7):end));
     row.obs_vdcpu_mean = mean(obsRows(4, round(end*0.7):end));
@@ -243,23 +278,35 @@ end
 function row = run_fault_case(M, topology, faultName, faultPu, mode, ...
     targetPhaseRms, stopTime, Ts, faultStart, faultClear, caseSpec, energyEnableDefault)
 
-    [sacEnable, energyEnable, policyMode, actorSelectMode] = mode_settings(mode, "fault", energyEnableDefault);
+    [sacEnable, energyEnable, policyMode, actorSelectMode] = mode_settings(mode, "fault", topology, energyEnableDefault);
     in = Simulink.SimulationInput(M);
     in = in.setModelParameter('StopTime', num2str(stopTime));
     in = set_common_variables(in, M, sacEnable, energyEnable, policyMode, ...
         actorSelectMode, targetPhaseRms);
+    in = apply_conventional_profile(in, M, topology, mode);
     out = sim(in);
 
     Vlv = out.get('Vlv_abc');
     Vdc = out.get('Vdc');
     obs = out.get('HPTSAC_obs');
     act = out.get('HPTSAC_action');
+    mref = out.get('Mref6_cmd');
+    meng = out.get('Menergy_cmd');
+    mregDbg = out.get('Mreg_cmd');
+    energyDbg = out.get('Energy_dbg');
     t = (0:size(Vlv, 1)-1)' * Ts;
     phaseRmsInst = sqrt(mean(Vlv(:, 1:3).^2, 2));
     faultIdx = t > (faultStart + 0.025) & t < (faultClear - 0.005);
     recoveryIdx = t > (faultClear + 0.035) & t < (stopTime - 0.005);
     obsRows = orient_channels(obs, 24);
     actRows = orient_channels(act, 4);
+    mrefRows = orient_channels(mref, 6);
+    mengRows = orient_channels(meng, 3);
+    mregDbgRows = orient_channels(mregDbg, 7);
+    energyDbgRows = orient_channels(energyDbg, 12);
+    energyIdMax = getVariable(get_param(M, 'ModelWorkspace'), 'hpt_energy_id_max');
+    actualActRows = selected_action_rows(mode, topology, actRows, mrefRows, mregDbgRows, ...
+        energyDbgRows, energyIdMax);
 
     row = base_row(M, topology, "fault", faultName, mode, NaN, faultPu);
     row.lv_mean = mean(phaseRmsInst(faultIdx));
@@ -273,11 +320,11 @@ function row = run_fault_case(M, topology, faultName, faultPu, mode, ...
     row.vdc_mean = mean(Vdc(round(end*0.7):end, 1));
     row.vdc_min = min(Vdc(:, 1));
     row.vdc_max = max(Vdc(:, 1));
-    row.action_max_abs = max(abs(actRows), [], 'all');
-    row.reg_d_mean = mean(actRows(1, round(end*0.7):end));
-    row.reg_q_mean = mean(actRows(2, round(end*0.7):end));
-    row.energy_d_mean = mean(actRows(3, round(end*0.7):end));
-    row.energy_q_mean = mean(actRows(4, round(end*0.7):end));
+    row.action_max_abs = actual_action_max(mrefRows, mengRows);
+    row.reg_d_mean = mean(actualActRows(1, round(end*0.7):end));
+    row.reg_q_mean = mean(actualActRows(2, round(end*0.7):end));
+    row.energy_d_mean = mean(actualActRows(3, round(end*0.7):end));
+    row.energy_q_mean = mean(actualActRows(4, round(end*0.7):end));
     row.obs_vpu_mean = mean(obsRows(1, round(end*0.7):end));
     row.obs_vpos_mean = mean(obsRows(2, round(end*0.7):end));
     row.obs_vdcpu_mean = mean(obsRows(4, round(end*0.7):end));
@@ -289,6 +336,94 @@ function row = run_fault_case(M, topology, faultName, faultPu, mode, ...
 
     [row.within_window, row.window_reason] = assess_fault(row);
     row.control_score = score_row(row);
+end
+
+function in = apply_conventional_profile(in, M, topology, mode)
+    mode = string(mode);
+    if mode ~= "conventional_dq"
+        return;
+    end
+
+    profile = evalin('base', 'hpt_compare_conventional_profile');
+    overrides = evalin('base', 'hpt_compare_conventional_params');
+    profile = string(profile);
+    topology = string(topology);
+
+    if profile == "tuned_v1"
+        if topology == "topology1"
+            in = in.setVariable('hpt_vreg_kp', 16.0, 'Workspace', M);
+            in = in.setVariable('hpt_vreg_ki', 4.0, 'Workspace', M);
+            in = in.setVariable('hpt_m_reg_max', 0.65, 'Workspace', M);
+            in = in.setVariable('hpt_inj_phase_offset', -1.05, 'Workspace', M);
+            in = in.setVariable('hpt_swell_gain_scale', 0.65, 'Workspace', M);
+            in = in.setVariable('hpt_vdc_kp', 0.16, 'Workspace', M);
+            in = in.setVariable('hpt_vdc_ki', 0.30, 'Workspace', M);
+            in = in.setVariable('hpt_energy_i_kp', 0.65, 'Workspace', M);
+            in = in.setVariable('hpt_energy_i_ki', 90.0, 'Workspace', M);
+        else
+            % Topology2's physical EnergyController outer DC loop currently
+            % has the wrong sign around the parallel-coupled energy port.
+            % Use the HPTSACController policy_mode=0 rule/dq current loop as
+            % the strong traditional baseline, keeping its calibrated default
+            % current-loop and injection parameters.
+            in = in.setVariable('hpt_inj_phase_offset', -1.05, 'Workspace', M);
+            in = in.setVariable('hpt_energy_i_kp', 0.50, 'Workspace', M);
+            in = in.setVariable('hpt_energy_i_ki', 100.0, 'Workspace', M);
+            in = in.setVariable('hpt_energy_vff_gain', 1.06, 'Workspace', M);
+            in = in.setVariable('hpt_energy_control_sign', -1.0, 'Workspace', M);
+            in = in.setVariable('hpt_energy_bridge_polarity', -1.0, 'Workspace', M);
+        end
+    elseif profile ~= "model_default"
+        error('Unknown conventional profile: %s', profile);
+    end
+
+    names = fieldnames(overrides);
+    for k = 1:numel(names)
+        in = in.setVariable(names{k}, overrides.(names{k}), 'Workspace', M);
+    end
+end
+
+function v = actual_action_max(mrefRows, mengRows)
+    v = max([abs(mrefRows(:)); abs(mengRows(:))]);
+end
+
+function actRows = selected_action_rows(mode, topology, hptActRows, mrefRows, mregDbgRows, ...
+    energyDbgRows, energyIdMax)
+    mode = string(mode);
+    topology = string(topology);
+    hptSelected = (mode == "rule_fallback") || (mode == "sac_actor_raw_guard0") || ...
+        (mode == "conventional_dq" && topology == "topology2");
+    if hptSelected
+        actRows = hptActRows;
+        return;
+    end
+
+    n = min([size(mrefRows, 2), size(mregDbgRows, 2), size(energyDbgRows, 2)]);
+    actRows = zeros(4, n);
+    for k = 1:n
+        theta = mregDbgRows(1, k);
+        phi = mregDbgRows(7, k);
+        [actRows(1, k), actRows(2, k)] = reg6_to_dq(mrefRows(:, k), theta + phi);
+        actRows(3, k) = clip_scalar(energyDbgRows(6, k) / max(energyIdMax, 1e-9), ...
+            -0.95, 0.95);
+        actRows(4, k) = 0.0;
+    end
+end
+
+function [d, q] = reg6_to_dq(reg6, angle)
+    ma = reg6(1);
+    mb = reg6(3);
+    mc = reg6(5);
+    alpha = (2/3) * (ma - 0.5*mb - 0.5*mc);
+    beta = (sqrt(3)/3) * (mb - mc);
+    s = sin(angle);
+    c = cos(angle);
+    d = s*alpha - c*beta;
+    q = c*alpha + s*beta;
+end
+
+function y = clip_scalar(x, lo, hi)
+    y = min(max(x, lo), hi);
 end
 
 function in = set_common_variables(in, M, sacEnable, energyEnable, policyMode, ...

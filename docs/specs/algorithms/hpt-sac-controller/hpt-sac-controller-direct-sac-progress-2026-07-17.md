@@ -258,3 +258,70 @@ Interpretation:
   comparison.
 - The comparison infrastructure is now in place; the next work is controller
   baseline tuning and then SAC training against that baseline.
+
+## Strong Conventional Baseline Update
+
+Correction:
+
+- The old `no_control` label was misleading. In the current Simulink wiring,
+  `hpt_sac_enable = 0` selects the existing physical
+  `VoltageRegulator`/`EnergyController` path, not all-converters-off.
+- The comparison mode is now named `legacy_conventional`; `no_control` remains
+  only as a backward-compatible alias.
+
+Updated modes:
+
+- `legacy_conventional`: original model-workspace PLL/dq/PI controller path.
+- `conventional_dq`: stronger topology-aware traditional baseline.
+  - topology1: tuned physical `VoltageRegulator`/`EnergyController`.
+  - topology2: calibrated rule/dq current-loop fallback, because the physical
+    topology2 `EnergyController` DC-link outer loop currently collapses the DC
+    link around the parallel-coupled energy port.
+- `rule_fallback`: explicit access to the rule/dq fallback branch for diagnosis.
+- `sac_actor_raw_guard0`: SAC actor with execution guard disabled.
+
+Instrumentation repair:
+
+- `action_max_abs` now uses the actual selected bridge commands
+  `Mref6_cmd` and `Menergy_cmd`, instead of the unselected internal
+  `HPTSAC_action` signal.
+- For legacy/conventional physical-controller modes, reported action means are
+  derived from selected modulation commands and `Energy_dbg`, so the CSV no
+  longer reports unused HPTSAC action values as if they were applied.
+
+Topology1 `sag_0p90` smoke:
+
+- Result CSV:
+  `lab/results/hpt_v2_control_comparison/control_comparison_topology1_fault_sag_0p90_20260717_040637.csv`
+
+| Mode | Score | Pass | LV fault | LV recovery | Vdc min |
+| --- | ---: | --- | ---: | ---: | ---: |
+| legacy_conventional | `101.583` | false | `201.678 V` | `204.405 V` | `709.352 V` |
+| conventional_dq | `101.005` | false | `202.283 V` | `206.689 V` | `754.297 V` |
+| rule_fallback | `109.791` | false | `182.629 V` | `191.047 V` | `722.911 V` |
+| sac_actor_raw_guard0 | `164.422` | false | `184.194 V` | `201.956 V` | `121.095 V` |
+
+Topology2 `sag_0p90` smoke:
+
+- Result CSV:
+  `lab/results/hpt_v2_control_comparison/control_comparison_topology2_fault_sag_0p90_20260717_040454.csv`
+
+| Mode | Score | Pass | LV fault | LV recovery | Vdc min |
+| --- | ---: | --- | ---: | ---: | ---: |
+| legacy_conventional | `174.977` | false | `201.839 V` | `196.762 V` | `0.084 V` |
+| conventional_dq | `113.448` | false | `181.702 V` | `203.965 V` | `735.011 V` |
+| rule_fallback | `113.448` | false | `181.702 V` | `203.965 V` | `735.011 V` |
+| sac_actor_raw_guard0 | `137.399` | false | `213.672 V` | `250.645 V` | `729.396 V` |
+
+Interpretation:
+
+- The strong baseline now beats SAC raw in both topology1 and topology2
+  `sag_0p90` switch-level smoke cases.
+- topology1 improved by tuning the real physical conventional path.
+- topology2 exposed a structural issue in the physical `EnergyController`: the
+  DC-link loop drives the wrong effective direction under sag. A sign/polarity
+  sweep showed simple bridge polarity flips do not fix it; the stable
+  traditional baseline therefore uses the existing rule/dq fallback branch.
+- Fault `pass=false` is still dominated by
+  `not_evaluated_no_grid_reactive_current`; final GB/T certification still
+  needs grid-side reactive-current measurement and evaluation.

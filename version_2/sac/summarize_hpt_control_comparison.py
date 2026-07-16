@@ -1,4 +1,4 @@
-"""Summarize HPT no-control/conventional/SAC switch-level comparisons."""
+"""Summarize HPT legacy/conventional/SAC switch-level comparisons."""
 from __future__ import annotations
 
 import argparse
@@ -83,9 +83,10 @@ def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     out: list[dict[str, Any]] = []
     for (topology, scenario_type, case_name), by_mode in sorted(groups.items()):
+        legacy = by_mode.get("legacy_conventional") or by_mode.get("no_control")
         conv = by_mode.get("conventional_dq")
+        rule = by_mode.get("rule_fallback")
         sac = by_mode.get("sac_actor_raw_guard0")
-        no_control = by_mode.get("no_control")
         best_mode = min(
             by_mode,
             key=lambda mode: f(by_mode[mode], "control_score", float("inf")),
@@ -96,19 +97,24 @@ def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "scenario_type": scenario_type,
                 "case_name": case_name,
                 "best_mode": best_mode,
-                "no_control_score": f(no_control, "control_score", float("nan")),
+                "legacy_score": f(legacy, "control_score", float("nan")),
                 "conventional_score": f(conv, "control_score", float("nan")),
+                "rule_fallback_score": f(rule, "control_score", float("nan")),
                 "sac_score": f(sac, "control_score", float("nan")),
                 "sac_minus_conventional_score": f(sac, "control_score", float("nan"))
                 - f(conv, "control_score", float("nan")),
                 "sac_beat_conventional": f(sac, "control_score", float("inf"))
                 < f(conv, "control_score", float("inf")),
+                "legacy_pass": b(legacy, "within_window"),
                 "conventional_pass": b(conv, "within_window"),
                 "sac_pass": b(sac, "within_window"),
+                "legacy_lv_recovery": f(legacy, "lv_recovery_mean", float("nan")),
                 "conventional_lv_recovery": f(conv, "lv_recovery_mean", float("nan")),
                 "sac_lv_recovery": f(sac, "lv_recovery_mean", float("nan")),
+                "legacy_vdc_min": f(legacy, "vdc_min", float("nan")),
                 "conventional_vdc_min": f(conv, "vdc_min", float("nan")),
                 "sac_vdc_min": f(sac, "vdc_min", float("nan")),
+                "legacy_reason": s(legacy, "window_reason"),
                 "conventional_reason": s(conv, "window_reason"),
                 "sac_reason": s(sac, "window_reason"),
             }
@@ -129,13 +135,13 @@ def write_report(path: Path, input_csv: Path, summary: list[dict[str, Any]]) -> 
         f"- SAC beat conventional: `{len(beat)} / {len(sac_rows)}`",
         f"- SAC pass: `{len(pass_rows)} / {len(sac_rows)}`",
         "",
-        "| Topology | Scenario | Case | Best | No control | Conventional | SAC | SAC - conv |",
+        "| Topology | Scenario | Case | Best | Legacy | Conventional | SAC | SAC - conv |",
         "| --- | --- | --- | --- | ---: | ---: | ---: | ---: |",
     ]
     for row in summary:
         lines.append(
             f"| {row['topology']} | {row['scenario_type']} | {row['case_name']} | "
-            f"{row['best_mode']} | {row['no_control_score']:.3f} | "
+            f"{row['best_mode']} | {row['legacy_score']:.3f} | "
             f"{row['conventional_score']:.3f} | {row['sac_score']:.3f} | "
             f"{row['sac_minus_conventional_score']:.3f} |"
         )
