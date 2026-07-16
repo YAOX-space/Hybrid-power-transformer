@@ -28,6 +28,8 @@ Proxy validation:
 - `measure_hpt_frt_proxy_gap.py` - FRT proxy-vs-Simulink gap report.
 - `measure_hpt_reward_alignment.py` - ranking test between calibrated proxy
   reward-like scores and switch-level FRT matrix scores.
+- `train_hpt_reward_correction.py` - supervised correction from proxy reward to
+  switch-level reward-like action ranking, with held-out action evaluation.
 
 Training:
 
@@ -79,8 +81,10 @@ The current full workflow is:
 2. Calibrate the proxy from that matrix.
 3. Measure proxy-vs-switch-level gap.
 4. Build teacher traces.
-5. Train topology/case specialists.
-6. Validate promoted actors on switch-level cases.
+5. Measure reward alignment.
+6. Train/evaluate reward correction for weak proxy-ranking groups.
+7. Train topology/case specialists.
+8. Validate promoted actors on switch-level cases.
 
 ## Known Open Blockers
 

@@ -99,6 +99,15 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
                 str(matrix),
             ),
         ),
+        "reward-correction": Stage(
+            name="reward-correction",
+            description="Train and evaluate a switch-level reward correction model for proxy action ranking.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.train_hpt_reward_correction",
+            ),
+        ),
         "fault-specialists-smoke": Stage(
             name="fault-specialists-smoke",
             description="Run a short topology2 sag_0p90 specialist smoke test.",

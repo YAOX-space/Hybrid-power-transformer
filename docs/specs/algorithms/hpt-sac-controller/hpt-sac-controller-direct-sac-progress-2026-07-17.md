@@ -153,3 +153,55 @@ Before another full 8-hour campaign, the next code work should be:
    joint regulating/energy actions.
 3. Resume specialist training only after a short smoke case proves the new
    scoring and proxy gap are consistent.
+
+## Literature-Driven Method Update
+
+Added:
+
+- `docs/specs/algorithms/hpt-sac-controller/hpt-sac-offline-rl-literature-and-method.md`
+- `version_2/sac/train_hpt_reward_correction.py`
+
+Reference conclusion:
+
+- Offline RL papers in `references/week6` point to a conservative data-first
+  route when rollouts are expensive and the proxy is biased.
+- SAC robustness papers in `references/week5` are relevant, but they do not
+  remove the need to align the reward source with switch-level Simulink.
+- The current practical fix is therefore reward correction from switch-level
+  labels before more proxy SAC.
+
+Reward-correction run:
+
+- Output directory:
+  `lab/results/hpt_v2_reward_correction/reward_correction_20260717_025529`
+- Selected model: `extra_trees`
+- Training rows: `656`
+- Held-out action rows: `172`
+- Feature count: `35`
+
+Held-out action evaluation:
+
+| Metric | Baseline proxy | Corrected proxy |
+| --- | ---: | ---: |
+| Weak groups | `3 / 20` | `0 / 20` |
+| Mean Spearman | `0.852` | `0.992` |
+| Mean top-k overlap fraction | `0.833` | `0.967` |
+| Mean proxy-top1 switch percentile | `0.088` | `0.021` |
+
+Full matrix sanity check:
+
+| Metric | Baseline proxy | Corrected proxy |
+| --- | ---: | ---: |
+| Weak groups | `7 / 20` | `1 / 20` |
+| Mean Spearman | `0.782` | `0.975` |
+| Mean top-k overlap fraction | `0.467` | `0.850` |
+| Mean proxy-top1 switch percentile | `0.155` | `0.025` |
+
+Interpretation:
+
+- The correction model substantially repairs action ranking on the current
+  switch-level FRT matrix.
+- It should now be used for candidate/teacher ranking and specialist training
+  inputs.
+- It is not a final proof of controller success.  Any actor trained with this
+  corrected signal still needs switch-level validation.
