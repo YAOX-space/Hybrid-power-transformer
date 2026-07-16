@@ -205,3 +205,30 @@ Current 8-hour run:
   `lab/results/hpt_case_specialists_8h_20260716_125417`
 - Promotion rule: only a candidate with `within_window=true` in switch-level
   single-case validation is kept under `promoted/`.
+
+Final result of this run:
+
+- Status: complete at `2026-07-16T20:54:32`
+- Iterations: `350`
+- Passing switch-level candidates: `148`
+- Best case: iteration `108`
+- Best physical target used for training: `[0.55, 0, 0.6, 0]`
+- Best switch-level metrics:
+  - LV mean: `206.990 V`
+  - LV unbalance: `0.428 V`
+  - Vdc mean: `806.706 V`
+  - Vdc min: `725.755 V`
+  - action max: `0.934`
+  - mean action: `reg_d=0.567`, `reg_q=-0.107`,
+    `energy_d=0.242`, `energy_q=-0.039`
+- Best files:
+  - `lab/results/hpt_case_specialists_8h_20260716_125417/best/topology1_grid9000.mat`
+  - `lab/results/hpt_case_specialists_8h_20260716_125417/best/hpt_case_specialists_8h_20260716_125417_topology1_grid9000_it108.zip`
+
+Important limitation:
+
+- This is a successful specialist for `topology1 / steady / grid_9000V`.
+- It is not yet a full HPT controller for topology1 all steady points, topology2,
+  sag, swell, or fault-transition cases.
+- The next step is to repeat the same per-case loop for the remaining cases and
+  then build a router that selects the correct specialist.
