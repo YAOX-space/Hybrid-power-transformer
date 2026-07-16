@@ -928,7 +928,7 @@ class HPTVoltageSACEnv(gym.Env):
         slew = float(np.linalg.norm(action - self._last_action))
         fault_or_recovery = float(self._detector.fault_active or self._detector.recovery_active)
         teacher_prior = self._table_teacher_action(grid_now)
-        teacher_gap = float((m_reg_d - teacher_prior[0]) ** 2)
+        teacher_gap = float((m_reg_d - teacher_prior[0]) ** 2) if cfg.teacher_prior_weight > 0.0 else 0.0
         safe_probability, safety_threshold, safety_unsafe = self._safety_score(
             grid_pu=grid_now,
             raw_action=raw_action,

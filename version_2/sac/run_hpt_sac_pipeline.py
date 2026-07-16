@@ -88,6 +88,17 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
                 str(trace),
             ),
         ),
+        "reward-alignment": Stage(
+            name="reward-alignment",
+            description="Measure whether calibrated proxy reward ranks actions like switch-level FRT metrics.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.measure_hpt_reward_alignment",
+                "--matrix-csv",
+                str(matrix),
+            ),
+        ),
         "fault-specialists-smoke": Stage(
             name="fault-specialists-smoke",
             description="Run a short topology2 sag_0p90 specialist smoke test.",

@@ -26,6 +26,8 @@ Proxy validation:
 
 - `measure_hpt_proxy_gap.py` - steady and step proxy-vs-Simulink gap report.
 - `measure_hpt_frt_proxy_gap.py` - FRT proxy-vs-Simulink gap report.
+- `measure_hpt_reward_alignment.py` - ranking test between calibrated proxy
+  reward-like scores and switch-level FRT matrix scores.
 
 Training:
 

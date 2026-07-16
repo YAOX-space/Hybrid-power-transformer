@@ -100,6 +100,43 @@ Operational implication:
 - Do not claim continuous fault-depth generalization until additional topology2
   joint-action samples or a better learned uncertainty-aware proxy are added.
 
+## Reward Alignment Check
+
+Added:
+
+- `version_2/sac/measure_hpt_reward_alignment.py`
+
+Latest outputs:
+
+- `lab/results/hpt_v2_reward_alignment/reward_alignment_full_all_20260717_005608_detail.csv`
+- `lab/results/hpt_v2_reward_alignment/reward_alignment_full_all_20260717_005608_summary.csv`
+- `lab/results/hpt_v2_reward_alignment/reward_alignment_full_all_20260717_005608_REPORT.md`
+
+Result:
+
+- `20` topology/category/mode groups were checked.
+- `13 / 20` groups show useful monotonic alignment.
+- `7 / 20` groups are weak under the current criteria.
+
+Important weak groups:
+
+- topology1 HVRT `energy_sweep`: Spearman about `0.169`; proxy reward ranking
+  is not reliable here.
+- topology1/topology2 `joint_sweep`: Spearman is often acceptable, but top-3
+  overlap is `0`; the proxy gets the broad trend but not the best action.
+- topology2 HVRT `joint_sweep`: Spearman about `0.716`, proxy top-1 is only
+  rank `15 / 36` in switch-level score.
+
+Interpretation:
+
+- The proxy is useful for coarse filtering and directionally ranking many LVRT
+  groups.
+- It is not yet trustworthy as a standalone SAC training environment for final
+  action selection.
+- Next training should use proxy candidates only with switch-level promotion
+  gates, or switch to offline/DAgger training from Simulink-labeled actions for
+  the weak groups.
+
 ## Next Engineering Step
 
 Use `run_hpt_sac_pipeline.py` for repeatable launches:
