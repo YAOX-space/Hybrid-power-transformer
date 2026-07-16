@@ -328,7 +328,7 @@ def train_specialist(
         "--energy-limit",
         "0.95",
     ])
-    if not fixed_target_uses_energy(spec):
+    if spec.scenario_type == "steady" and not fixed_target_uses_energy(spec):
         cmd.append("--zero-energy-targets")
     cmd.extend([
         "--action-weights",
@@ -407,6 +407,9 @@ def main() -> None:
     parser.add_argument("--trace-csv", type=Path, default=None)
     parser.add_argument("--frt-trace-csv", type=Path, default=None)
     parser.add_argument("--all-cases", action="store_true")
+    parser.add_argument("--topology", default="all")
+    parser.add_argument("--scenario-type", default="all")
+    parser.add_argument("--case-name", default="all")
     parser.add_argument("--max-specialists", type=int, default=999)
     parser.add_argument("--epochs", type=int, default=120)
     parser.add_argument("--repeat", type=int, default=512)
@@ -424,6 +427,12 @@ def main() -> None:
     trace_csv = args.trace_csv or latest_csv(TRACE_DIR, "step_traces_*.csv")
     frt_trace_csv = args.frt_trace_csv or latest_csv(FRT_TEACHER_TRACE_DIR, "frt_teacher_*_traces.csv")
     specs = default_specs() if args.all_cases else interesting_specs()
+    if args.topology != "all":
+        specs = [s for s in specs if s.topology == args.topology]
+    if args.scenario_type != "all":
+        specs = [s for s in specs if s.scenario_type == args.scenario_type]
+    if args.case_name != "all":
+        specs = [s for s in specs if s.case_name == args.case_name]
     specs = specs[: max(0, int(args.max_specialists))]
 
     backup = run_dir / "actor_backups"
