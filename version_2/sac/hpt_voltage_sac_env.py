@@ -747,6 +747,10 @@ class HPTVoltageSACEnv(gym.Env):
             reg_effect = self._reg_gain() * m_reg_d
             q_effect = 0.0 if self._calibration else cfg.energy_q_gain * m_energy_q
             calibrated_lv = base_lv + reg_effect + q_effect
+        energy_lv = self._calibrated_energy_target(grid_now, m_energy_d, m_energy_q, "lv_pu_mean")
+        energy_lv_zero = self._calibrated_energy_target(grid_now, 0.0, 0.0, "lv_pu_mean")
+        if energy_lv is not None and energy_lv_zero is not None:
+            calibrated_lv += energy_lv - energy_lv_zero
         v_target = max(0.0, calibrated_lv - load_drop)
         self.v_lv += (v_target - self.v_lv) * (cfg.dt / cfg.v_tau)
         self.v_pos = max(0.0, self.v_lv)

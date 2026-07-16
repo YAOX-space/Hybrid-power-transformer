@@ -32,6 +32,7 @@ SIMULINK = ROOT / "version_2" / "simulink"
 RESULTS = ROOT / "lab" / "results"
 MODELS = ROOT / "data" / "models"
 TRACE_DIR = RESULTS / "hpt_v2_sac_step_traces"
+FRT_TEACHER_TRACE_DIR = RESULTS / "hpt_v2_frt_teacher_traces"
 SINGLE_CASE_DIR = RESULTS / "hpt_v2_sac_single_case"
 
 STEADY_MAT = SIMULINK / "hpt_sac_actor_weights.mat"
@@ -145,8 +146,15 @@ def default_specs() -> list[SpecialistSpec]:
                 )
             )
         for case_name, cls in (
-            ("sag_0p90", "shallow_lvrt"),
-            ("swell_1p10", "shallow_hvrt"),
+            ("sag_0p20", "lvrt"),
+            ("sag_0p50", "lvrt"),
+            ("sag_0p75", "lvrt"),
+            ("sag_0p85", "lvrt"),
+            ("sag_0p90", "lvrt"),
+            ("swell_1p10", "hvrt"),
+            ("swell_1p20", "hvrt"),
+            ("swell_1p25", "hvrt"),
+            ("swell_1p30", "hvrt"),
         ):
             specs.append(
                 SpecialistSpec(
@@ -397,6 +405,7 @@ def write_report(run_dir: Path, records: list[SpecialistRecord], status: str) ->
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--trace-csv", type=Path, default=None)
+    parser.add_argument("--frt-trace-csv", type=Path, default=None)
     parser.add_argument("--all-cases", action="store_true")
     parser.add_argument("--max-specialists", type=int, default=999)
     parser.add_argument("--epochs", type=int, default=120)
@@ -413,6 +422,7 @@ def main() -> None:
     run_dir = RESULTS / f"hpt_case_specialists_{now_stamp()}"
     run_dir.mkdir(parents=True, exist_ok=True)
     trace_csv = args.trace_csv or latest_csv(TRACE_DIR, "step_traces_*.csv")
+    frt_trace_csv = args.frt_trace_csv or latest_csv(FRT_TEACHER_TRACE_DIR, "frt_teacher_*_traces.csv")
     specs = default_specs() if args.all_cases else interesting_specs()
     specs = specs[: max(0, int(args.max_specialists))]
 
@@ -424,6 +434,7 @@ def main() -> None:
             {
                 "run_dir": str(run_dir),
                 "trace_csv": str(trace_csv),
+                "frt_trace_csv": str(frt_trace_csv),
                 "status_path": str(run_dir / "status.json"),
                 "report_path": str(run_dir / "REPORT.md"),
                 "pid": os.getpid(),
@@ -453,7 +464,7 @@ def main() -> None:
             model_path, rc = train_specialist(
                 run_dir,
                 spec,
-                trace_csv,
+                frt_trace_csv if spec.scenario_type == "fault" else trace_csv,
                 epochs=args.epochs,
                 repeat=args.repeat,
                 seed=args.seed + i,
