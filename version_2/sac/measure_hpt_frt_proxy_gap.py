@@ -87,9 +87,42 @@ def has_numeric(row: dict[str, Any], key: str) -> bool:
         return False
 
 
+def axis_key(table: list[dict[str, Any]], preferred: str, fallback: str) -> str:
+    if any(has_numeric(row, preferred) for row in table):
+        return preferred
+    return fallback
+
+
+def row_numeric(row: dict[str, Any], preferred: str, fallback: str, default: float = 0.0) -> float:
+    if has_numeric(row, preferred):
+        return f(row, preferred)
+    if has_numeric(row, fallback):
+        return f(row, fallback)
+    return float(default)
+
+
+def row_action(row: dict[str, Any]) -> tuple[float, float, float, float]:
+    return (
+        row_numeric(row, "cmd_m_reg_d_mean", "raw_m_reg_d", f(row, "reg_d_mean", 0.0)),
+        row_numeric(row, "cmd_m_reg_q_mean", "raw_m_reg_q", f(row, "reg_q_mean", 0.0)),
+        row_numeric(row, "cmd_m_energy_d_mean", "raw_m_energy_d", f(row, "energy_d_mean", 0.0)),
+        row_numeric(row, "cmd_m_energy_q_mean", "raw_m_energy_q", f(row, "energy_q_mean", 0.0)),
+    )
+
+
+def row_response(row: dict[str, Any]) -> tuple[float, float, float, float]:
+    return (
+        row_numeric(row, "meas_reg_d_mean", "reg_d_mean", 0.0),
+        row_numeric(row, "meas_reg_q_mean", "reg_q_mean", 0.0),
+        row_numeric(row, "meas_energy_d_mean", "energy_d_mean", 0.0),
+        row_numeric(row, "meas_energy_q_mean", "energy_q_mean", 0.0),
+    )
+
+
 def interp_response(table: list[dict[str, Any]], grid_pu: float, reg_d: float, key: str) -> float | None:
     if not table:
         return None
+    x_key = axis_key(table, "cmd_m_reg_d", "reg_d_mean")
     grids = sorted({round(f(row, "grid_pu"), 9) for row in table})
     vals: list[float] = []
     used_grids: list[float] = []
@@ -100,7 +133,9 @@ def interp_response(table: list[dict[str, Any]], grid_pu: float, reg_d: float, k
                 continue
             if not has_numeric(row, key):
                 continue
-            bucket[f(row, "reg_d_mean")].append(f(row, key))
+            if not has_numeric(row, x_key):
+                continue
+            bucket[f(row, x_key)].append(f(row, key))
         if not bucket:
             continue
         xs = np.asarray(sorted(bucket), dtype=float)
@@ -147,7 +182,7 @@ def interp_energy_axis(
         for row in table:
             if abs(f(row, "grid_pu") - grid) > 1e-9:
                 continue
-            if abs(f(row, other_axis_key)) > 1e-9:
+            if not has_numeric(row, other_axis_key) or abs(f(row, other_axis_key)) > 1e-9:
                 continue
             if not has_numeric(row, value_key):
                 continue
@@ -166,19 +201,21 @@ def interp_energy_axis(
 
 
 def interp_energy(table: list[dict[str, Any]], grid_pu: float, ed: float, eq: float, key: str) -> float | None:
+    ed_key = axis_key(table, "cmd_m_energy_d", "energy_d_mean")
+    eq_key = axis_key(table, "cmd_m_energy_q", "energy_q_mean")
     coupled = interp_grid_axes(
         table,
         grid_pu,
-        ["energy_d_mean", "energy_q_mean"],
+        [ed_key, eq_key],
         [ed, eq],
         key,
     )
     if coupled is not None:
         return coupled
 
-    baseline = interp_energy_axis(table, grid_pu, 0.0, "energy_d_mean", "energy_q_mean", key)
-    d_axis = interp_energy_axis(table, grid_pu, ed, "energy_d_mean", "energy_q_mean", key)
-    q_axis = interp_energy_axis(table, grid_pu, eq, "energy_q_mean", "energy_d_mean", key)
+    baseline = interp_energy_axis(table, grid_pu, 0.0, ed_key, eq_key, key)
+    d_axis = interp_energy_axis(table, grid_pu, ed, ed_key, eq_key, key)
+    q_axis = interp_energy_axis(table, grid_pu, eq, eq_key, ed_key, key)
     if baseline is None or d_axis is None or q_axis is None:
         return None
     return float(baseline + (d_axis - baseline) + (q_axis - baseline))
@@ -198,6 +235,8 @@ def interp_axes(rows: list[dict[str, Any]], axis_keys: list[str], axis_values: l
     target = float(axis_values[0])
     bucket: dict[float, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
+        if not has_numeric(row, axis_key):
+            continue
         bucket[f(row, axis_key)].append(row)
     if not bucket:
         return None
@@ -254,10 +293,8 @@ def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dic
         if mode == "reg_sweep" and abs(raw_reg_q) > 1e-9:
             mode_label = "reg_q_sweep"
         grid = f(row, "grid_pu", f(row, "fault_pu"))
-        reg = f(row, "reg_d_mean", f(row, "raw_m_reg_d"))
-        reg_q = f(row, "reg_q_mean", raw_reg_q)
-        ed = f(row, "energy_d_mean", f(row, "raw_m_energy_d"))
-        eq = f(row, "energy_q_mean", f(row, "raw_m_energy_q"))
+        reg, reg_q, ed, eq = row_action(row)
+        meas_reg, meas_reg_q, meas_ed, meas_eq = row_response(row)
         reg_table = top.get("fault_reg_response_table", top.get("fault_response_table", []))
         reg_d_axis_table = top.get("fault_response_table", [])
         energy_table = top.get("fault_energy_response_table", [])
@@ -266,7 +303,14 @@ def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dic
 
         def predict_metric(key: str) -> float | None:
             pred = interp_grid_axes(
-                reg_table, grid, ["reg_d_mean", "reg_q_mean"], [reg, reg_q], key
+                reg_table,
+                grid,
+                [
+                    axis_key(reg_table, "cmd_m_reg_d", "reg_d_mean"),
+                    axis_key(reg_table, "cmd_m_reg_q", "reg_q_mean"),
+                ],
+                [reg, reg_q],
+                key,
             )
             if pred is None:
                 pred = interp_response(reg_d_axis_table, grid, reg, key)
@@ -279,7 +323,11 @@ def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dic
                 joint = interp_grid_axes(
                     joint_table,
                     grid,
-                    ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
+                    [
+                        axis_key(joint_table, "cmd_m_reg_d", "reg_d_mean"),
+                        axis_key(joint_table, "cmd_m_energy_d", "energy_d_mean"),
+                        axis_key(joint_table, "cmd_m_energy_q", "energy_q_mean"),
+                    ],
                     [reg, ed, eq],
                     key,
                 )
@@ -319,6 +367,14 @@ def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dic
                 "reg_q": reg_q,
                 "energy_d": ed,
                 "energy_q": eq,
+                "cmd_m_reg_d": reg,
+                "cmd_m_reg_q": reg_q,
+                "cmd_m_energy_d": ed,
+                "cmd_m_energy_q": eq,
+                "meas_reg_d": meas_reg,
+                "meas_reg_q": meas_reg_q,
+                "meas_energy_d": meas_ed,
+                "meas_energy_q": meas_eq,
                 "sim_lv_pu": f(row, "lv_pu_mean"),
                 "proxy_lv_pu": pred_lv,
                 "err_lv_pu": None if pred_lv is None else pred_lv - f(row, "lv_pu_mean"),

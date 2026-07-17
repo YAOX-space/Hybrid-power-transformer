@@ -102,6 +102,32 @@ def finite_or(row: dict[str, Any], key: str, default: float = 0.0) -> float:
     return value
 
 
+def has_numeric(row: dict[str, Any], key: str) -> bool:
+    if key not in row or row.get(key) in ("", None):
+        return False
+    try:
+        return bool(np.isfinite(float(row[key])))
+    except (TypeError, ValueError):
+        return False
+
+
+def row_numeric(row: dict[str, Any], preferred: str, fallback: str, default: float = 0.0) -> float:
+    if has_numeric(row, preferred):
+        return f(row, preferred)
+    if has_numeric(row, fallback):
+        return f(row, fallback)
+    return float(default)
+
+
+def action_tuple(row: dict[str, Any]) -> tuple[float, float, float, float]:
+    return (
+        row_numeric(row, "cmd_m_reg_d_mean", "raw_m_reg_d", f(row, "reg_d_mean", 0.0)),
+        row_numeric(row, "cmd_m_reg_q_mean", "raw_m_reg_q", f(row, "reg_q_mean", 0.0)),
+        row_numeric(row, "cmd_m_energy_d_mean", "raw_m_energy_d", f(row, "energy_d_mean", 0.0)),
+        row_numeric(row, "cmd_m_energy_q_mean", "raw_m_energy_q", f(row, "energy_q_mean", 0.0)),
+    )
+
+
 def mode_label(row: dict[str, Any]) -> str:
     mode = s(row, "mode")
     if mode == "reg_sweep" and abs(f(row, "raw_m_reg_q")) > 1e-9:
@@ -138,10 +164,7 @@ def proxy_reward_from_lookup(row: dict[str, Any], proxy_row: dict[str, Any]) -> 
             "proxy_grid_current_violation_pu": float("nan"),
         }
 
-    reg_d = f(row, "reg_d_mean", f(row, "raw_m_reg_d"))
-    reg_q = f(row, "reg_q_mean", f(row, "raw_m_reg_q"))
-    energy_d = f(row, "energy_d_mean", f(row, "raw_m_energy_d"))
-    energy_q = f(row, "energy_q_mean", f(row, "raw_m_energy_q"))
+    reg_d, reg_q, energy_d, energy_q = action_tuple(row)
     reg_mag = float(math.hypot(reg_d, reg_q))
     energy_mag = float(math.hypot(energy_d, energy_q))
     action_max = finite_or(proxy_row, "proxy_action_max_abs", max(reg_mag, energy_mag))
@@ -232,10 +255,10 @@ def switch_score(row: dict[str, Any]) -> dict[str, float | str]:
         score += 8.0
     score += 0.20 * action_max * action_max
 
-    raw_reg_d = f(row, "raw_m_reg_d")
+    cmd_reg_d, _cmd_reg_q, _cmd_ed, _cmd_eq = action_tuple(row)
     wrong_sign = (
-        (f(row, "grid_pu", 1.0) < 0.92 and raw_reg_d < -1e-9)
-        or (f(row, "grid_pu", 1.0) > 1.08 and raw_reg_d > 1e-9)
+        (f(row, "grid_pu", 1.0) < 0.92 and cmd_reg_d < -1e-9)
+        or (f(row, "grid_pu", 1.0) > 1.08 and cmd_reg_d > 1e-9)
     )
     if wrong_sign:
         score += 8.0
@@ -382,6 +405,7 @@ def make_detail(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list
         raise RuntimeError(f"Proxy gap rows mismatch: {len(proxy_rows)} != {len(rows)}")
     detail: list[dict[str, Any]] = []
     for idx, (row, proxy_row) in enumerate(zip(rows, proxy_rows)):
+        cmd_reg_d, cmd_reg_q, cmd_energy_d, cmd_energy_q = action_tuple(row)
         proxy = proxy_reward_from_lookup(row, proxy_row)
         switch = switch_score(row)
         detail.append(
@@ -396,6 +420,14 @@ def make_detail(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list
                 "raw_m_reg_q": f(row, "raw_m_reg_q"),
                 "raw_m_energy_d": f(row, "raw_m_energy_d"),
                 "raw_m_energy_q": f(row, "raw_m_energy_q"),
+                "cmd_m_reg_d": cmd_reg_d,
+                "cmd_m_reg_q": cmd_reg_q,
+                "cmd_m_energy_d": cmd_energy_d,
+                "cmd_m_energy_q": cmd_energy_q,
+                "meas_reg_d": row_numeric(row, "meas_reg_d_mean", "reg_d_mean", 0.0),
+                "meas_reg_q": row_numeric(row, "meas_reg_q_mean", "reg_q_mean", 0.0),
+                "meas_energy_d": row_numeric(row, "meas_energy_d_mean", "energy_d_mean", 0.0),
+                "meas_energy_q": row_numeric(row, "meas_energy_q_mean", "energy_q_mean", 0.0),
                 "reg_d_mean": f(row, "reg_d_mean"),
                 "reg_q_mean": f(row, "reg_q_mean"),
                 "energy_d_mean": f(row, "energy_d_mean"),
