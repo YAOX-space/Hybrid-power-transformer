@@ -71,8 +71,15 @@ A model can be called a switch-level success only if all are true:
 2. The case evaluator returns `passed = true`.
 3. The report includes LV metrics, Vdc metrics, action bounds, and failure
    reasons.
-4. For fault cases, current full GB/T certification is provisional until
-   grid-side reactive-current logging is implemented.
+4. For fault cases, the report must include grid-side `Igrid_abc` derived dq
+   metrics, reactive-current support/response status, and grid-current limit
+   status.  A case with missing or failed current metrics is not promotable.
+5. Proxy-only SAC results are not promotable unless the active proxy
+   calibration JSON was generated from an FRT matrix containing those same
+   grid-current fields.
+6. Proxy training runs must pass rollout alignment with
+   `verify_hpt_proxy_rollout_alignment.py`; this checks the actual SAC
+   environment, not only the static lookup tables.
 
 ## Cleanup Policy
 

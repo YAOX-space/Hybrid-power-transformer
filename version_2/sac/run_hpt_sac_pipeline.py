@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SIMULINK = ROOT / "version_2" / "simulink"
 RESULTS = ROOT / "lab" / "results"
 FRT_MATRIX_DIR = RESULTS / "hpt_v2_frt_calibration_matrix"
+CONTROL_DIR = RESULTS / "hpt_v2_control_comparison"
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,16 @@ def _latest(pattern: str) -> Path:
     return matches[-1]
 
 
+def _latest_control(pattern: str) -> Path:
+    matches = sorted(
+        (p for p in CONTROL_DIR.glob(pattern) if "_summary" not in p.stem),
+        key=lambda p: p.stat().st_mtime,
+    )
+    if not matches:
+        raise FileNotFoundError(f"No files match {CONTROL_DIR / pattern}")
+    return matches[-1]
+
+
 def _matlab_batch(statement: str) -> tuple[str, ...]:
     return ("matlab", "-batch", statement)
 
@@ -40,6 +51,8 @@ def _matlab_batch(statement: str) -> tuple[str, ...]:
 def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Stage]:
     matrix = Path(matrix_csv) if matrix_csv else _latest("frt_calibration_matrix_full_all_*.csv")
     trace = Path(trace_csv) if trace_csv else _latest("frt_calibration_traces_full_all_*.csv")
+    expanded_matrix = _latest("frt_calibration_matrix_expanded_full_holdout_*.csv")
+    conventional_boundary = _latest_control("control_comparison_*conventional_boundary*.csv")
 
     frt_matrix_cmd = _matlab_batch(
         "cd('E:/research_space/Hybrid-power-transformer/version_2/simulink'); "
@@ -148,6 +161,186 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
                 "64",
                 "--energy-enable",
                 "1.0",
+            ),
+        ),
+        "boundary-full-action-dataset": Stage(
+            name="boundary-full-action-dataset",
+            description="Build boundary-centered full-action dataset for beat-conventional SAC.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.build_hpt_boundary_full_action_dataset",
+                "--conventional-csv",
+                str(conventional_boundary),
+                "--matrix-csv",
+                str(expanded_matrix),
+                "--candidate-selection",
+                "near_boundary_depths",
+            ),
+        ),
+        "boundary-bc-reproduction-smoke": Stage(
+            name="boundary-bc-reproduction-smoke",
+            description="BC-only full-action reproduction gate on one topology1 LVRT boundary group.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.train_hpt_fault_specialists_vs_baseline",
+                "--baseline-csv",
+                str(conventional_boundary),
+                "--run-id",
+                "hpt_boundary_bc_reproduction_smoke",
+                "--topology",
+                "topology1",
+                "--category",
+                "LVRT",
+                "--duration-ms",
+                "80",
+                "--max-specialists",
+                "1",
+                "--steps",
+                "0",
+                "--bc-warmstart-epochs",
+                "40",
+                "--bc-episodes-per-scenario",
+                "2",
+                "--bc-teacher-source",
+                "conventional_csv",
+            ),
+        ),
+        "boundary-sac-regularized-smoke": Stage(
+            name="boundary-sac-regularized-smoke",
+            description="Short behavior-anchored full-action SAC smoke on one topology1 LVRT group.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.train_hpt_fault_specialists_vs_baseline",
+                "--baseline-csv",
+                str(conventional_boundary),
+                "--run-id",
+                "hpt_boundary_sac_regularized_smoke",
+                "--topology",
+                "topology1",
+                "--category",
+                "LVRT",
+                "--duration-ms",
+                "80",
+                "--max-specialists",
+                "1",
+                "--steps",
+                "1000",
+                "--bc-warmstart-epochs",
+                "80",
+                "--bc-episodes-per-scenario",
+                "2",
+                "--bc-teacher-source",
+                "conventional_csv",
+                "--teacher-prior-weight",
+                "30",
+                "--learning-rate",
+                "0.0001",
+                "--ent-coef",
+                "auto_0.1",
+                "--behavior-anchor-epochs",
+                "20",
+                "--behavior-anchor-interval-steps",
+                "100",
+            ),
+        ),
+        "offline-full-action-smoke": Stage(
+            name="offline-full-action-smoke",
+            description="Train TD3+BC/AWAC-style offline full-action baselines on one boundary group.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.train_hpt_offline_full_action_baselines",
+                "--run-id",
+                "hpt_offline_full_action_smoke",
+                "--topology",
+                "topology1",
+                "--category",
+                "LVRT",
+                "--duration-ms",
+                "80",
+                "--max-cases",
+                "2",
+                "--epochs",
+                "300",
+                "--batch-size",
+                "32",
+                "--algorithms",
+                "auto",
+            ),
+        ),
+        "offline-full-action-boundary": Stage(
+            name="offline-full-action-boundary",
+            description="Train offline full-action baselines on all selected boundary rows.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.train_hpt_offline_full_action_baselines",
+                "--run-id",
+                "hpt_offline_full_action_boundary",
+                "--topology",
+                "all",
+                "--category",
+                "all",
+                "--duration-ms",
+                "all",
+                "--max-cases",
+                "0",
+                "--epochs",
+                "500",
+                "--batch-size",
+                "64",
+                "--algorithms",
+                "auto",
+            ),
+        ),
+        "offline-full-action-group-boundary": Stage(
+            name="offline-full-action-group-boundary",
+            description="Train one offline full-action specialist per topology/category/duration group.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.train_hpt_offline_full_action_baselines",
+                "--run-id",
+                "hpt_offline_full_action_group_boundary",
+                "--topology",
+                "all",
+                "--category",
+                "all",
+                "--duration-ms",
+                "all",
+                "--max-cases",
+                "0",
+                "--epochs",
+                "500",
+                "--batch-size",
+                "32",
+                "--algorithms",
+                "auto",
+                "--group-specialists",
+            ),
+        ),
+        "offline-full-action-switch-validate": Stage(
+            name="offline-full-action-switch-validate",
+            description="Validate proxy-beating offline full-action AWAC candidates in switch-level Simulink.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.validate_hpt_offline_actions_switchlevel",
+                "--case-results-csv",
+                str(RESULTS / "hpt_offline_full_action_group_boundary" / "case_results.csv"),
+                "--run-id",
+                "hpt_offline_full_action_switch_validation",
+                "--topology",
+                "topology1",
+                "--category",
+                "HVRT",
+                "--algorithm-contains",
+                "awac_style",
+                "--max-cases",
+                "8",
             ),
         ),
         "fault-specialists-full": Stage(

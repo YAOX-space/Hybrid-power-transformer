@@ -41,6 +41,7 @@ from gymnasium import spaces
 OBS_DIM_HPT = 24
 ACT_DIM_HPT = 4
 DEFAULT_PROXY_CALIBRATION = Path(__file__).with_name("hpt_proxy_calibration.json")
+_INTERP_EPS = 1e-6
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,7 @@ class HPTVoltageScenario:
     recovery_tau_s: float = 0.05
     scr: float = 3.0
     xr_ratio: float = 3.0
+    calibration_mode: str = "joint_sweep"
 
 
 @dataclass(frozen=True)
@@ -111,6 +113,16 @@ class HPTVoltageEnvConfig:
     topology2_dynamic_soft_reg_limit: float = 0.25
     topology2_dynamic_stress_weight: float = 35.0
     topology2_dynamic_slew_weight: float = 8.0
+    grid_reactive_tolerance_pu: float = 0.12
+    grid_reactive_delay_s: float = 0.06
+    grid_reactive_iq_limit_pu: float = 0.30
+    grid_current_limit_pu: float = 1.50
+    grid_reactive_reward_weight: float = 40.0
+    grid_current_reward_weight: float = 50.0
+    grid_wrong_sign_reward_weight: float = 8.0
+    calibrated_survival_reward_weight: float = 140.0
+    calibration_ood_reward_weight: float = 220.0
+    action_projection_enable: bool = False
     safety_classifier_path: str = ""
     safety_penalty_weight: float = 8.0
     safety_unsafe_terminal: bool = False
@@ -170,6 +182,15 @@ def classify_hpt_operating_condition(
     return "nominal"
 
 
+def _has_numeric_key(row: dict, key: str) -> bool:
+    if key not in row or row.get(key) in ("", None):
+        return False
+    try:
+        return bool(np.isfinite(float(row[key])))
+    except (TypeError, ValueError):
+        return False
+
+
 def _interp_response_table(
     table: list[dict],
     grid_pu: float,
@@ -186,12 +207,16 @@ def _interp_response_table(
         for row in table:
             if abs(float(row["grid_pu"]) - grid) > 1e-9:
                 continue
+            if not _has_numeric_key(row, value_key):
+                continue
             x = float(row["reg_d_mean"])
             bucket.setdefault(x, []).append(float(row[value_key]))
         if not bucket:
             return None
         xs = np.asarray(sorted(bucket), dtype=float)
         ys = np.asarray([np.mean(bucket[float(x)]) for x in xs], dtype=float)
+        if float(reg_d) < float(xs[0]) - _INTERP_EPS or float(reg_d) > float(xs[-1]) + _INTERP_EPS:
+            return None
         values_by_grid.append(float(np.interp(float(reg_d), xs, ys)))
 
     return float(np.interp(float(grid_pu), np.asarray(grids, dtype=float), np.asarray(values_by_grid, dtype=float)))
@@ -217,12 +242,16 @@ def _interp_energy_axis(
                 continue
             if abs(float(row[other_axis_key])) > 1e-6:
                 continue
+            if not _has_numeric_key(row, value_key):
+                continue
             x = float(row[axis_key])
             bucket.setdefault(x, []).append(float(row[value_key]))
         if not bucket:
             return None
         xs = np.asarray(sorted(bucket), dtype=float)
         ys = np.asarray([np.mean(bucket[float(x)]) for x in xs], dtype=float)
+        if float(action_value) < float(xs[0]) - _INTERP_EPS or float(action_value) > float(xs[-1]) + _INTERP_EPS:
+            return None
         values_by_grid.append(float(np.interp(float(action_value), xs, ys)))
 
     return float(np.interp(float(grid_pu), np.asarray(grids, dtype=float), np.asarray(values_by_grid, dtype=float)))
@@ -235,6 +264,16 @@ def _interp_energy_response(
     energy_q: float,
     value_key: str,
 ) -> float | None:
+    coupled = _interp_grid_axes_table(
+        table,
+        grid_pu,
+        ["energy_d_mean", "energy_q_mean"],
+        [energy_d, energy_q],
+        value_key,
+    )
+    if coupled is not None:
+        return coupled
+
     baseline = _interp_energy_axis(
         table, grid_pu, 0.0, "energy_d_mean", "energy_q_mean", value_key
     )
@@ -253,7 +292,7 @@ def _interp_axes(rows: list[dict], axis_keys: list[str], axis_values: list[float
     if not rows:
         return None
     if not axis_keys:
-        vals = [float(row[value_key]) for row in rows if value_key in row]
+        vals = [float(row[value_key]) for row in rows if _has_numeric_key(row, value_key)]
         if not vals:
             return None
         return float(np.mean(vals))
@@ -277,6 +316,8 @@ def _interp_axes(rows: list[dict], axis_keys: list[str], axis_values: list[float
         xs.append(float(x))
         ys.append(float(value))
     if not xs:
+        return None
+    if target < min(xs) - _INTERP_EPS or target > max(xs) + _INTERP_EPS:
         return None
     return float(np.interp(target, np.asarray(xs, dtype=float), np.asarray(ys, dtype=float)))
 
@@ -304,6 +345,8 @@ def _interp_grid_axes_table(
         ys.append(float(value))
     if not xs:
         return None
+    if float(grid_pu) < min(xs) - _INTERP_EPS or float(grid_pu) > max(xs) + _INTERP_EPS:
+        return None
     return float(np.interp(float(grid_pu), np.asarray(xs, dtype=float), np.asarray(ys, dtype=float)))
 
 
@@ -316,6 +359,18 @@ def _neg_seq_for_fault(fault_type: str, target: float) -> float:
     if fault_type == "2ph_g":
         return min(0.16, 0.28 * depth)
     return 0.0
+
+
+def _finite_or_none(value: float | None) -> float | None:
+    if value is None:
+        return None
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not np.isfinite(out):
+        return None
+    return out
 
 
 def default_hpt_voltage_scenarios() -> list[HPTVoltageScenario]:
@@ -503,6 +558,7 @@ class HPTVoltageSACEnv(gym.Env):
         self._sc = self.scenarios[0]
         self._last_action = np.zeros(ACT_DIM_HPT, dtype=np.float32)
         self._detector = HPTOnlineFaultDetector(self.config)
+        self._calibrated_metric_cache: dict[tuple, float | None] = {}
         self._reset_states()
 
     def _reset_states(self) -> None:
@@ -513,6 +569,14 @@ class HPTVoltageSACEnv(gym.Env):
         self.vdc = 1.0
         self.energy_id = 0.0
         self.energy_iq = 0.0
+        self.grid_vpos_pu = 1.0
+        self.grid_id_pu = 0.0
+        self.grid_iq_pu = 0.0
+        self.grid_iq_ref_pu = 0.0
+        self.grid_iq_shortfall_pu = 0.0
+        self.grid_reactive_wrong_sign = False
+        self.grid_current_peak_pu = 0.0
+        self._calibrated_metric_cache.clear()
         self._detector.reset()
 
     def reset(self, *, seed: int | None = None, options=None):
@@ -668,6 +732,366 @@ class HPTVoltageSACEnv(gym.Env):
                 table = cal.get("energy_response_table", [])
         return _interp_energy_response(table, grid_pu, energy_d, energy_q, value_key)
 
+    def _duration_filtered_conventional_rows(self) -> list[dict]:
+        cal = self._topology_calibration()
+        rows = list(cal.get("fault_conventional_response_table", []))
+        if not rows or self._sc.category == "steady":
+            return []
+        category = str(self._sc.category).upper()
+        duration = self._fault_duration()
+        out: list[dict] = []
+        for row in rows:
+            if str(row.get("category", "")).upper() != category:
+                continue
+            if _has_numeric_key(row, "fault_duration_s"):
+                if abs(float(row["fault_duration_s"]) - duration) > 1e-6:
+                    continue
+            out.append(row)
+        return out
+
+    def _conventional_teacher_action(self, grid_pu: float) -> np.ndarray | None:
+        rows = self._duration_filtered_conventional_rows()
+        if not rows:
+            return None
+        row = min(rows, key=lambda r: abs(float(r.get("grid_pu", grid_pu)) - float(grid_pu)))
+        if abs(float(row.get("grid_pu", grid_pu)) - float(grid_pu)) > 0.051:
+            return None
+        return np.asarray(
+            [
+                float(row.get("reg_d_mean", 0.0)),
+                float(row.get("reg_q_mean", 0.0)),
+                float(row.get("energy_d_mean", 0.0)),
+                float(row.get("energy_q_mean", 0.0)),
+            ],
+            dtype=np.float32,
+        )
+
+    def _nearest_conventional_fault_row(
+        self,
+        grid_pu: float,
+        reg_d: float,
+        reg_q: float,
+        energy_d: float,
+        energy_q: float,
+        *,
+        max_distance: float = 0.50,
+    ) -> dict | None:
+        rows = self._duration_filtered_conventional_rows()
+        if not rows:
+            return None
+
+        def span(key: str, minimum: float) -> float:
+            vals = [float(row[key]) for row in rows if _has_numeric_key(row, key)]
+            if not vals:
+                return minimum
+            return max(max(vals) - min(vals), minimum)
+
+        grid_span = min(span("grid_pu", 0.02), 0.03)
+        reg_d_span = span("reg_d_mean", 0.08)
+        reg_q_span = span("reg_q_mean", 0.05)
+        energy_d_span = span("energy_d_mean", 0.08)
+        energy_q_span = span("energy_q_mean", 0.05)
+
+        best_row: dict | None = None
+        best_distance = float("inf")
+        for row in rows:
+            if not _has_numeric_key(row, "grid_pu"):
+                continue
+            vec = np.asarray(
+                [
+                    (float(grid_pu) - float(row["grid_pu"])) / grid_span,
+                    (float(reg_d) - float(row.get("reg_d_mean", 0.0))) / reg_d_span,
+                    (float(reg_q) - float(row.get("reg_q_mean", 0.0))) / reg_q_span,
+                    (float(energy_d) - float(row.get("energy_d_mean", 0.0))) / energy_d_span,
+                    (float(energy_q) - float(row.get("energy_q_mean", 0.0))) / energy_q_span,
+                ],
+                dtype=float,
+            )
+            distance = float(np.linalg.norm(vec))
+            if distance < best_distance:
+                best_distance = distance
+                best_row = row
+
+        if best_row is None or best_distance > max_distance:
+            return None
+        return best_row
+
+    def _calibrated_fault_metric(
+        self,
+        grid_pu: float,
+        reg_d: float,
+        reg_q: float,
+        energy_d: float,
+        energy_q: float,
+        value_key: str,
+    ) -> float | None:
+        """Predict a fault-only grid metric from switch-level calibration tables."""
+
+        cal = self._topology_calibration()
+        if not cal or self._sc.category == "steady":
+            return None
+
+        mode = str(getattr(self._sc, "calibration_mode", "joint_sweep"))
+        cache_key = (
+            self._topology_name(),
+            mode,
+            value_key,
+            round(float(grid_pu), 9),
+            round(float(self._fault_duration()), 9),
+            round(float(reg_d), 9),
+            round(float(reg_q), 9),
+            round(float(energy_d), 9),
+            round(float(energy_q), 9),
+        )
+        if cache_key in self._calibrated_metric_cache:
+            return self._calibrated_metric_cache[cache_key]
+
+        def cached(value: float | None) -> float | None:
+            self._calibrated_metric_cache[cache_key] = value
+            return value
+
+        def from_baseline() -> float | None:
+            return _finite_or_none(
+                _interp_grid_axes_table(
+                    cal.get("fault_baseline_table", []),
+                    grid_pu,
+                    [],
+                    [],
+                    value_key,
+                )
+            )
+
+        def from_conventional() -> float | None:
+            row = self._nearest_conventional_fault_row(
+                grid_pu, reg_d, reg_q, energy_d, energy_q
+            )
+            if row is None or not _has_numeric_key(row, value_key):
+                return None
+            return _finite_or_none(float(row[value_key]))
+
+        def from_reg() -> float | None:
+            value = _interp_grid_axes_table(
+                cal.get("fault_reg_response_table", []),
+                grid_pu,
+                ["reg_d_mean", "reg_q_mean"],
+                [reg_d, reg_q],
+                value_key,
+            )
+            value = _finite_or_none(value)
+            if value is not None:
+                return value
+            return _finite_or_none(
+                _interp_response_table(
+                    cal.get("fault_response_table", []),
+                    grid_pu,
+                    reg_d,
+                    value_key,
+                )
+            )
+
+        def from_energy() -> float | None:
+            return _finite_or_none(
+                _interp_energy_response(
+                    cal.get("fault_energy_response_table", []),
+                    grid_pu,
+                    energy_d,
+                    energy_q,
+                    value_key,
+                )
+            )
+
+        def from_joint() -> float | None:
+            return _finite_or_none(
+                _interp_grid_axes_table(
+                    cal.get("fault_joint_response_table", []),
+                    grid_pu,
+                    ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
+                    [reg_d, energy_d, energy_q],
+                    value_key,
+                )
+            )
+
+        value = from_conventional()
+        if value is not None:
+            return cached(value)
+
+        if mode == "baseline":
+            return cached(from_baseline())
+        if mode == "reg_sweep":
+            return cached(from_reg())
+        if mode == "energy_sweep":
+            return cached(from_energy())
+        if mode == "joint_sweep":
+            value = from_joint()
+            if value is not None:
+                return cached(value)
+
+        value = from_reg()
+        if value is not None:
+            return cached(value)
+
+        value = from_energy()
+        if value is not None:
+            return cached(value)
+
+        value = from_baseline()
+        if value is not None:
+            return cached(value)
+        return cached(None)
+
+    def _calibration_support_violation(
+        self,
+        reg_d: float,
+        reg_q: float,
+        energy_d: float,
+        energy_q: float,
+    ) -> float:
+        """Return normalized action distance outside switch-calibrated support.
+
+        The calibrated proxy is only trustworthy inside the fixed-action
+        switch-level matrix that produced ``hpt_proxy_calibration.json``.  SAC
+        can otherwise exploit optimistic extrapolation, so out-of-support
+        actions are penalized and treated as unsafe by the evaluator.
+        """
+
+        cal = self._topology_calibration()
+        if not cal or self._sc.category == "steady":
+            return 0.0
+
+        ranges: dict[str, list[float]] = {}
+        for table_name in (
+            "fault_reg_response_table",
+            "fault_energy_response_table",
+            "fault_joint_response_table",
+            "fault_conventional_response_table",
+        ):
+            for row in cal.get(table_name, []):
+                if "category" in row and str(row.get("category", "")).upper() != str(self._sc.category).upper():
+                    continue
+                for key in ("reg_d_mean", "reg_q_mean", "energy_d_mean", "energy_q_mean"):
+                    if _has_numeric_key(row, key):
+                        ranges.setdefault(key, []).append(float(row[key]))
+
+        def excess(key: str, value: float) -> float:
+            vals = ranges.get(key, [])
+            if not vals:
+                return 0.0
+            lo = min(vals)
+            hi = max(vals)
+            span = max(hi - lo, 1e-6)
+            if value < lo - _INTERP_EPS:
+                return (lo - value) / span
+            if value > hi + _INTERP_EPS:
+                return (value - hi) / span
+            return 0.0
+
+        terms = [
+            excess("reg_d_mean", float(reg_d)),
+            excess("reg_q_mean", float(reg_q)),
+            excess("energy_d_mean", float(energy_d)),
+            excess("energy_q_mean", float(energy_q)),
+        ]
+        return float(np.linalg.norm(np.asarray(terms, dtype=float)))
+
+    def _grid_iq_reference(self, vpos_pu: float) -> float:
+        limit = float(self.config.grid_reactive_iq_limit_pu)
+        if vpos_pu < 0.9:
+            return float(min(limit, 1.5 * (0.9 - vpos_pu)))
+        if vpos_pu > 1.1:
+            return float(max(-limit, -1.5 * (vpos_pu - 1.1)))
+        return 0.0
+
+    def _estimate_grid_metrics(
+        self,
+        grid_pu: float,
+        m_reg_d: float,
+        m_reg_q: float,
+        m_energy_d: float,
+        m_energy_q: float,
+    ) -> dict[str, float | bool]:
+        """Estimate the evaluator's grid-current/FRT metrics inside the proxy."""
+
+        cfg = self.config
+        vpos = self._calibrated_fault_metric(
+            grid_pu, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "grid_vpos_pu_mean"
+        )
+        if vpos is None:
+            vpos = float(grid_pu)
+
+        iq_ref = self._calibrated_fault_metric(
+            grid_pu, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "grid_iq_ref_mean_pu"
+        )
+        if iq_ref is None:
+            iq_ref = self._grid_iq_reference(vpos)
+
+        iq = self._calibrated_fault_metric(
+            grid_pu, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "grid_iq_mean_pu"
+        )
+        if iq is None:
+            direction = 1.0 if vpos < 0.9 else (-1.0 if vpos > 1.1 else 0.0)
+            directed_reg = max(0.0, direction * m_reg_d) if direction else 0.0
+            support_mag = min(
+                cfg.grid_reactive_iq_limit_pu,
+                0.28 * directed_reg + 0.12 * abs(m_reg_q) + 0.05 * abs(m_energy_q),
+            )
+            iq = direction * support_mag
+
+        shortfall = self._calibrated_fault_metric(
+            grid_pu,
+            m_reg_d,
+            m_reg_q,
+            m_energy_d,
+            m_energy_q,
+            "grid_iq_shortfall_max_pu",
+        )
+        if shortfall is None:
+            tol = float(cfg.grid_reactive_tolerance_pu)
+            if iq_ref > tol:
+                shortfall = max(0.0, (iq_ref - tol) - iq)
+            elif iq_ref < -tol:
+                shortfall = max(0.0, iq - (iq_ref + tol))
+            else:
+                shortfall = 0.0
+
+        wrong_sign_metric = self._calibrated_fault_metric(
+            grid_pu, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "grid_iq_wrong_sign"
+        )
+        if wrong_sign_metric is None:
+            wrong_sign = bool((vpos < 0.9 and iq < -1e-3) or (vpos > 1.1 and iq > 1e-3))
+        else:
+            wrong_sign = bool(wrong_sign_metric > 0.5)
+
+        current = self._calibrated_fault_metric(
+            grid_pu, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "grid_current_peak_pu"
+        )
+        if current is None:
+            load_current = float(self._sc.load_pu) / max(abs(vpos), 0.25)
+            action_current = 0.08 * abs(m_reg_d) + 0.04 * abs(m_reg_q) + 0.04 * float(
+                np.hypot(m_energy_d, m_energy_q)
+            )
+            current = float(np.hypot(load_current, iq) + action_current)
+
+        self.grid_vpos_pu = float(vpos)
+        self.grid_id_pu = float(
+            self._calibrated_fault_metric(
+                grid_pu, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "grid_id_mean_pu"
+            )
+            or 0.0
+        )
+        self.grid_iq_pu = float(iq)
+        self.grid_iq_ref_pu = float(iq_ref)
+        self.grid_iq_shortfall_pu = float(max(0.0, shortfall))
+        self.grid_reactive_wrong_sign = bool(wrong_sign)
+        self.grid_current_peak_pu = float(max(0.0, current))
+        return {
+            "vpos": self.grid_vpos_pu,
+            "iq": self.grid_iq_pu,
+            "iq_ref": self.grid_iq_ref_pu,
+            "shortfall": self.grid_iq_shortfall_pu,
+            "wrong_sign": self.grid_reactive_wrong_sign,
+            "current_peak": self.grid_current_peak_pu,
+        }
+
     def _obs(self) -> np.ndarray:
         cfg = self.config
         v_err = 1.0 - self.v_lv
@@ -703,6 +1127,10 @@ class HPTVoltageSACEnv(gym.Env):
         on the learned/SAC proxy.  It gives SAC a local action prior while still
         allowing the actor to learn deviations when the reward supports them.
         """
+
+        conventional = self._conventional_teacher_action(grid_pu)
+        if conventional is not None:
+            return conventional.astype(np.float32)
 
         candidates = np.linspace(-self.config.reg_limit, self.config.reg_limit, 81)
         best_score = float("inf")
@@ -833,40 +1261,84 @@ class HPTVoltageSACEnv(gym.Env):
         cfg = self.config
         raw_action = np.asarray(action, dtype=np.float32)
         raw_action = np.clip(raw_action, self.action_space.low, self.action_space.high)
-        action = self._project_action(raw_action)
+        action = self._project_action(raw_action) if cfg.action_projection_enable else raw_action.copy()
         m_reg_d, m_reg_q, m_energy_d, m_energy_q = [float(v) for v in action]
 
         grid_now, neg_now = self._grid_profile(self.t)
-        calibrated_lv = self._calibrated_lv_target(grid_now, m_reg_d, m_reg_q)
+        calibrated_fault_case = bool(self._calibration and self._sc.category != "steady")
+        lookup_grid = float(self._sc.grid_pu) if calibrated_fault_case else float(grid_now)
+        support_violation = (
+            self._calibration_support_violation(m_reg_d, m_reg_q, m_energy_d, m_energy_q)
+            if calibrated_fault_case
+            else 0.0
+        )
+        calibrated_lv = None
+        lv_mode_exact = False
+        if calibrated_fault_case:
+            mode_lv = self._calibrated_fault_metric(
+                lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "lv_pu_mean"
+            )
+            if mode_lv is not None:
+                calibrated_lv = mode_lv
+                lv_mode_exact = True
+        if calibrated_lv is None:
+            calibrated_lv = self._calibrated_lv_target(lookup_grid, m_reg_d, m_reg_q)
         load_drop = 0.010 * max(0.0, float(self._sc.load_pu) - 1.0)
         if calibrated_lv is None:
             base_lv = self._source_base_voltage(grid_now)
             reg_effect = self._reg_gain() * m_reg_d
             q_effect = 0.0 if self._calibration else cfg.energy_q_gain * m_energy_q
             calibrated_lv = base_lv + reg_effect + q_effect
-        joint_lv = self._calibrated_joint_target(
-            grid_now, m_reg_d, m_energy_d, m_energy_q, "lv_pu_mean"
-        )
-        joint_lv_zero = self._calibrated_joint_target(
-            grid_now, m_reg_d, 0.0, 0.0, "lv_pu_mean"
-        )
-        if joint_lv is not None and abs(m_reg_q) <= 1e-6:
-            calibrated_lv = joint_lv
-        elif joint_lv is not None and joint_lv_zero is not None:
-            calibrated_lv += joint_lv - joint_lv_zero
-        else:
-            energy_lv = self._calibrated_energy_target(grid_now, m_energy_d, m_energy_q, "lv_pu_mean")
-            energy_lv_zero = self._calibrated_energy_target(grid_now, 0.0, 0.0, "lv_pu_mean")
-            if energy_lv is not None and energy_lv_zero is not None:
-                calibrated_lv += energy_lv - energy_lv_zero
+        if not lv_mode_exact:
+            joint_lv = self._calibrated_joint_target(
+                lookup_grid, m_reg_d, m_energy_d, m_energy_q, "lv_pu_mean"
+            )
+            joint_lv_zero = self._calibrated_joint_target(
+                lookup_grid, m_reg_d, 0.0, 0.0, "lv_pu_mean"
+            )
+            if joint_lv is not None and abs(m_reg_q) <= 1e-6:
+                calibrated_lv = joint_lv
+            elif joint_lv is not None and joint_lv_zero is not None:
+                calibrated_lv += joint_lv - joint_lv_zero
+            else:
+                energy_lv = self._calibrated_energy_target(lookup_grid, m_energy_d, m_energy_q, "lv_pu_mean")
+                energy_lv_zero = self._calibrated_energy_target(lookup_grid, 0.0, 0.0, "lv_pu_mean")
+                if energy_lv is not None and energy_lv_zero is not None:
+                    calibrated_lv += energy_lv - energy_lv_zero
+        fault_end = float(self._sc.fault_start_s) + self._fault_duration()
+        if calibrated_fault_case and self.t >= fault_end:
+            recovery_lv = self._calibrated_fault_metric(
+                lookup_grid,
+                m_reg_d,
+                m_reg_q,
+                m_energy_d,
+                m_energy_q,
+                "lv_recovery_pu_mean",
+            )
+            if recovery_lv is not None:
+                calibrated_lv = recovery_lv
         v_target = max(0.0, calibrated_lv - load_drop)
-        self.v_lv += (v_target - self.v_lv) * (cfg.dt / cfg.v_tau)
+        v_alpha = 1.0 if calibrated_fault_case else cfg.dt / cfg.v_tau
+        self.v_lv += (v_target - self.v_lv) * float(np.clip(v_alpha, 0.0, 1.0))
         self.v_pos = max(0.0, self.v_lv)
         self.v_neg += (neg_now + 0.02 * abs(m_reg_q) - self.v_neg) * (cfg.dt / cfg.v_tau)
 
-        calibrated_i = self._calibrated_energy_target(
-            grid_now, m_energy_d, m_energy_q, "energy_i_rms_mean"
-        )
+        calibrated_i = None
+        if calibrated_fault_case:
+            mode_i = self._calibrated_fault_metric(
+                lookup_grid,
+                m_reg_d,
+                m_reg_q,
+                m_energy_d,
+                m_energy_q,
+                "energy_i_rms_mean",
+            )
+            if mode_i is not None:
+                calibrated_i = mode_i
+        if calibrated_i is None:
+            calibrated_i = self._calibrated_energy_target(
+                lookup_grid, m_energy_d, m_energy_q, "energy_i_rms_mean"
+            )
         if calibrated_i is None:
             energy_direct_scale = 0.0 if self._calibration else 1.0
             target_energy_id = energy_direct_scale * cfg.energy_d_gain * m_energy_d
@@ -877,42 +1349,85 @@ class HPTVoltageSACEnv(gym.Env):
             target_energy_iq = np.sign(m_energy_q) * min(2.0, abs(calibrated_i) / current_scale)
         self.energy_id += (target_energy_id - self.energy_id) * 0.25
         self.energy_iq += (target_energy_iq - self.energy_iq) * 0.25
-        calibrated_vdc = self._calibrated_vdc_target(grid_now, m_reg_d, m_reg_q)
+        calibrated_vdc = None
+        vdc_mode_exact = False
+        if calibrated_fault_case:
+            mode_vdc = self._calibrated_fault_metric(
+                lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "vdc_pu_mean"
+            )
+            if mode_vdc is not None:
+                calibrated_vdc = mode_vdc
+                vdc_mode_exact = True
+        if calibrated_vdc is None:
+            calibrated_vdc = self._calibrated_vdc_target(lookup_grid, m_reg_d, m_reg_q)
         if calibrated_vdc is None:
             calibrated_vdc = (
                 self._vdc_base_pu()
                 - self._reg_dc_cost() * max(0.0, abs(m_reg_d))
                 - 0.04 * max(0.0, 1.0 - grid_now)
             )
-        joint_vdc = self._calibrated_joint_target(
-            grid_now, m_reg_d, m_energy_d, m_energy_q, "vdc_pu_mean"
-        )
-        joint_vdc_zero = self._calibrated_joint_target(
-            grid_now, m_reg_d, 0.0, 0.0, "vdc_pu_mean"
-        )
-        if joint_vdc is not None and abs(m_reg_q) <= 1e-6:
+        if vdc_mode_exact:
             energy_direct_scale = 0.0
-            energy_vdc_delta = joint_vdc - calibrated_vdc
-        elif joint_vdc is not None and joint_vdc_zero is not None:
-            energy_direct_scale = 0.0
-            energy_vdc_delta = joint_vdc - joint_vdc_zero
+            energy_vdc_delta = 0.0
         else:
-            energy_vdc = self._calibrated_energy_target(grid_now, m_energy_d, m_energy_q, "vdc_pu_mean")
-            energy_vdc_zero = self._calibrated_energy_target(grid_now, 0.0, 0.0, "vdc_pu_mean")
-            if energy_vdc is not None and energy_vdc_zero is not None:
+            joint_vdc = self._calibrated_joint_target(
+                lookup_grid, m_reg_d, m_energy_d, m_energy_q, "vdc_pu_mean"
+            )
+            joint_vdc_zero = self._calibrated_joint_target(
+                lookup_grid, m_reg_d, 0.0, 0.0, "vdc_pu_mean"
+            )
+            if joint_vdc is not None and abs(m_reg_q) <= 1e-6:
                 energy_direct_scale = 0.0
-                energy_vdc_delta = energy_vdc - energy_vdc_zero
+                energy_vdc_delta = joint_vdc - calibrated_vdc
+            elif joint_vdc is not None and joint_vdc_zero is not None:
+                energy_direct_scale = 0.0
+                energy_vdc_delta = joint_vdc - joint_vdc_zero
             else:
-                energy_direct_scale = 0.0 if self._calibration else 1.0
-                energy_vdc_delta = energy_direct_scale * cfg.energy_d_dc_gain * m_energy_d
+                energy_vdc = self._calibrated_energy_target(lookup_grid, m_energy_d, m_energy_q, "vdc_pu_mean")
+                energy_vdc_zero = self._calibrated_energy_target(lookup_grid, 0.0, 0.0, "vdc_pu_mean")
+                if energy_vdc is not None and energy_vdc_zero is not None:
+                    energy_direct_scale = 0.0
+                    energy_vdc_delta = energy_vdc - energy_vdc_zero
+                else:
+                    energy_direct_scale = 0.0 if self._calibration else 1.0
+                    energy_vdc_delta = energy_direct_scale * cfg.energy_d_dc_gain * m_energy_d
         vdc_target = (
             calibrated_vdc
             + energy_vdc_delta
             - energy_direct_scale * cfg.energy_q_dc_cost * abs(m_energy_q)
             - cfg.load_dc_cost * max(0.0, float(self._sc.load_pu) - 1.0)
         )
-        self.vdc += (vdc_target - self.vdc) * (cfg.dt / cfg.vdc_tau)
-        self.vdc = float(np.clip(self.vdc, 0.05, 1.30))
+        vdc_alpha = 1.0 if calibrated_fault_case else cfg.dt / cfg.vdc_tau
+        self.vdc += (vdc_target - self.vdc) * float(np.clip(vdc_alpha, 0.0, 1.0))
+        vdc_floor = 0.0 if calibrated_fault_case else 0.05
+        vdc_ceiling = 2.0 if calibrated_fault_case else 1.30
+        self.vdc = float(np.clip(self.vdc, vdc_floor, vdc_ceiling))
+
+        grid_metrics = self._estimate_grid_metrics(
+            lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q
+        )
+
+        calibrated_lv_recovery = None
+        calibrated_lv_peak = None
+        calibrated_lv_min = None
+        calibrated_vdc_min = None
+        calibrated_vdc_max = None
+        if calibrated_fault_case:
+            calibrated_lv_recovery = self._calibrated_fault_metric(
+                lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "lv_recovery_pu_mean"
+            )
+            calibrated_lv_peak = self._calibrated_fault_metric(
+                lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "lv_peak_pu"
+            )
+            calibrated_lv_min = self._calibrated_fault_metric(
+                lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "lv_min_pu"
+            )
+            calibrated_vdc_min = self._calibrated_fault_metric(
+                lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "vdc_min_pu"
+            )
+            calibrated_vdc_max = self._calibrated_fault_metric(
+                lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "vdc_max_pu"
+            )
 
         self.t += cfg.dt
         detector_grid, detector_neg = self._grid_profile(self.t)
@@ -927,8 +1442,13 @@ class HPTVoltageSACEnv(gym.Env):
         energy_weight = 0.60 if self._calibration else 0.08
         slew = float(np.linalg.norm(action - self._last_action))
         fault_or_recovery = float(self._detector.fault_active or self._detector.recovery_active)
-        teacher_prior = self._table_teacher_action(grid_now)
-        teacher_gap = float((m_reg_d - teacher_prior[0]) ** 2) if cfg.teacher_prior_weight > 0.0 else 0.0
+        if cfg.teacher_prior_weight > 0.0:
+            teacher_prior = self._table_teacher_action(lookup_grid)
+            teacher_delta = action - teacher_prior
+            teacher_gap = float(np.dot(teacher_delta, teacher_delta))
+        else:
+            teacher_prior = np.zeros(ACT_DIM_HPT, dtype=np.float32)
+            teacher_gap = 0.0
         safe_probability, safety_threshold, safety_unsafe = self._safety_score(
             grid_pu=grid_now,
             raw_action=raw_action,
@@ -947,12 +1467,67 @@ class HPTVoltageSACEnv(gym.Env):
             + cfg.topology2_dynamic_slew_weight * slew * slew
             + 2.0 * abs(m_reg_q)
         )
+        reactive_demand = abs(float(grid_metrics["iq_ref"])) > cfg.grid_reactive_tolerance_pu
+        reactive_window_ready = bool(
+            self._detector.recovery_active
+            or (
+                self._detector.fault_active
+                and (self.t - self._detector.onset_t) >= cfg.grid_reactive_delay_s
+            )
+        )
+        reactive_assessed = bool(reactive_window_ready and reactive_demand)
+        reactive_shortfall = float(grid_metrics["shortfall"]) if reactive_assessed else 0.0
+        reactive_wrong_sign = float(bool(grid_metrics["wrong_sign"]) and reactive_assessed)
+        grid_current_violation = max(
+            0.0, float(grid_metrics["current_peak"]) - cfg.grid_current_limit_pu
+        )
+        lv_fault_for_bounds = self.v_lv
+        lv_recovery_for_bounds = (
+            float(calibrated_lv_recovery)
+            if calibrated_lv_recovery is not None
+            else self.v_lv
+        )
+        lv_peak_for_bounds = (
+            float(calibrated_lv_peak)
+            if calibrated_lv_peak is not None
+            else self.v_lv
+        )
+        lv_min_for_bounds = (
+            float(calibrated_lv_min)
+            if calibrated_lv_min is not None
+            else self.v_lv
+        )
+        vdc_min_for_bounds = (
+            float(calibrated_vdc_min)
+            if calibrated_vdc_min is not None
+            else self.vdc
+        )
+        vdc_max_for_bounds = (
+            float(calibrated_vdc_max)
+            if calibrated_vdc_max is not None
+            else self.vdc
+        )
+        calibrated_survival_violation = 0.0
+        if calibrated_fault_case:
+            calibrated_survival_violation += max(0.0, 176.0 / cfg.v_ref_phase_rms - lv_fault_for_bounds) ** 2
+            calibrated_survival_violation += max(0.0, lv_fault_for_bounds - 238.0 / cfg.v_ref_phase_rms) ** 2
+            calibrated_survival_violation += max(0.0, 180.0 / cfg.v_ref_phase_rms - lv_recovery_for_bounds) ** 2
+            calibrated_survival_violation += max(0.0, lv_recovery_for_bounds - 235.0 / cfg.v_ref_phase_rms) ** 2
+            calibrated_survival_violation += max(0.0, 180.0 / cfg.v_ref_phase_rms - lv_min_for_bounds) ** 2
+            calibrated_survival_violation += max(0.0, lv_peak_for_bounds - 235.0 / cfg.v_ref_phase_rms) ** 2
+            calibrated_survival_violation += max(0.0, 650.0 / cfg.vdc_ref - vdc_min_for_bounds) ** 2
+            calibrated_survival_violation += max(0.0, vdc_max_for_bounds - 1000.0 / cfg.vdc_ref) ** 2
         reward = (
             -(90.0 + 35.0 * fault_or_recovery) * voltage_err * voltage_err
             -45.0 * unbalance * unbalance
             -55.0 * vdc_soft * vdc_soft
             -8.0 * wrong_sign
             -topology2_dynamic_stress
+            -cfg.calibrated_survival_reward_weight * calibrated_survival_violation
+            -cfg.calibration_ood_reward_weight * support_violation * support_violation
+            -cfg.grid_reactive_reward_weight * reactive_shortfall
+            -cfg.grid_wrong_sign_reward_weight * reactive_wrong_sign
+            -cfg.grid_current_reward_weight * grid_current_violation
             -0.20 * reg_mag * reg_mag
             -energy_weight * energy_mag * energy_mag
             -cfg.action_slew_weight * slew * slew
@@ -966,7 +1541,12 @@ class HPTVoltageSACEnv(gym.Env):
             reward += 0.5
 
         self._last_action = action.copy()
-        terminated = bool(self.vdc < 0.65 or self.vdc > 1.25 or self.v_lv < 0.45 or self.v_lv > 1.40)
+        if calibrated_fault_case:
+            terminated = False
+        else:
+            terminated = bool(
+                self.vdc < 0.65 or self.vdc > 1.25 or self.v_lv < 0.45 or self.v_lv > 1.40
+            )
         if cfg.safety_unsafe_terminal and safety_unsafe:
             terminated = True
         truncated = bool(self.t >= float(self._sc.duration_s))
@@ -988,6 +1568,37 @@ class HPTVoltageSACEnv(gym.Env):
             "safety_threshold": safety_threshold,
             "safety_unsafe": safety_unsafe,
             "teacher_m_reg_d": float(teacher_prior[0]),
+            "teacher_m_reg_q": float(teacher_prior[1]),
+            "teacher_m_energy_d": float(teacher_prior[2]),
+            "teacher_m_energy_q": float(teacher_prior[3]),
+            "teacher_gap": teacher_gap,
+            "grid_vpos_pu": float(grid_metrics["vpos"]),
+            "grid_iq_pu": float(grid_metrics["iq"]),
+            "grid_iq_ref_pu": float(grid_metrics["iq_ref"]),
+            "grid_iq_shortfall_pu": float(grid_metrics["shortfall"]),
+            "grid_iq_shortfall_reward_pu": reactive_shortfall,
+            "grid_reactive_assessed": reactive_assessed,
+            "grid_reactive_wrong_sign": bool(grid_metrics["wrong_sign"]),
+            "grid_current_peak_pu": float(grid_metrics["current_peak"]),
+            "grid_current_limit_pu": cfg.grid_current_limit_pu,
+            "grid_current_limit_violation": grid_current_violation,
+            "calibration_support_violation": support_violation,
+            "calibrated_survival_violation": calibrated_survival_violation,
+            "calibrated_lv_recovery_pu": float(calibrated_lv_recovery)
+            if calibrated_lv_recovery is not None
+            else float("nan"),
+            "calibrated_lv_peak_pu": float(calibrated_lv_peak)
+            if calibrated_lv_peak is not None
+            else float("nan"),
+            "calibrated_lv_min_pu": float(calibrated_lv_min)
+            if calibrated_lv_min is not None
+            else float("nan"),
+            "calibrated_vdc_min_pu": float(calibrated_vdc_min)
+            if calibrated_vdc_min is not None
+            else float("nan"),
+            "calibrated_vdc_max_pu": float(calibrated_vdc_max)
+            if calibrated_vdc_max is not None
+            else float("nan"),
             "action": action.copy(),
         }
         return self._obs(), float(reward), terminated, truncated, info

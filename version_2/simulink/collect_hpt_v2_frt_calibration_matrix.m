@@ -2,7 +2,7 @@
 % Switch-level FRT calibration matrix for the version-2 HPT SAC proxy.
 %
 % Workspace overrides:
-%   hpt_calib_mode       "pilot" | "full"        default: "full"
+%   hpt_calib_mode       "pilot" | "full" | "holdout"        default: "full"
 %   hpt_calib_topology   "topology1" | "topology2" | "all"
 %
 % The script records both aggregate metrics and 2-ms traces.  It uses fixed
@@ -56,6 +56,20 @@ if hpt_calib_mode == "pilot"
     energyActions = [0.0, 0.0; 0.4, 0.0; 0.0, 0.2];
     jointEnergyValues = [0.0, 0.4];
     faults = faults([5, 6], :);
+elseif hpt_calib_mode == "holdout"
+    regDValues = [-0.70, -0.30, 0.30, 0.70];
+    regQValues = 0.20;
+    energyActions = [
+        0.10, 0.00;
+        0.30, 0.00;
+        0.00, 0.10;
+        0.30, 0.10
+    ];
+    jointEnergyValues = [0.10, 0.30];
+    faults = {
+        'sag_0p65',   0.65, 'LVRT';
+        'swell_1p15', 1.15, 'HVRT';
+    };
 else
     regDValues = [-0.80, -0.60, -0.40, -0.20, 0.00, 0.20, 0.40, 0.60, 0.80];
     regQValues = [-0.40, 0.00, 0.40];
@@ -115,7 +129,11 @@ for c = 1:size(cases, 1)
             traceCells = append_trace_cells(traceCells, rowCells{end}, sampleStride); %#ok<AGROW>
         end
 
-        if faultPu < 1.0
+        if hpt_calib_mode == "holdout" && faultPu < 1.0
+            jointRegValues = [0.30, 0.50];
+        elseif hpt_calib_mode == "holdout"
+            jointRegValues = [-0.30, -0.50];
+        elseif faultPu < 1.0
             jointRegValues = [0.20, 0.40, 0.60];
         else
             jointRegValues = [-0.20, -0.40, -0.60];
@@ -182,6 +200,12 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
 
     Vlv = out.get('Vlv_abc');
     Vdc = out.get('Vdc');
+    if string(topology) == "topology1"
+        Vgrid = out.get('Vmv_abc');
+    else
+        Vgrid = out.get('Vpri_abc');
+    end
+    Igrid = out.get('Igrid_abc');
     obs = out.get('HPTSAC_obs');
     act = out.get('HPTSAC_action');
     if has_logged_var(out, 'Energy_Iabc')
@@ -192,6 +216,8 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
 
     obsRows = orient_channels(obs, 24);
     actRows = orient_channels(act, 4);
+    gridVRows = orient_channels(Vgrid, 3);
+    gridIRows = orient_channels(Igrid, 3);
     iRows = orient_channels(Ienergy, 3);
     t = (0:size(Vlv, 1)-1)' * Ts;
     phaseRmsInst = sqrt(mean(Vlv(:, 1:3).^2, 2));
@@ -249,6 +275,8 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
     row.reg_q_mean = safe_mean(actRows(2, tailStart:end));
     row.energy_d_mean = safe_mean(actRows(3, tailStart:end));
     row.energy_q_mean = safe_mean(actRows(4, tailStart:end));
+    row = add_grid_current_metrics(row, gridVRows, gridIRows, t, ...
+        faultStart, faultClear);
     row.obs_dim = size(obsRows, 1);
     row.action_dim = size(actRows, 1);
     row.trace_t = t;
@@ -256,6 +284,11 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
     row.trace_vdc = Vdc(:, 1);
     row.trace_obs = obsRows;
     row.trace_act = actRows;
+    row.trace_grid_vpos_pu = row.trace_grid_metrics.vpos_pu;
+    row.trace_grid_iq_pu = row.trace_grid_metrics.iq_pu;
+    row.trace_grid_iq_ref_pu = row.trace_grid_metrics.iq_ref_pu;
+    row.trace_grid_i_peak_pu = row.trace_grid_metrics.i_peak_pu;
+    row = rmfield(row, 'trace_grid_metrics');
 end
 
 function traceCells = append_trace_cells(traceCells, row, sampleStride)
@@ -284,6 +317,10 @@ function traceCells = append_trace_cells(traceCells, row, sampleStride)
         tr.lv_pu_inst = row.trace_vlv(j) / row.target_phase_rms;
         tr.vdc_inst = row.trace_vdc(j);
         tr.vdc_pu_inst = row.trace_vdc(j) / 800.0;
+        tr.grid_vpos_pu_inst = row.trace_grid_vpos_pu(j);
+        tr.grid_iq_pu_inst = row.trace_grid_iq_pu(j);
+        tr.grid_iq_ref_pu_inst = row.trace_grid_iq_ref_pu(j);
+        tr.grid_i_peak_pu_inst = row.trace_grid_i_peak_pu(j);
         tr.window_zone = classify_zone(t(j), row.fault_start, row.fault_clear, row.stop_time);
         for ii = 1:24
             tr.(sprintf('obs_%02d', ii)) = row.trace_obs(ii, j);
@@ -362,6 +399,106 @@ function y = orient_channels(x, nChannels)
     end
 end
 
+function row = add_grid_current_metrics(row, gridVRows, gridIRows, t, faultStart, faultClear)
+    reactiveTol = 0.12;
+    reactiveDelay = 0.06;
+    reactiveDwell = 0.80;
+    signEps = 1e-3;
+    iqPeLimitPu = 0.30;
+    currentLimitPu = 1.50;
+    vMvLineRms = 10000.0;
+    sBase = 400e3;
+    vPhasePeak = sqrt(2) * vMvLineRms / sqrt(3);
+    iBasePeak = sqrt(2) * sBase / (sqrt(3) * vMvLineRms);
+
+    [vPosPu, idPu, iqPu, iPeakPu] = grid_dq_from_voltage_angle( ...
+        gridVRows, gridIRows, vPhasePeak, iBasePeak);
+    refPu = arrayfun(@(v) grid_iq_reference(v, iqPeLimitPu), vPosPu);
+    assessIdx = t >= faultStart + reactiveDelay & t <= faultClear;
+    demandIdx = assessIdx & abs(refPu) > reactiveTol;
+
+    row.grid_vpos_pu_min = min(vPosPu(t >= faultStart & t <= faultClear));
+    row.grid_vpos_pu_mean = safe_mean(vPosPu(t >= faultStart & t <= faultClear));
+    row.grid_id_mean_pu = safe_mean(idPu(assessIdx));
+    row.grid_iq_mean_pu = safe_mean(iqPu(assessIdx));
+    row.grid_iq_ref_mean_pu = safe_mean(refPu(assessIdx));
+    row.grid_current_peak_pu = max(iPeakPu);
+    row.grid_idq_peak_pu = max(sqrt(idPu.^2 + iqPu.^2));
+    row.gbt_grid_current_limit_pass = row.grid_current_peak_pu <= currentLimitPu;
+
+    wrongSign = (vPosPu < 0.9 & iqPu < -signEps) | ...
+        (vPosPu > 1.1 & iqPu > signEps);
+    row.grid_iq_wrong_sign = any(wrongSign(assessIdx));
+
+    if ~any(assessIdx)
+        row.grid_iq_shortfall_max_pu = NaN;
+        row.grid_iq_met_fraction = NaN;
+        row.gbt_reactive_status = "not_evaluated_no_fault_current_window";
+        row.gbt_reactive_pass = false;
+    elseif ~any(demandIdx)
+        row.grid_iq_shortfall_max_pu = 0.0;
+        row.grid_iq_met_fraction = NaN;
+        row.gbt_reactive_status = "not_evaluated_no_sustained_reactive_demand_after_delay";
+        row.gbt_reactive_pass = false;
+    else
+        shortfall = zeros(size(refPu));
+        lvrtIdx = refPu > reactiveTol;
+        hvrtIdx = refPu < -reactiveTol;
+        shortfall(lvrtIdx) = max(0.0, (refPu(lvrtIdx) - reactiveTol) - iqPu(lvrtIdx));
+        shortfall(hvrtIdx) = max(0.0, iqPu(hvrtIdx) - (refPu(hvrtIdx) + reactiveTol));
+        metIdx = demandIdx & shortfall <= 1e-9;
+        row.grid_iq_shortfall_max_pu = max(shortfall(demandIdx));
+        row.grid_iq_met_fraction = nnz(metIdx) / nnz(demandIdx);
+        if row.grid_iq_wrong_sign
+            row.gbt_reactive_status = "reactive_wrong_sign";
+            row.gbt_reactive_pass = false;
+        elseif row.grid_iq_met_fraction < reactiveDwell
+            row.gbt_reactive_status = "reactive_shortfall";
+            row.gbt_reactive_pass = false;
+        else
+            row.gbt_reactive_status = "pass";
+            row.gbt_reactive_pass = true;
+        end
+    end
+    row.trace_grid_metrics = struct( ...
+        'vpos_pu', vPosPu, ...
+        'iq_pu', iqPu, ...
+        'iq_ref_pu', refPu, ...
+        'i_peak_pu', iPeakPu);
+end
+
+function [vPosPu, idPu, iqPu, iPeakPu] = grid_dq_from_voltage_angle( ...
+    gridVRows, gridIRows, vPhasePeak, iBasePeak)
+    va = gridVRows(1, :)';
+    vb = gridVRows(2, :)';
+    vc = gridVRows(3, :)';
+    ia = gridIRows(1, :)';
+    ib = gridIRows(2, :)';
+    ic = gridIRows(3, :)';
+    valpha = (2/3) * (va - 0.5*vb - 0.5*vc);
+    vbeta = (sqrt(3)/3) * (vb - vc);
+    ialpha = (2/3) * (ia - 0.5*ib - 0.5*ic);
+    ibeta = (sqrt(3)/3) * (ib - ic);
+    theta = atan2(vbeta, valpha);
+    id = ialpha .* cos(theta) + ibeta .* sin(theta);
+    iq = -ialpha .* sin(theta) + ibeta .* cos(theta);
+
+    vPosPu = sqrt(valpha.^2 + vbeta.^2) ./ vPhasePeak;
+    idPu = id ./ iBasePeak;
+    iqPu = -iq ./ iBasePeak;
+    iPeakPu = max(abs(gridIRows), [], 1)' ./ iBasePeak;
+end
+
+function iqRef = grid_iq_reference(vPosPu, iqPeLimitPu)
+    if vPosPu < 0.9
+        iqRef = min(iqPeLimitPu, 1.5 * (0.9 - vPosPu));
+    elseif vPosPu > 1.1
+        iqRef = max(-iqPeLimitPu, -1.5 * (vPosPu - 1.1));
+    else
+        iqRef = 0.0;
+    end
+end
+
 function m = safe_mean(x)
     if isempty(x)
         m = NaN;
@@ -377,7 +514,9 @@ function m = safe_mean(x)
 end
 
 function row = strip_trace(row)
-    row = rmfield(row, {'trace_t', 'trace_vlv', 'trace_vdc', 'trace_obs', 'trace_act'});
+    row = rmfield(row, {'trace_t', 'trace_vlv', 'trace_vdc', 'trace_obs', ...
+        'trace_act', 'trace_grid_vpos_pu', 'trace_grid_iq_pu', ...
+        'trace_grid_iq_ref_pu', 'trace_grid_i_peak_pu'});
 end
 
 function write_trace_csv(path, rowCells)

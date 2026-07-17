@@ -16,6 +16,9 @@ Core environment and metadata:
 Switch-level data and calibration:
 
 - `build_hpt_switch_dataset.py` - converts switch-level traces into ML datasets.
+- `build_hpt_boundary_full_action_dataset.py` - builds the boundary-centered
+  full-action dataset used to train direct actors against the conventional DQ
+  baseline.
 - `calibrate_hpt_proxy_from_sweep.py` - steady/regulating proxy calibration.
 - `calibrate_hpt_energy_proxy_from_sweep.py` - energy-bridge proxy calibration.
 - `calibrate_hpt_frt_proxy_from_matrix.py` - GB/T FRT matrix calibration.
@@ -32,11 +35,18 @@ Proxy validation:
   switch-level reward-like action ranking, with held-out action evaluation.
 - `summarize_hpt_control_comparison.py` - summarizes switch-level legacy
   conventional, strong conventional, and SAC comparison CSVs.
+- `validate_hpt_offline_actions_switchlevel.py` - promotes proxy-beating
+  offline full-action candidates into switch-level fixed-action validation
+  against the traditional baseline.
 
 Training:
 
 - `train_hpt_voltage_sac.py` - baseline SAC training on the proxy.
 - `pretrain_hpt_actor_bc.py` - behavior-cloning and mixed teacher pretraining.
+- `train_hpt_offline_full_action_baselines.py` - TD3+BC-style and
+  AWAC/IQL-style contextual offline baselines from the full-action boundary
+  dataset.  This is the stronger behavior-constrained route used when ordinary
+  proxy SAC drifts outside switch-level support.
 - `train_hpt_case_specialists.py` - topology/case specialist training and
   switch-level promotion gate.
 - `train_hpt_learned_proxy.py` - learned proxy experiments.
@@ -86,13 +96,36 @@ The current full workflow is:
 5. Measure reward alignment.
 6. Train/evaluate reward correction for weak proxy-ranking groups.
 7. Run legacy-conventional/strong-conventional/SAC switch-level comparison.
-8. Train topology/case specialists.
-9. Validate promoted actors on switch-level cases.
+8. Build the boundary-centered full-action dataset.
+9. Run BC-only reproduction before any long SAC training.
+10. Run offline full-action baselines (`offline-full-action-smoke`, then
+    `offline-full-action-group-boundary`) to check whether behavior-constrained
+    per-topology/per-fault policies can improve on conventional DQ without
+    leaving the calibrated switch-level support.  The pooled
+    `offline-full-action-boundary` stage is retained as a diagnostic, but it is
+    weaker because topology2 DC-link behavior can poison topology1/HVRT gains.
+11. Run `offline-full-action-switch-validate` for proxy-beating candidates.
+    Proxy-gate success is not a final result until it survives this switch-level
+    gate.
+12. Train topology/case specialists only after the offline/proxy and
+    switch-level fixed-action gates expose a viable candidate.
+13. Validate promoted actors on switch-level cases.
 
 ## Known Open Blockers
 
-- Full GB/T pass/fail certification still needs grid-side reactive-current
-  logging. Current fault results report `not_evaluated_no_grid_reactive_current`.
+- Grid-side current logging is now available in the switch-level models as
+  `Igrid_abc`, and the FRT evaluators compute dq reactive-current support,
+  response, and grid-current limit metrics.  Some shallow cases can still report
+  `not_evaluated_no_sustained_reactive_demand_after_delay` when the measured
+  post-delay droop demand is below the configured tolerance.
+- The Python proxy now has the same reward-side hooks for these grid-current
+  metrics.  Re-run the FRT calibration matrix and
+  `calibrate_hpt_frt_proxy_from_matrix.py` before trusting SAC training that
+  optimizes reactive-current support or grid-current limits.
+- `verify_hpt_proxy_rollout_alignment.py` checks the actual
+  `HPTVoltageSACEnv` rollout against switch-level matrix rows.  Use it after
+  every calibration refresh; lookup/reward alignment alone is not enough to
+  certify the SAC training environment.
 - The strong `conventional_dq` baseline is topology-aware: topology1 uses the
   tuned physical `VoltageRegulator`/`EnergyController` path, while topology2 uses
   the calibrated rule/dq current-loop fallback because the physical topology2
@@ -100,6 +133,11 @@ The current full workflow is:
 - Topology2 joint regulating+energy action still has a large Vdc proxy gap.
   Independent d-axis and energy sweeps are calibrated; joint interaction is not
   yet reliable enough for final direct-SAC claims.
+- Offline full-action AWAC proxy-gate gains currently transfer only partially
+  to switch-level Simulink.  In the latest topology1/HVRT gate, only
+  `hvrt_200ms_1p120pu` beat conventional after fixed-action validation.  The
+  main remaining mismatch is energy-branch action semantics and recovery-window
+  voltage behavior.
 - The interrupted full fault specialist run at
   `lab/results/hpt_case_specialists_20260717_011726` produced partial results
   only. It should be treated as diagnostic data, not a completed campaign.

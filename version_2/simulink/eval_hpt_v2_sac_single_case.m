@@ -221,6 +221,12 @@ function [row, traceRows] = run_fault_case(M, topology, faultName, faultPu, mode
 
     Vlv = out.get('Vlv_abc');
     Vdc = out.get('Vdc');
+    if string(topology) == "topology1"
+        Vgrid = out.get('Vmv_abc');
+    else
+        Vgrid = out.get('Vpri_abc');
+    end
+    Igrid = out.get('Igrid_abc');
     obs = out.get('HPTSAC_obs');
     act = out.get('HPTSAC_action');
     t = (0:size(Vlv, 1)-1)' * Ts;
@@ -229,6 +235,8 @@ function [row, traceRows] = run_fault_case(M, topology, faultName, faultPu, mode
     recoveryIdx = t > (faultClear + 0.035) & t < (stopTime - 0.005);
     obsRows = orient_channels(obs, 24);
     actRows = orient_channels(act, 4);
+    gridVRows = orient_channels(Vgrid, 3);
+    gridIRows = orient_channels(Igrid, 3);
 
     row = base_row(M, topology, "fault", faultName, mode, NaN, faultPu);
     row.lv_mean = mean(phaseRmsInst(faultIdx));
@@ -253,8 +261,9 @@ function [row, traceRows] = run_fault_case(M, topology, faultName, faultPu, mode
     row.obs_verr_mean = mean(obsRows(6, round(end*0.7):end));
     row.obs_fault_flag_mean = mean(obsRows(17, round(end*0.7):end));
     row.obs_recovery_flag_mean = mean(obsRows(18, round(end*0.7):end));
-    row = add_gbt_fault_metrics(row, phaseRmsInst, Vdc(:, 1), actRows, t, ...
-        targetPhaseRms, faultPu, faultStart, faultClear, stopTime);
+    row = add_gbt_fault_metrics(row, phaseRmsInst, Vdc(:, 1), actRows, ...
+        gridVRows, gridIRows, t, targetPhaseRms, faultPu, faultStart, ...
+        faultClear, stopTime);
 
     [row.within_window, row.window_reason] = assess_fault(row, caseSpec);
     traceRows = make_trace_rows(M, topology, "fault", row.case_name, NaN, ...
@@ -356,8 +365,9 @@ function c = condition_class(scenarioType, faultPu)
     end
 end
 
-function row = add_gbt_fault_metrics(row, lvRmsInst, vdc, actRows, t, ...
-    targetPhaseRms, faultPu, faultStart, faultClear, stopTime)
+function row = add_gbt_fault_metrics(row, lvRmsInst, vdc, actRows, ...
+    gridVRows, gridIRows, t, targetPhaseRms, faultPu, faultStart, ...
+    faultClear, stopTime)
 
     solverTol = 1e-3;
     vdcBase = 800.0;
@@ -395,16 +405,132 @@ function row = add_gbt_fault_metrics(row, lvRmsInst, vdc, actRows, t, ...
     row.gbt_vdc_survive_pass = row.gbt_vdc_pu_min >= 0.75 && ...
         row.gbt_vdc_pu_max <= 1.25;
     row.gbt_action_limit_pass = max(abs(actRows), [], 'all') <= 0.9501;
+    row = add_grid_reactive_metrics(row, gridVRows, gridIRows, t, ...
+        faultStart, faultClear);
+    row.gbt_limit_status = sprintf("grid_current_peak_pu=%.3f;action_max=%.3f", ...
+        row.grid_current_peak_pu, max(abs(actRows), [], 'all'));
+    row.gbt_certifiable = row.gbt_reactive_evaluated && ...
+        row.gbt_grid_current_limit_pass;
+end
 
-    % The GB/T dynamic reactive-current criterion needs measured positive-
-    % and negative-sequence reactive current. The current switch-level HPT
-    % evaluator logs voltages, Vdc, and SAC actions, but not a certified
-    % grid-side reactive current measurement. Match the previous-version
-    % status model: missing mandatory measurements are NOT_EVALUATED.
-    row.gbt_reactive_status = "not_evaluated_no_grid_reactive_current";
-    row.gbt_reactive_pass = false;
-    row.gbt_limit_status = "action_surrogate_not_current_certification";
-    row.gbt_certifiable = false;
+function row = add_grid_reactive_metrics(row, gridVRows, gridIRows, t, ...
+    faultStart, faultClear)
+
+    reactiveTol = 0.12;
+    reactiveDelay = 0.06;
+    reactiveDwell = 0.80;
+    signEps = 1e-3;
+    iqPeLimitPu = 0.30;
+    currentLimitPu = 1.50;
+    vMvLineRms = 10000.0;
+    sBase = 400e3;
+    vPhasePeak = sqrt(2) * vMvLineRms / sqrt(3);
+    iBasePeak = sqrt(2) * sBase / (sqrt(3) * vMvLineRms);
+
+    [vPosPu, idPu, iqPu] = grid_dq_from_voltage_angle(gridVRows, gridIRows, ...
+        vPhasePeak, iBasePeak);
+    refPu = arrayfun(@(v) grid_iq_reference(v, iqPeLimitPu), vPosPu);
+    assessIdx = t >= faultStart + reactiveDelay & t <= faultClear;
+    demandIdx = assessIdx & abs(refPu) > reactiveTol;
+
+    row.grid_vpos_pu_min = min(vPosPu(t >= faultStart & t <= faultClear));
+    row.grid_vpos_pu_mean = mean(vPosPu(t >= faultStart & t <= faultClear));
+    row.grid_id_mean_pu = mean(idPu(assessIdx));
+    row.grid_iq_mean_pu = mean(iqPu(assessIdx));
+    row.grid_iq_ref_mean_pu = mean(refPu(assessIdx));
+    row.grid_current_peak_pu = max(max(abs(gridIRows))) / iBasePeak;
+    row.grid_idq_peak_pu = max(sqrt(idPu.^2 + iqPu.^2));
+    row.gbt_grid_current_limit_pass = row.grid_current_peak_pu <= currentLimitPu;
+
+    wrongSign = (vPosPu < 0.9 & iqPu < -signEps) | ...
+        (vPosPu > 1.1 & iqPu > signEps);
+    row.grid_iq_wrong_sign = any(wrongSign(assessIdx));
+
+    if ~any(assessIdx)
+        row.gbt_reactive_status = "not_evaluated_no_fault_current_window";
+        row.gbt_reactive_evaluated = false;
+        row.gbt_reactive_pass = false;
+        return;
+    end
+    if ~any(demandIdx)
+        row.grid_iq_shortfall_max_pu = 0.0;
+        row.grid_iq_met_fraction = NaN;
+        row.gbt_reactive_status = "not_evaluated_no_sustained_reactive_demand_after_delay";
+        row.gbt_reactive_evaluated = false;
+        row.gbt_reactive_pass = false;
+        return;
+    end
+
+    shortfall = zeros(size(refPu));
+    lvrtIdx = refPu > reactiveTol;
+    hvrtIdx = refPu < -reactiveTol;
+    shortfall(lvrtIdx) = max(0.0, (refPu(lvrtIdx) - reactiveTol) - iqPu(lvrtIdx));
+    shortfall(hvrtIdx) = max(0.0, iqPu(hvrtIdx) - (refPu(hvrtIdx) + reactiveTol));
+    metIdx = demandIdx & shortfall <= 1e-9;
+
+    row.gbt_reactive_evaluated = true;
+    row.grid_iq_shortfall_max_pu = max(shortfall(demandIdx));
+    row.grid_iq_met_fraction = nnz(metIdx) / nnz(demandIdx);
+
+    firstMet = find(metIdx, 1, 'first');
+    if isempty(firstMet)
+        row.gbt_reactive_response_ms = Inf;
+        row.gbt_reactive_response_pass = false;
+    else
+        row.gbt_reactive_response_ms = 1000.0 * (t(firstMet) - faultStart);
+        row.gbt_reactive_response_pass = row.gbt_reactive_response_ms <= ...
+            1000.0 * reactiveDelay + 1e-6;
+    end
+
+    if row.grid_iq_wrong_sign
+        row.gbt_reactive_status = "reactive_wrong_sign";
+        row.gbt_reactive_pass = false;
+    elseif row.grid_iq_met_fraction < reactiveDwell
+        row.gbt_reactive_status = "reactive_shortfall";
+        row.gbt_reactive_pass = false;
+    elseif ~row.gbt_reactive_response_pass
+        row.gbt_reactive_status = "reactive_response_slow";
+        row.gbt_reactive_pass = false;
+    else
+        row.gbt_reactive_status = "pass";
+        row.gbt_reactive_pass = true;
+    end
+end
+
+function [vPosPu, idPu, iqPu] = grid_dq_from_voltage_angle(gridVRows, ...
+    gridIRows, vPhasePeak, iBasePeak)
+
+    va = gridVRows(1, :)';
+    vb = gridVRows(2, :)';
+    vc = gridVRows(3, :)';
+    ia = gridIRows(1, :)';
+    ib = gridIRows(2, :)';
+    ic = gridIRows(3, :)';
+
+    valpha = (2/3) * (va - 0.5*vb - 0.5*vc);
+    vbeta = (sqrt(3)/3) * (vb - vc);
+    ialpha = (2/3) * (ia - 0.5*ib - 0.5*ic);
+    ibeta = (sqrt(3)/3) * (ib - ic);
+    theta = atan2(vbeta, valpha);
+    id = ialpha .* cos(theta) + ibeta .* sin(theta);
+    iq = -ialpha .* sin(theta) + ibeta .* cos(theta);
+
+    vPosPu = sqrt(valpha.^2 + vbeta.^2) ./ vPhasePeak;
+    idPu = id ./ iBasePeak;
+    % The V-I block current is oriented grid/source -> HPT.  FRT support is
+    % reported in the opposite convention: positive iq means the HPT injects
+    % voltage-supporting reactive current during LVRT.
+    iqPu = -iq ./ iBasePeak;
+end
+
+function iqRef = grid_iq_reference(vPosPu, iqPeLimitPu)
+    if vPosPu < 0.9
+        iqRef = min(iqPeLimitPu, 1.5 * (0.9 - vPosPu));
+    elseif vPosPu > 1.1
+        iqRef = max(-iqPeLimitPu, -1.5 * (vPosPu - 1.1));
+    else
+        iqRef = 0.0;
+    end
 end
 
 function [zone, ok, reason] = classify_window( ...
@@ -530,6 +656,20 @@ function row = base_row(M, topology, scenarioType, caseName, mode, gridVoltage, 
     row.gbt_vdc_pu_max = NaN;
     row.gbt_vdc_survive_pass = false;
     row.gbt_action_limit_pass = false;
+    row.grid_vpos_pu_min = NaN;
+    row.grid_vpos_pu_mean = NaN;
+    row.grid_id_mean_pu = NaN;
+    row.grid_iq_mean_pu = NaN;
+    row.grid_iq_ref_mean_pu = NaN;
+    row.grid_iq_shortfall_max_pu = NaN;
+    row.grid_iq_met_fraction = NaN;
+    row.grid_iq_wrong_sign = false;
+    row.grid_current_peak_pu = NaN;
+    row.grid_idq_peak_pu = NaN;
+    row.gbt_reactive_evaluated = false;
+    row.gbt_reactive_response_ms = NaN;
+    row.gbt_reactive_response_pass = false;
+    row.gbt_grid_current_limit_pass = false;
     row.gbt_reactive_status = "";
     row.gbt_reactive_pass = false;
     row.gbt_limit_status = "";
@@ -576,6 +716,9 @@ function [ok, reason] = assess_fault(row, caseSpec)
     end
     if ~row.gbt_action_limit_pass
         reasons(end+1) = "action_limit"; %#ok<AGROW>
+    end
+    if ~row.gbt_grid_current_limit_pass
+        reasons(end+1) = "grid_current_limit"; %#ok<AGROW>
     end
     if ~row.gbt_reactive_pass
         reasons(end+1) = string(row.gbt_reactive_status); %#ok<AGROW>

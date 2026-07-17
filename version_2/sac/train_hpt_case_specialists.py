@@ -71,6 +71,9 @@ class CaseScore:
     reg_q_mean: float
     energy_d_mean: float
     energy_q_mean: float
+    grid_iq_shortfall_max_pu: float
+    grid_current_peak_pu: float
+    grid_iq_wrong_sign: bool
 
 
 @dataclass
@@ -108,6 +111,9 @@ def _score_from_dict(data: dict | None) -> CaseScore | None:
         reg_q_mean=float(data.get("reg_q_mean", 0.0)),
         energy_d_mean=float(data.get("energy_d_mean", 0.0)),
         energy_q_mean=float(data.get("energy_q_mean", 0.0)),
+        grid_iq_shortfall_max_pu=float(data.get("grid_iq_shortfall_max_pu", 0.0)),
+        grid_current_peak_pu=float(data.get("grid_current_peak_pu", 0.0)),
+        grid_iq_wrong_sign=bool(data.get("grid_iq_wrong_sign", False)),
     )
 
 
@@ -251,6 +257,18 @@ def score_case(csv_path: Path) -> CaseScore:
     row = rows[0]
     passed = str(row.get("within_window", "")).strip().lower() in {"1", "true"}
     reason = str(row.get("window_reason", ""))
+
+    def finite_field(name: str, default: float = 0.0) -> float:
+        raw = row.get(name, "")
+        if raw in ("", None):
+            return float(default)
+        value = float(raw)
+        return value if value == value else float(default)
+
+    def bool_field(name: str) -> bool:
+        raw = str(row.get(name, "")).strip().lower()
+        return raw in {"1", "true", "yes"}
+
     lv_mean = float(row.get("lv_mean") or 0.0)
     lv_recovery = float(row.get("lv_recovery_mean") or "nan")
     lv_peak = float(row.get("lv_peak") or 0.0)
@@ -258,6 +276,9 @@ def score_case(csv_path: Path) -> CaseScore:
     vdc_mean = float(row.get("vdc_mean") or 0.0)
     vdc_min = float(row.get("vdc_min") or 0.0)
     action_max = float(row.get("action_max_abs") or 0.0)
+    grid_iq_shortfall = finite_field("grid_iq_shortfall_max_pu", 0.0)
+    grid_current_peak = finite_field("grid_current_peak_pu", 0.0)
+    grid_iq_wrong_sign = bool_field("grid_iq_wrong_sign")
     penalty = 0.0
     if not passed:
         penalty += 100.0
@@ -268,6 +289,10 @@ def score_case(csv_path: Path) -> CaseScore:
         penalty += max(0.0, 180.0 - lv_min) / 3.0
     penalty += max(0.0, 650.0 - vdc_min) / 10.0
     penalty += max(0.0, action_max - 0.9501) * 100.0
+    penalty += 40.0 * grid_iq_shortfall
+    penalty += 50.0 * max(0.0, grid_current_peak - 1.5)
+    if grid_iq_wrong_sign:
+        penalty += 8.0
     return CaseScore(
         csv_path=str(csv_path),
         passed=passed,
@@ -284,6 +309,9 @@ def score_case(csv_path: Path) -> CaseScore:
         reg_q_mean=float(row.get("reg_q_mean") or 0.0),
         energy_d_mean=float(row.get("energy_d_mean") or 0.0),
         energy_q_mean=float(row.get("energy_q_mean") or 0.0),
+        grid_iq_shortfall_max_pu=grid_iq_shortfall,
+        grid_current_peak_pu=grid_current_peak,
+        grid_iq_wrong_sign=grid_iq_wrong_sign,
     )
 
 
@@ -422,12 +450,16 @@ def write_report(run_dir: Path, records: list[SpecialistRecord], status: str) ->
         if baseline:
             lines.append(
                 f"  - baseline pass `{baseline.passed}` score `{baseline.score:.3f}` "
-                f"LV `{baseline.lv_mean:.3f}` VdcMin `{baseline.vdc_min:.3f}` reason `{baseline.fail_reason}`"
+                f"LV `{baseline.lv_mean:.3f}` VdcMin `{baseline.vdc_min:.3f}` "
+                f"IqShort `{baseline.grid_iq_shortfall_max_pu:.3f}` "
+                f"IgridPk `{baseline.grid_current_peak_pu:.3f}` reason `{baseline.fail_reason}`"
             )
         if cand:
             lines.append(
                 f"  - candidate pass `{cand.passed}` score `{cand.score:.3f}` "
-                f"LV `{cand.lv_mean:.3f}` VdcMin `{cand.vdc_min:.3f}` reason `{cand.fail_reason}`"
+                f"LV `{cand.lv_mean:.3f}` VdcMin `{cand.vdc_min:.3f}` "
+                f"IqShort `{cand.grid_iq_shortfall_max_pu:.3f}` "
+                f"IgridPk `{cand.grid_current_peak_pu:.3f}` reason `{cand.fail_reason}`"
             )
         if rec.notes:
             lines.append("  - notes: " + "; ".join(rec.notes))

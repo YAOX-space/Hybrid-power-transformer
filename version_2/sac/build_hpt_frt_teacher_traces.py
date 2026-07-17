@@ -64,6 +64,14 @@ def f(row: dict[str, Any], key: str, default: float = 0.0) -> float:
     value = row.get(key, default)
     if value in ("", None):
         return float(default)
+    if isinstance(value, bool):
+        return 1.0 if value else 0.0
+    if isinstance(value, str):
+        lower = value.strip().lower()
+        if lower in {"true", "yes"}:
+            return 1.0
+        if lower in {"false", "no"}:
+            return 0.0
     return float(value)
 
 
@@ -90,10 +98,21 @@ def score_candidate(row: dict[str, Any]) -> float:
     reg_mag = abs(f(row, "raw_m_reg_d")) + 0.3 * abs(f(row, "raw_m_reg_q"))
     energy_mag = abs(f(row, "raw_m_energy_d")) + abs(f(row, "raw_m_energy_q"))
     vdc_violation = max(0.0, 0.75 - vdc_min) + max(0.0, vdc_max - 1.25)
+    reactive_shortfall = f(row, "grid_iq_shortfall_max_pu", 0.0)
+    if reactive_shortfall != reactive_shortfall:
+        reactive_shortfall = 0.0
+    grid_current = f(row, "grid_current_peak_pu", 0.0)
+    if grid_current != grid_current:
+        grid_current = 0.0
+    grid_current_violation = max(0.0, grid_current - 1.5)
+    grid_wrong_sign = f(row, "grid_iq_wrong_sign", 0.0) > 0.5
     return (
         18.0 * abs(lv - 1.0)
         + 8.0 * abs(rec - 1.0)
         + 45.0 * vdc_violation
+        + 40.0 * reactive_shortfall
+        + 50.0 * grid_current_violation
+        + (8.0 if grid_wrong_sign else 0.0)
         + 0.8 * max(0.0, action - 0.95)
         + 0.06 * reg_mag
         + 0.08 * energy_mag

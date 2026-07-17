@@ -83,6 +83,9 @@ def export_hpt_actor(model_path: Path, out_path: Path) -> dict:
         meta = json.loads(sidecar.read_text(encoding="utf-8"))
         data["run_id"] = meta.get("run_id", "")
         data["training_steps"] = np.array([[meta.get("steps", np.nan)]], dtype="float64")
+    else:
+        data["run_id"] = ""
+        data["training_steps"] = np.array([[np.nan]], dtype="float64")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     sio.savemat(str(out_path), data)
     return data

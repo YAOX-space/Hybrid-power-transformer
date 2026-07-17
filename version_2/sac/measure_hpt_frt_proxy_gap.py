@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MATRIX_DIR = ROOT / "lab" / "results" / "hpt_v2_frt_calibration_matrix"
 DEFAULT_CALIBRATION = ROOT / "version_2" / "sac" / "hpt_proxy_calibration.json"
 DEFAULT_OUT_DIR = ROOT / "lab" / "results" / "hpt_v2_frt_proxy_gap"
+INTERP_EPS = 1e-6
 
 
 def latest_csv(directory: Path, pattern: str) -> Path:
@@ -66,7 +67,24 @@ def f(row: dict[str, Any], key: str, default: float = 0.0) -> float:
     value = row.get(key, default)
     if value in ("", None):
         return float(default)
+    if isinstance(value, bool):
+        return 1.0 if value else 0.0
+    if isinstance(value, str):
+        lower = value.strip().lower()
+        if lower in {"true", "yes"}:
+            return 1.0
+        if lower in {"false", "no"}:
+            return 0.0
     return float(value)
+
+
+def has_numeric(row: dict[str, Any], key: str) -> bool:
+    if key not in row or row.get(key) in ("", None):
+        return False
+    try:
+        return bool(np.isfinite(float(row[key])))
+    except (TypeError, ValueError):
+        return False
 
 
 def interp_response(table: list[dict[str, Any]], grid_pu: float, reg_d: float, key: str) -> float | None:
@@ -80,11 +98,15 @@ def interp_response(table: list[dict[str, Any]], grid_pu: float, reg_d: float, k
         for row in table:
             if abs(f(row, "grid_pu") - grid) > 1e-9:
                 continue
+            if not has_numeric(row, key):
+                continue
             bucket[f(row, "reg_d_mean")].append(f(row, key))
         if not bucket:
             continue
         xs = np.asarray(sorted(bucket), dtype=float)
         ys = np.asarray([np.mean(bucket[float(x)]) for x in xs], dtype=float)
+        if float(reg_d) < float(xs[0]) - INTERP_EPS or float(reg_d) > float(xs[-1]) + INTERP_EPS:
+            continue
         vals.append(float(np.interp(reg_d, xs, ys)))
         used_grids.append(grid)
     if not vals:
@@ -97,6 +119,8 @@ def interp_by_grid(table: list[dict[str, Any]], grid_pu: float, key: str) -> flo
         return None
     bucket: dict[float, list[float]] = defaultdict(list)
     for row in table:
+        if not has_numeric(row, key):
+            continue
         bucket[round(f(row, "grid_pu"), 9)].append(f(row, key))
     if not bucket:
         return None
@@ -125,11 +149,15 @@ def interp_energy_axis(
                 continue
             if abs(f(row, other_axis_key)) > 1e-9:
                 continue
+            if not has_numeric(row, value_key):
+                continue
             bucket[f(row, axis_key)].append(f(row, value_key))
         if not bucket:
             continue
         xs = np.asarray(sorted(bucket), dtype=float)
         ys = np.asarray([np.mean(bucket[float(x)]) for x in xs], dtype=float)
+        if float(action_value) < float(xs[0]) - INTERP_EPS or float(action_value) > float(xs[-1]) + INTERP_EPS:
+            continue
         vals.append(float(np.interp(action_value, xs, ys)))
         used_grids.append(grid)
     if not vals:
@@ -138,6 +166,16 @@ def interp_energy_axis(
 
 
 def interp_energy(table: list[dict[str, Any]], grid_pu: float, ed: float, eq: float, key: str) -> float | None:
+    coupled = interp_grid_axes(
+        table,
+        grid_pu,
+        ["energy_d_mean", "energy_q_mean"],
+        [ed, eq],
+        key,
+    )
+    if coupled is not None:
+        return coupled
+
     baseline = interp_energy_axis(table, grid_pu, 0.0, "energy_d_mean", "energy_q_mean", key)
     d_axis = interp_energy_axis(table, grid_pu, ed, "energy_d_mean", "energy_q_mean", key)
     q_axis = interp_energy_axis(table, grid_pu, eq, "energy_q_mean", "energy_d_mean", key)
@@ -174,6 +212,8 @@ def interp_axes(rows: list[dict[str, Any]], axis_keys: list[str], axis_values: l
         ys.append(float(value))
     if not xs:
         return None
+    if target < min(xs) - INTERP_EPS or target > max(xs) + INTERP_EPS:
+        return None
     return float(np.interp(target, np.asarray(xs), np.asarray(ys)))
 
 
@@ -198,6 +238,8 @@ def interp_grid_axes(
         ys.append(float(value))
     if not xs:
         return None
+    if float(grid_pu) < min(xs) - INTERP_EPS or float(grid_pu) > max(xs) + INTERP_EPS:
+        return None
     return float(np.interp(float(grid_pu), np.asarray(xs), np.asarray(ys)))
 
 
@@ -221,52 +263,51 @@ def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dic
         energy_table = top.get("fault_energy_response_table", [])
         joint_table = top.get("fault_joint_response_table", [])
         baseline_table = top.get("fault_baseline_table", [])
-        pred_lv = interp_grid_axes(
-            reg_table, grid, ["reg_d_mean", "reg_q_mean"], [reg, reg_q], "lv_pu_mean"
-        )
-        pred_vdc = interp_grid_axes(
-            reg_table, grid, ["reg_d_mean", "reg_q_mean"], [reg, reg_q], "vdc_pu_mean"
-        )
-        if pred_lv is None:
-            pred_lv = interp_response(reg_d_axis_table, grid, reg, "lv_pu_mean")
-        if pred_vdc is None:
-            pred_vdc = interp_response(reg_d_axis_table, grid, reg, "vdc_pu_mean")
-        pred_lv_energy = interp_energy(energy_table, grid, ed, eq, "lv_pu_mean")
-        pred_vdc_energy = interp_energy(energy_table, grid, ed, eq, "vdc_pu_mean")
-        pred_i_energy = interp_energy(energy_table, grid, ed, eq, "energy_i_rms_mean")
-        if mode == "baseline":
-            pred_lv = interp_by_grid(baseline_table, grid, "lv_pu_mean")
-            pred_vdc = interp_by_grid(baseline_table, grid, "vdc_pu_mean")
-        elif mode in {"energy_sweep"}:
-            pred_lv = pred_lv_energy
-            pred_vdc = pred_vdc_energy
-        elif mode in {"joint_sweep"}:
-            joint_lv = interp_grid_axes(
-                joint_table,
-                grid,
-                ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
-                [reg, ed, eq],
-                "lv_pu_mean",
+
+        def predict_metric(key: str) -> float | None:
+            pred = interp_grid_axes(
+                reg_table, grid, ["reg_d_mean", "reg_q_mean"], [reg, reg_q], key
             )
-            joint_vdc = interp_grid_axes(
-                joint_table,
-                grid,
-                ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
-                [reg, ed, eq],
-                "vdc_pu_mean",
-            )
-            if joint_lv is not None:
-                pred_lv = joint_lv
-            elif pred_lv is not None and pred_lv_energy is not None:
-                zero_lv = interp_energy(energy_table, grid, 0.0, 0.0, "lv_pu_mean")
-                if zero_lv is not None:
-                    pred_lv = pred_lv + (pred_lv_energy - zero_lv)
-            if joint_vdc is not None:
-                pred_vdc = joint_vdc
-            elif pred_vdc is not None and pred_vdc_energy is not None:
-                zero_energy = interp_energy(energy_table, grid, 0.0, 0.0, "vdc_pu_mean")
-                if zero_energy is not None:
-                    pred_vdc = pred_vdc + (pred_vdc_energy - zero_energy)
+            if pred is None:
+                pred = interp_response(reg_d_axis_table, grid, reg, key)
+            pred_energy = interp_energy(energy_table, grid, ed, eq, key)
+            if mode == "baseline":
+                return interp_by_grid(baseline_table, grid, key)
+            if mode in {"energy_sweep"}:
+                return pred_energy
+            if mode in {"joint_sweep"}:
+                joint = interp_grid_axes(
+                    joint_table,
+                    grid,
+                    ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
+                    [reg, ed, eq],
+                    key,
+                )
+                if joint is not None:
+                    return joint
+                if pred is not None and pred_energy is not None:
+                    zero_energy = interp_energy(energy_table, grid, 0.0, 0.0, key)
+                    if zero_energy is not None:
+                        return pred + (pred_energy - zero_energy)
+            return pred
+
+        pred_lv = predict_metric("lv_pu_mean")
+        pred_lv_recovery = predict_metric("lv_recovery_pu_mean")
+        pred_lv_peak = predict_metric("lv_peak_pu")
+        pred_lv_min = predict_metric("lv_min_pu")
+        pred_lv_unbalance = predict_metric("lv_unbalance_pu")
+        pred_vdc = predict_metric("vdc_pu_mean")
+        pred_vdc_min = predict_metric("vdc_min_pu")
+        pred_vdc_max = predict_metric("vdc_max_pu")
+        pred_action_max = predict_metric("action_max_abs")
+        pred_i_energy = predict_metric("energy_i_rms_mean")
+        pred_grid_vpos = predict_metric("grid_vpos_pu_mean")
+        pred_grid_iq = predict_metric("grid_iq_mean_pu")
+        pred_grid_iq_ref = predict_metric("grid_iq_ref_mean_pu")
+        pred_grid_iq_shortfall = predict_metric("grid_iq_shortfall_max_pu")
+        pred_grid_iq_wrong_sign = predict_metric("grid_iq_wrong_sign")
+        pred_grid_current = predict_metric("grid_current_peak_pu")
+        pred_grid_idq = predict_metric("grid_idq_peak_pu")
         out.append(
             {
                 "topology": topology,
@@ -281,12 +322,54 @@ def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dic
                 "sim_lv_pu": f(row, "lv_pu_mean"),
                 "proxy_lv_pu": pred_lv,
                 "err_lv_pu": None if pred_lv is None else pred_lv - f(row, "lv_pu_mean"),
+                "sim_lv_recovery_pu": f(row, "lv_recovery_pu_mean", np.nan),
+                "proxy_lv_recovery_pu": pred_lv_recovery,
+                "err_lv_recovery_pu": None if pred_lv_recovery is None else pred_lv_recovery - f(row, "lv_recovery_pu_mean", np.nan),
+                "sim_lv_peak_pu": f(row, "lv_peak_pu", np.nan),
+                "proxy_lv_peak_pu": pred_lv_peak,
+                "err_lv_peak_pu": None if pred_lv_peak is None else pred_lv_peak - f(row, "lv_peak_pu", np.nan),
+                "sim_lv_min_pu": f(row, "lv_min_pu", np.nan),
+                "proxy_lv_min_pu": pred_lv_min,
+                "err_lv_min_pu": None if pred_lv_min is None else pred_lv_min - f(row, "lv_min_pu", np.nan),
+                "sim_lv_unbalance_pu": f(row, "lv_unbalance_pu", np.nan),
+                "proxy_lv_unbalance_pu": pred_lv_unbalance,
+                "err_lv_unbalance_pu": None if pred_lv_unbalance is None else pred_lv_unbalance - f(row, "lv_unbalance_pu", np.nan),
                 "sim_vdc_pu": f(row, "vdc_pu_mean", f(row, "vdc_mean") / 800.0),
                 "proxy_vdc_pu": pred_vdc,
                 "err_vdc_pu": None if pred_vdc is None else pred_vdc - f(row, "vdc_pu_mean", f(row, "vdc_mean") / 800.0),
+                "sim_vdc_min_pu": f(row, "vdc_min_pu", f(row, "vdc_min") / 800.0),
+                "proxy_vdc_min_pu": pred_vdc_min,
+                "err_vdc_min_pu": None if pred_vdc_min is None else pred_vdc_min - f(row, "vdc_min_pu", f(row, "vdc_min") / 800.0),
+                "sim_vdc_max_pu": f(row, "vdc_max_pu", f(row, "vdc_max") / 800.0),
+                "proxy_vdc_max_pu": pred_vdc_max,
+                "err_vdc_max_pu": None if pred_vdc_max is None else pred_vdc_max - f(row, "vdc_max_pu", f(row, "vdc_max") / 800.0),
+                "sim_action_max_abs": f(row, "action_max_abs", np.nan),
+                "proxy_action_max_abs": pred_action_max,
+                "err_action_max_abs": None if pred_action_max is None else pred_action_max - f(row, "action_max_abs", np.nan),
                 "sim_energy_i_rms": f(row, "energy_i_rms_mean"),
                 "proxy_energy_i_rms": pred_i_energy,
                 "err_energy_i_rms": None if pred_i_energy is None else pred_i_energy - f(row, "energy_i_rms_mean"),
+                "sim_grid_vpos_pu": f(row, "grid_vpos_pu_mean", np.nan),
+                "proxy_grid_vpos_pu": pred_grid_vpos,
+                "err_grid_vpos_pu": None if pred_grid_vpos is None else pred_grid_vpos - f(row, "grid_vpos_pu_mean", np.nan),
+                "sim_grid_iq_pu": f(row, "grid_iq_mean_pu", np.nan),
+                "proxy_grid_iq_pu": pred_grid_iq,
+                "err_grid_iq_pu": None if pred_grid_iq is None else pred_grid_iq - f(row, "grid_iq_mean_pu", np.nan),
+                "sim_grid_iq_ref_pu": f(row, "grid_iq_ref_mean_pu", np.nan),
+                "proxy_grid_iq_ref_pu": pred_grid_iq_ref,
+                "err_grid_iq_ref_pu": None if pred_grid_iq_ref is None else pred_grid_iq_ref - f(row, "grid_iq_ref_mean_pu", np.nan),
+                "sim_grid_iq_shortfall_pu": f(row, "grid_iq_shortfall_max_pu", np.nan),
+                "proxy_grid_iq_shortfall_pu": pred_grid_iq_shortfall,
+                "err_grid_iq_shortfall_pu": None if pred_grid_iq_shortfall is None else pred_grid_iq_shortfall - f(row, "grid_iq_shortfall_max_pu", np.nan),
+                "sim_grid_iq_wrong_sign": f(row, "grid_iq_wrong_sign", np.nan),
+                "proxy_grid_iq_wrong_sign": pred_grid_iq_wrong_sign,
+                "err_grid_iq_wrong_sign": None if pred_grid_iq_wrong_sign is None else pred_grid_iq_wrong_sign - f(row, "grid_iq_wrong_sign", np.nan),
+                "sim_grid_current_peak_pu": f(row, "grid_current_peak_pu", np.nan),
+                "proxy_grid_current_peak_pu": pred_grid_current,
+                "err_grid_current_peak_pu": None if pred_grid_current is None else pred_grid_current - f(row, "grid_current_peak_pu", np.nan),
+                "sim_grid_idq_peak_pu": f(row, "grid_idq_peak_pu", np.nan),
+                "proxy_grid_idq_peak_pu": pred_grid_idq,
+                "err_grid_idq_peak_pu": None if pred_grid_idq is None else pred_grid_idq - f(row, "grid_idq_peak_pu", np.nan),
             }
         )
     return out
@@ -299,8 +382,17 @@ def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     summary: list[dict[str, Any]] = []
     for (topology, category, mode), data in sorted(groups.items()):
         lv_err = np.asarray([f(r, "err_lv_pu", np.nan) for r in data], dtype=float)
+        lv_recovery_err = np.asarray([f(r, "err_lv_recovery_pu", np.nan) for r in data], dtype=float)
+        lv_peak_err = np.asarray([f(r, "err_lv_peak_pu", np.nan) for r in data], dtype=float)
+        lv_min_err = np.asarray([f(r, "err_lv_min_pu", np.nan) for r in data], dtype=float)
         vdc_err = np.asarray([f(r, "err_vdc_pu", np.nan) for r in data], dtype=float)
+        vdc_min_err = np.asarray([f(r, "err_vdc_min_pu", np.nan) for r in data], dtype=float)
+        vdc_max_err = np.asarray([f(r, "err_vdc_max_pu", np.nan) for r in data], dtype=float)
         i_err = np.asarray([f(r, "err_energy_i_rms", np.nan) for r in data], dtype=float)
+        grid_iq_err = np.asarray([f(r, "err_grid_iq_pu", np.nan) for r in data], dtype=float)
+        grid_iq_shortfall_err = np.asarray([f(r, "err_grid_iq_shortfall_pu", np.nan) for r in data], dtype=float)
+        grid_iq_wrong_err = np.asarray([f(r, "err_grid_iq_wrong_sign", np.nan) for r in data], dtype=float)
+        grid_current_err = np.asarray([f(r, "err_grid_current_peak_pu", np.nan) for r in data], dtype=float)
         summary.append(
             {
                 "topology": topology,
@@ -309,9 +401,18 @@ def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "n": len(data),
                 "lv_mae_pu": float(np.nanmean(np.abs(lv_err))),
                 "lv_max_abs_pu": float(np.nanmax(np.abs(lv_err))),
+                "lv_recovery_mae_pu": float(np.nanmean(np.abs(lv_recovery_err))) if np.any(~np.isnan(lv_recovery_err)) else float("nan"),
+                "lv_peak_mae_pu": float(np.nanmean(np.abs(lv_peak_err))) if np.any(~np.isnan(lv_peak_err)) else float("nan"),
+                "lv_min_mae_pu": float(np.nanmean(np.abs(lv_min_err))) if np.any(~np.isnan(lv_min_err)) else float("nan"),
                 "vdc_mae_pu": float(np.nanmean(np.abs(vdc_err))),
                 "vdc_max_abs_pu": float(np.nanmax(np.abs(vdc_err))),
+                "vdc_min_mae_pu": float(np.nanmean(np.abs(vdc_min_err))) if np.any(~np.isnan(vdc_min_err)) else float("nan"),
+                "vdc_max_mae_pu": float(np.nanmean(np.abs(vdc_max_err))) if np.any(~np.isnan(vdc_max_err)) else float("nan"),
                 "energy_i_mae": float(np.nanmean(np.abs(i_err))) if np.any(~np.isnan(i_err)) else float("nan"),
+                "grid_iq_mae_pu": float(np.nanmean(np.abs(grid_iq_err))) if np.any(~np.isnan(grid_iq_err)) else float("nan"),
+                "grid_iq_shortfall_mae_pu": float(np.nanmean(np.abs(grid_iq_shortfall_err))) if np.any(~np.isnan(grid_iq_shortfall_err)) else float("nan"),
+                "grid_iq_wrong_sign_mae": float(np.nanmean(np.abs(grid_iq_wrong_err))) if np.any(~np.isnan(grid_iq_wrong_err)) else float("nan"),
+                "grid_current_mae_pu": float(np.nanmean(np.abs(grid_current_err))) if np.any(~np.isnan(grid_current_err)) else float("nan"),
             }
         )
     return summary

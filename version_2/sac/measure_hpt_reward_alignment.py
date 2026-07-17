@@ -79,12 +79,27 @@ def f(row: dict[str, Any], key: str, default: float = 0.0) -> float:
     value = row.get(key, default)
     if value in ("", None):
         return float(default)
+    if isinstance(value, bool):
+        return 1.0 if value else 0.0
+    if isinstance(value, str):
+        lower = value.strip().lower()
+        if lower in {"true", "yes"}:
+            return 1.0
+        if lower in {"false", "no"}:
+            return 0.0
     return float(value)
 
 
 def s(row: dict[str, Any], key: str, default: str = "") -> str:
     value = row.get(key, default)
     return str(value)
+
+
+def finite_or(row: dict[str, Any], key: str, default: float = 0.0) -> float:
+    value = f(row, key, default)
+    if not np.isfinite(value):
+        return float(default)
+    return value
 
 
 def mode_label(row: dict[str, Any]) -> str:
@@ -101,16 +116,26 @@ def proxy_reward_from_lookup(row: dict[str, Any], proxy_row: dict[str, Any]) -> 
     doing a dynamic rollout.  It is a ranking diagnostic for matrix actions.
     """
 
-    lv = f(proxy_row, "proxy_lv_pu", np.nan)
-    vdc = f(proxy_row, "proxy_vdc_pu", np.nan)
-    if not np.isfinite(lv) or not np.isfinite(vdc):
+    lv_mean = f(proxy_row, "proxy_lv_pu", np.nan)
+    lv_recovery = f(proxy_row, "proxy_lv_recovery_pu", lv_mean)
+    lv_peak = f(proxy_row, "proxy_lv_peak_pu", lv_mean)
+    lv_min = f(proxy_row, "proxy_lv_min_pu", lv_mean)
+    lv_unbalance = finite_or(proxy_row, "proxy_lv_unbalance_pu", 0.0)
+    vdc_mean = f(proxy_row, "proxy_vdc_pu", np.nan)
+    vdc_min = f(proxy_row, "proxy_vdc_min_pu", vdc_mean)
+    vdc_max = f(proxy_row, "proxy_vdc_max_pu", vdc_mean)
+    if not np.isfinite(lv_mean) or not np.isfinite(vdc_mean):
         return {
             "proxy_return": float("nan"),
             "proxy_mean_reward": float("nan"),
-            "proxy_lv_mean": lv,
-            "proxy_vdc_mean": vdc,
+            "proxy_lv_mean": lv_mean,
+            "proxy_vdc_mean": vdc_mean,
             "proxy_vdc_soft": float("nan"),
             "proxy_wrong_sign": float("nan"),
+            "proxy_grid_iq_shortfall_pu": float("nan"),
+            "proxy_grid_iq_wrong_sign": float("nan"),
+            "proxy_grid_current_peak_pu": float("nan"),
+            "proxy_grid_current_violation_pu": float("nan"),
         }
 
     reg_d = f(row, "reg_d_mean", f(row, "raw_m_reg_d"))
@@ -119,38 +144,55 @@ def proxy_reward_from_lookup(row: dict[str, Any], proxy_row: dict[str, Any]) -> 
     energy_q = f(row, "energy_q_mean", f(row, "raw_m_energy_q"))
     reg_mag = float(math.hypot(reg_d, reg_q))
     energy_mag = float(math.hypot(energy_d, energy_q))
-    voltage_err = lv - 1.0
-    unbalance = 0.02 * abs(reg_q)
-    vdc_soft = max(0.0, 0.95 - vdc) + max(0.0, vdc - 1.12)
+    action_max = finite_or(proxy_row, "proxy_action_max_abs", max(reg_mag, energy_mag))
+    vdc_soft = max(0.0, 0.95 - vdc_mean) + max(0.0, vdc_mean - 1.12)
     grid = f(row, "grid_pu", f(row, "fault_pu", 1.0))
     wrong_sign = float((grid < 0.92 and reg_d < -1e-9) or (grid > 1.08 and reg_d > 1e-9))
-    topology2_dynamic = float(s(row, "topology") == "topology2")
-    topology2_reg_excess = max(0.0, abs(reg_d) - 0.25)
-    topology2_dynamic_stress = topology2_dynamic * (
-        35.0 * topology2_reg_excess * topology2_reg_excess + 2.0 * abs(reg_q)
-    )
-    reward = (
-        -125.0 * voltage_err * voltage_err
-        -45.0 * unbalance * unbalance
-        -55.0 * vdc_soft * vdc_soft
-        -8.0 * wrong_sign
-        -topology2_dynamic_stress
-        -0.20 * reg_mag * reg_mag
-        -0.60 * energy_mag * energy_mag
-        + 1.0
-    )
-    if 0.98 <= lv <= 1.02 and 0.85 <= vdc <= 1.10:
-        reward += 1.0
-    if 0.97 <= lv <= 1.03:
-        reward += 0.5
+    grid_iq_shortfall = finite_or(proxy_row, "proxy_grid_iq_shortfall_pu", 0.0)
+    grid_iq_wrong_sign = bool(finite_or(proxy_row, "proxy_grid_iq_wrong_sign", 0.0) > 0.5)
+    grid_current = finite_or(proxy_row, "proxy_grid_current_peak_pu", 0.0)
+    grid_current_violation = max(0.0, grid_current - 1.5)
+
+    lv_peak_limit = 235.0 / 207.0
+    lv_min_limit = 180.0 / 207.0
+    vdc_min_limit = 650.0 / 800.0
+    vdc_max_limit = 930.0 / 800.0
+
+    score = 0.0
+    score += 90.0 * (lv_mean - 1.0) ** 2
+    score += 60.0 * (lv_recovery - 1.0) ** 2
+    score += 45.0 * lv_unbalance * lv_unbalance
+    score += 55.0 * max(0.0, vdc_min_limit - vdc_min) ** 2
+    score += 35.0 * max(0.0, vdc_max - vdc_max_limit) ** 2
+    score += 45.0 * max(0.0, lv_peak - lv_peak_limit) ** 2
+    score += 45.0 * max(0.0, lv_min_limit - lv_min) ** 2
+    score += 40.0 * grid_iq_shortfall
+    score += 50.0 * grid_current_violation
+    score += 0.20 * action_max * action_max
+    if grid_iq_wrong_sign:
+        score += 8.0
+    if wrong_sign:
+        score += 8.0
+    reward = -score
 
     return {
         "proxy_return": float(reward),
         "proxy_mean_reward": float(reward),
-        "proxy_lv_mean": float(lv),
-        "proxy_vdc_mean": float(vdc),
+        "proxy_lv_mean": float(lv_mean),
+        "proxy_lv_recovery": float(lv_recovery),
+        "proxy_lv_peak": float(lv_peak),
+        "proxy_lv_min": float(lv_min),
+        "proxy_lv_unbalance": float(lv_unbalance),
+        "proxy_vdc_mean": float(vdc_mean),
+        "proxy_vdc_min": float(vdc_min),
+        "proxy_vdc_max": float(vdc_max),
         "proxy_vdc_soft": float(vdc_soft),
         "proxy_wrong_sign": float(wrong_sign),
+        "proxy_action_max_abs": float(action_max),
+        "proxy_grid_iq_shortfall_pu": float(grid_iq_shortfall),
+        "proxy_grid_iq_wrong_sign": float(grid_iq_wrong_sign),
+        "proxy_grid_current_peak_pu": float(grid_current),
+        "proxy_grid_current_violation_pu": float(grid_current_violation),
     }
 
 
@@ -166,6 +208,10 @@ def switch_score(row: dict[str, Any]) -> dict[str, float | str]:
     vdc_max = f(row, "vdc_max_pu", f(row, "vdc_max") / 800.0)
     unbalance = f(row, "lv_unbalance_pu")
     action_max = f(row, "action_max_abs")
+    grid_iq_shortfall = finite_or(row, "grid_iq_shortfall_max_pu", 0.0)
+    grid_current_peak = finite_or(row, "grid_current_peak_pu", 0.0)
+    grid_current_violation = max(0.0, grid_current_peak - 1.5)
+    grid_iq_wrong_sign = bool(finite_or(row, "grid_iq_wrong_sign", 0.0) > 0.5)
 
     lv_peak_limit = 235.0 / 207.0
     lv_min_limit = 180.0 / 207.0
@@ -180,6 +226,10 @@ def switch_score(row: dict[str, Any]) -> dict[str, float | str]:
     score += 35.0 * max(0.0, vdc_max - vdc_max_limit) ** 2
     score += 45.0 * max(0.0, lv_peak - lv_peak_limit) ** 2
     score += 45.0 * max(0.0, lv_min_limit - lv_min) ** 2
+    score += 40.0 * grid_iq_shortfall
+    score += 50.0 * grid_current_violation
+    if grid_iq_wrong_sign:
+        score += 8.0
     score += 0.20 * action_max * action_max
 
     raw_reg_d = f(row, "raw_m_reg_d")
@@ -190,6 +240,17 @@ def switch_score(row: dict[str, Any]) -> dict[str, float | str]:
     if wrong_sign:
         score += 8.0
 
+    reactive_ok_token = s(row, "gbt_reactive_pass", "")
+    if reactive_ok_token == "":
+        reactive_ok = True
+    else:
+        reactive_ok = reactive_ok_token.lower() in {"1", "true"}
+    current_ok_token = s(row, "gbt_grid_current_limit_pass", "")
+    if current_ok_token == "":
+        current_ok = grid_current_peak <= 1.5 if grid_current_peak > 0.0 else True
+    else:
+        current_ok = current_ok_token.lower() in {"1", "true"}
+
     pass_like = (
         0.97 <= lv_recovery <= 1.03
         and lv_peak <= lv_peak_limit
@@ -197,7 +258,10 @@ def switch_score(row: dict[str, Any]) -> dict[str, float | str]:
         and vdc_min >= vdc_min_limit
         and vdc_max <= vdc_max_limit
         and action_max <= 0.9501
+        and reactive_ok
+        and current_ok
         and not wrong_sign
+        and not grid_iq_wrong_sign
     )
 
     return {
@@ -205,6 +269,10 @@ def switch_score(row: dict[str, Any]) -> dict[str, float | str]:
         "switch_reward_like": float(-score),
         "switch_pass_like": float(pass_like),
         "switch_wrong_sign": float(wrong_sign),
+        "switch_grid_iq_shortfall_pu": float(grid_iq_shortfall),
+        "switch_grid_iq_wrong_sign": float(grid_iq_wrong_sign),
+        "switch_grid_current_peak_pu": float(grid_current_peak),
+        "switch_grid_current_violation_pu": float(grid_current_violation),
         "switch_lv_mean": lv_mean,
         "switch_lv_recovery": lv_recovery,
         "switch_lv_peak": lv_peak,
