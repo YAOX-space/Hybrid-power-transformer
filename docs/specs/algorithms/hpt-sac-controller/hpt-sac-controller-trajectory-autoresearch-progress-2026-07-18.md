@@ -39,6 +39,8 @@ Case: `topology2 / LVRT / 0.95 pu / 80 ms`.
 | all-window BC actor | `sac_actor_always_raw` | fail | 129.17 | 194.94 | 220.67 | 765.18 | 1008.20 | Better than baseline, but DC-link upper bound fails. |
 | DAgger1 actor | `sac_actor_always_raw` | fail | 128.23 | 195.10 | 221.91 | 665.17 | 1005.74 | Better score, still DC-link upper bound; lower Vdc margin. |
 | DAgger2 actor | `sac_actor_always_raw` | fail | 128.68 | 194.98 | 220.77 | 736.75 | 1005.68 | Balanced but still DC-link upper bound. |
+| DAgger3 noisy actor | `sac_actor_always_raw` | fail | 127.40 | 194.89 | 221.91 | 646.09 | 1000.97 | Nearly best score, but DC-link lower/upper margins fail. |
+| DAgger4 Vdc-feedback actor | `sac_actor_always_raw` | pass | 127.85 | 194.99 | 220.86 | 716.15 | 999.56 | First direct actor to pass voltage-survival and beat conventional. |
 | fault-window trajectory | `trajectory_action` | fail | 115.44 | 202.63 | 207.51 | 783.66 | 1006.65 | Best score so far, but DC-link upper bound fails. |
 
 ## What This Proves
@@ -54,48 +56,51 @@ Case: `topology2 / LVRT / 0.95 pu / 80 ms`.
 - DAgger-style closed-loop state collection is necessary.
   - Training only on open-loop trajectory states causes closed-loop action
     peaks and DC-link overshoot.
+- Adding local observation-neighborhood BC augmentation plus a Vdc-feedback
+  energy label produced the first direct actor that passes the staged
+  voltage-survival gate.
 
 ## What Is Not Done
 
-- No actor has passed the voltage-survival gate yet in `sac_actor_always_raw`.
-  The current failure is narrow and DC-link related:
-  - `Vdc max` is around `1005-1008 V`, while the current gate is `<=1000 V`.
+- No actor has passed full GBT-style FRT yet.
 - Full GBT-style FRT is not passed.
   - Existing failures include voltage envelope, recovery, current limit, and
     reactive-current sign/support.
-- This is still BC/DAgger warm-start, not final SAC improvement over a strong
-  traditional controller.
+- The current successful actor is a topology/scenario specialist:
+  `topology2 / LVRT / 0.95 pu / 80 ms`.
+- This is still BC/DAgger warm-start, not final SAC reinforcement fine-tuning.
 
 ## Interpretation
 
 The fixed/trajectory command has a real successful switch-level operating
-point, but the neural actor introduces small closed-loop deviations in visited
-states.  Those deviations are enough to push the DC link above the current
-upper gate.  The next work should not blindly train longer SAC on the proxy.
-It should improve the trajectory dataset and actor deployment loss around
-DC-link dynamics.
+point.  A neural actor can reproduce it only after closed-loop DAgger data are
+added.  The decisive fix was to label energy action as a function of measured
+Vdc, not as a fixed scalar.  This lets the actor keep Vdc inside the staged
+survival window while still using the regulating bridge to recover LV voltage.
 
 ## Next Autoresearch Plan
 
-1. Generate a small family of shaped trajectories around the successful region:
+1. Preserve DAgger4 as the current promoted voltage-survival specialist:
+   `hpt_sac_actor_weights_topology2_lvrt095_dagger4.mat`.
+2. Generate a small family of shaped trajectories around the successful region:
    - pre-fault target vs zero pre-fault,
    - ramp-in duration `5/10/20 ms`,
    - recovery ramp-out,
    - reg_d around `0.160-0.176`,
    - energy_d around `0.000-0.030`.
-2. Run switch-level validation for those shaped trajectories and select only
+3. Run switch-level validation for those shaped trajectories and select only
    trajectories that pass voltage survival.
-3. Collect switch-level traces from the passing trajectories.
-4. Train actor with mixed DAgger data:
+4. Collect switch-level traces from the passing trajectories.
+5. Train actor with mixed DAgger data:
    - successful open-loop trajectory states,
    - actor-visited states,
    - explicit DC-link over/under states with corrected labels.
-5. Add a behavior-regularized SAC stage only after the BC actor passes the
+6. Add a behavior-regularized SAC stage only after the BC actor passes the
    voltage-survival gate.
-6. Re-run switch-level comparison:
+7. Re-run switch-level comparison:
    - `conventional_dq`
    - `trajectory_action`
    - `sac_actor_always_raw`
-7. Promote only if the actor passes voltage survival and beats conventional
+8. Promote only if the actor passes voltage survival and beats conventional
    on score.  Full GBT reactive-current/current-limit checks remain the next
    certification phase.

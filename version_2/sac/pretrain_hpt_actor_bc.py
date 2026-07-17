@@ -235,6 +235,8 @@ def append_switch_trace_samples(
     case_contains: str,
     window_zones: str,
     fixed_target: str | None,
+    energy_vdc_feedback_gain: float,
+    energy_vdc_ref_pu: float,
 ) -> tuple[np.ndarray, np.ndarray, int]:
     if csv_path is None:
         return X, Y, 0
@@ -269,6 +271,14 @@ def append_switch_trace_samples(
                         f"--switch-trace-fixed-target must have {ACT_DIM_HPT} values"
                     )
                 target = np.asarray([float(p) for p in parts], dtype=np.float32)
+            if energy_vdc_feedback_gain != 0.0:
+                target[2] = float(
+                    np.clip(
+                        target[2] + energy_vdc_feedback_gain * (energy_vdc_ref_pu - float(obs[3])),
+                        -0.95,
+                        0.95,
+                    )
+                )
             if (
                 topology2_phase_equivalent
                 and str(row.get("topology", "")).lower() == "topology2"
@@ -467,6 +477,42 @@ def append_energy_teacher_trace_samples(
     )
 
 
+def augment_observation_noise(
+    X: np.ndarray,
+    Y: np.ndarray,
+    *,
+    noise_std: float,
+    repeat: int,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray, int]:
+    """Add local observation-neighborhood samples with unchanged targets.
+
+    This is useful after switch-level DAgger traces: the actor must output the
+    same safe action not only on the exact logged waveform, but also on nearby
+    closed-loop states that it may induce itself.  Binary flags are kept
+    unchanged.
+    """
+
+    if noise_std <= 0.0 or repeat <= 0 or X.size == 0:
+        return X, Y, 0
+    rng = np.random.default_rng(seed)
+    noisy_x: list[np.ndarray] = []
+    noisy_y: list[np.ndarray] = []
+    mask = np.ones((OBS_DIM_HPT,), dtype=np.float32)
+    # sag/swell/topology/fault/recovery flags should remain categorical.
+    mask[12:18] = 0.0
+    for _ in range(repeat):
+        noise = rng.normal(0.0, noise_std, size=X.shape).astype(np.float32)
+        x_aug = np.clip(X + noise * mask[None, :], -5.0, 5.0)
+        noisy_x.append(x_aug.astype(np.float32))
+        noisy_y.append(Y.astype(np.float32))
+    return (
+        np.concatenate([X, *noisy_x], axis=0),
+        np.concatenate([Y, *noisy_y], axis=0),
+        int(X.shape[0] * repeat),
+    )
+
+
 def build_or_load_model(args: argparse.Namespace, scenarios, config: HPTVoltageEnvConfig) -> SAC:
     vec = DummyVecEnv(
         [
@@ -569,6 +615,8 @@ def main() -> None:
     parser.add_argument("--switch-trace-case-contains", default="all")
     parser.add_argument("--switch-trace-window-zones", default="all")
     parser.add_argument("--switch-trace-fixed-target", default=None)
+    parser.add_argument("--switch-trace-energy-vdc-feedback-gain", type=float, default=0.0)
+    parser.add_argument("--switch-trace-energy-vdc-ref-pu", type=float, default=1.0)
     parser.add_argument("--switch-trace-topology2-phase-equivalent", action="store_true")
     parser.add_argument("--switch-trace-phase-shift-rad", type=float, default=0.55)
     parser.add_argument("--raw-smoke-correction-csv", type=Path, default=None)
@@ -578,6 +626,18 @@ def main() -> None:
     parser.add_argument("--energy-teacher-trace-repeat", type=int, default=16)
     parser.add_argument("--energy-teacher-trace-scenario-types", choices=["all", "steady", "fault"], default="all")
     parser.add_argument("--energy-teacher-min-time", type=float, default=0.0)
+    parser.add_argument(
+        "--bc-obs-noise-std",
+        type=float,
+        default=0.0,
+        help="Gaussian observation noise for local BC robustness augmentation.",
+    )
+    parser.add_argument(
+        "--bc-obs-noise-repeat",
+        type=int,
+        default=0,
+        help="Number of noisy copies per BC sample.",
+    )
     parser.add_argument(
         "--zero-energy-targets",
         action="store_true",
@@ -637,6 +697,8 @@ def main() -> None:
         case_contains=args.switch_trace_case_contains,
         window_zones=args.switch_trace_window_zones,
         fixed_target=args.switch_trace_fixed_target,
+        energy_vdc_feedback_gain=args.switch_trace_energy_vdc_feedback_gain,
+        energy_vdc_ref_pu=args.switch_trace_energy_vdc_ref_pu,
     )
     X, Y, raw_smoke_samples = append_raw_smoke_corrections(
         X,
@@ -664,6 +726,13 @@ def main() -> None:
     )
     if args.zero_energy_targets:
         Y[:, 2:4] = 0.0
+    X, Y, obs_noise_samples = augment_observation_noise(
+        X,
+        Y,
+        noise_std=args.bc_obs_noise_std,
+        repeat=args.bc_obs_noise_repeat,
+        seed=args.seed + 17,
+    )
     model = build_or_load_model(args, scenarios, config)
     metrics = train_actor_bc(
         model,
@@ -695,6 +764,7 @@ def main() -> None:
             "switch_trace_augmented_samples": int(switch_trace_samples),
             "raw_smoke_correction_samples": int(raw_smoke_samples),
             "energy_teacher_trace_samples": int(energy_teacher_samples),
+            "obs_noise_augmented_samples": int(obs_noise_samples),
         },
     }
     args.model_out.with_suffix(".json").write_text(json.dumps(sidecar, indent=2), encoding="utf-8")
