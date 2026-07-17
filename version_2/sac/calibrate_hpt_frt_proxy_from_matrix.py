@@ -89,6 +89,15 @@ def s(row: dict[str, Any], key: str, default: str = "") -> str:
     return str(value)
 
 
+def cmd(row: dict[str, Any], key: str, raw_key: str, legacy_key: str = "") -> float:
+    fallback = f(row, raw_key, f(row, legacy_key, 0.0) if legacy_key else 0.0)
+    return f(row, key, fallback)
+
+
+def meas(row: dict[str, Any], key: str, legacy_key: str) -> float:
+    return f(row, key, f(row, legacy_key, 0.0))
+
+
 def grid_metric_values(row: dict[str, Any]) -> dict[str, float | bool | str]:
     return {
         "grid_vpos_pu_min": f(row, "grid_vpos_pu_min", float("nan")),
@@ -127,10 +136,14 @@ def conventional_response_table(rows: list[dict[str, Any]]) -> list[dict[str, An
                 "category": boundary_category(row),
                 "grid_pu": f(row, "fault_pu"),
                 "fault_duration_s": f(row, "fault_duration_s", 0.0),
-                "reg_d_mean": f(row, "reg_d_mean"),
-                "reg_q_mean": f(row, "reg_q_mean"),
-                "energy_d_mean": f(row, "energy_d_mean"),
-                "energy_q_mean": f(row, "energy_q_mean"),
+                "cmd_m_reg_d": cmd(row, "cmd_m_reg_d_mean", "raw_m_reg_d", "reg_d_mean"),
+                "cmd_m_reg_q": cmd(row, "cmd_m_reg_q_mean", "raw_m_reg_q", "reg_q_mean"),
+                "cmd_m_energy_d": cmd(row, "cmd_m_energy_d_mean", "raw_m_energy_d", "energy_d_mean"),
+                "cmd_m_energy_q": cmd(row, "cmd_m_energy_q_mean", "raw_m_energy_q", "energy_q_mean"),
+                "reg_d_mean": meas(row, "meas_reg_d_mean", "reg_d_mean"),
+                "reg_q_mean": meas(row, "meas_reg_q_mean", "reg_q_mean"),
+                "energy_d_mean": meas(row, "meas_energy_d_mean", "energy_d_mean"),
+                "energy_q_mean": meas(row, "meas_energy_q_mean", "energy_q_mean"),
                 "lv_pu_mean": f(row, "lv_mean") / 207.0,
                 "lv_recovery_pu_mean": f(row, "lv_recovery_mean") / 207.0,
                 "lv_peak_pu": f(row, "lv_peak") / 207.0,
@@ -140,6 +153,8 @@ def conventional_response_table(rows: list[dict[str, Any]]) -> list[dict[str, An
                 "vdc_min_pu": f(row, "vdc_min") / 800.0,
                 "vdc_max_pu": f(row, "vdc_max") / 800.0,
                 "action_max_abs": f(row, "action_max_abs"),
+                "cmd_action_max_abs": f(row, "cmd_action_max_abs", float("nan")),
+                "bridge_modulation_abs_max": f(row, "bridge_modulation_abs_max", f(row, "action_max_abs")),
                 "control_score": f(row, "control_score", float("nan")),
                 "voltage_survival_pass": bool(f(row, "voltage_survival_pass", 0.0)),
                 "full_frt_pass": bool(f(row, "full_frt_pass", 0.0)),
@@ -152,8 +167,8 @@ def conventional_response_table(rows: list[dict[str, Any]]) -> list[dict[str, An
             x["category"],
             x["fault_duration_s"],
             x["grid_pu"],
-            x["reg_d_mean"],
-            x["energy_d_mean"],
+            x["cmd_m_reg_d"],
+            x["cmd_m_energy_d"],
         ),
     )
 
@@ -171,10 +186,10 @@ def fault_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "fault": s(row, "fault", s(row, "case_name")),
                 "category": s(row, "category"),
                 "grid_pu": f(row, "grid_pu", f(row, "fault_pu")),
-                "cmd_m_reg_d": f(row, "raw_m_reg_d"),
-                "cmd_m_reg_q": f(row, "raw_m_reg_q"),
-                "reg_d_mean": f(row, "reg_d_mean"),
-                "reg_q_mean": f(row, "reg_q_mean"),
+                "cmd_m_reg_d": cmd(row, "cmd_m_reg_d_mean", "raw_m_reg_d", "reg_d_mean"),
+                "cmd_m_reg_q": cmd(row, "cmd_m_reg_q_mean", "raw_m_reg_q", "reg_q_mean"),
+                "reg_d_mean": meas(row, "meas_reg_d_mean", "reg_d_mean"),
+                "reg_q_mean": meas(row, "meas_reg_q_mean", "reg_q_mean"),
                 "lv_pu_mean": f(row, "lv_pu_mean"),
                 "lv_recovery_pu_mean": f(row, "lv_recovery_pu_mean"),
                 "lv_peak_pu": f(row, "lv_peak_pu"),
@@ -185,10 +200,12 @@ def fault_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "vdc_max_pu": f(row, "vdc_max_pu", f(row, "vdc_max") / 800.0),
                 "energy_i_rms_mean": f(row, "energy_i_rms_mean", float("nan")),
                 "action_max_abs": f(row, "action_max_abs"),
+                "cmd_action_max_abs": f(row, "cmd_action_max_abs", float("nan")),
+                "bridge_modulation_abs_max": f(row, "bridge_modulation_abs_max", f(row, "action_max_abs")),
                 **grid_metric_values(row),
             }
         )
-    return sorted(table, key=lambda x: (x["grid_pu"], x["reg_d_mean"], x["cmd_m_reg_d"]))
+    return sorted(table, key=lambda x: (x["grid_pu"], x["cmd_m_reg_d"], x["reg_d_mean"]))
 
 
 def fault_reg_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -201,10 +218,10 @@ def fault_reg_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
                 "fault": s(row, "fault", s(row, "case_name")),
                 "category": s(row, "category"),
                 "grid_pu": f(row, "grid_pu", f(row, "fault_pu")),
-                "cmd_m_reg_d": f(row, "raw_m_reg_d"),
-                "cmd_m_reg_q": f(row, "raw_m_reg_q"),
-                "reg_d_mean": f(row, "reg_d_mean"),
-                "reg_q_mean": f(row, "reg_q_mean"),
+                "cmd_m_reg_d": cmd(row, "cmd_m_reg_d_mean", "raw_m_reg_d", "reg_d_mean"),
+                "cmd_m_reg_q": cmd(row, "cmd_m_reg_q_mean", "raw_m_reg_q", "reg_q_mean"),
+                "reg_d_mean": meas(row, "meas_reg_d_mean", "reg_d_mean"),
+                "reg_q_mean": meas(row, "meas_reg_q_mean", "reg_q_mean"),
                 "lv_pu_mean": f(row, "lv_pu_mean"),
                 "lv_recovery_pu_mean": f(row, "lv_recovery_pu_mean"),
                 "lv_peak_pu": f(row, "lv_peak_pu"),
@@ -215,10 +232,12 @@ def fault_reg_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
                 "vdc_max_pu": f(row, "vdc_max_pu", f(row, "vdc_max") / 800.0),
                 "energy_i_rms_mean": f(row, "energy_i_rms_mean", float("nan")),
                 "action_max_abs": f(row, "action_max_abs"),
+                "cmd_action_max_abs": f(row, "cmd_action_max_abs", float("nan")),
+                "bridge_modulation_abs_max": f(row, "bridge_modulation_abs_max", f(row, "action_max_abs")),
                 **grid_metric_values(row),
             }
         )
-    return sorted(table, key=lambda x: (x["grid_pu"], x["reg_d_mean"], x["reg_q_mean"]))
+    return sorted(table, key=lambda x: (x["grid_pu"], x["cmd_m_reg_d"], x["cmd_m_reg_q"]))
 
 
 def fault_baseline_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -257,10 +276,10 @@ def fault_energy_response_table(rows: list[dict[str, Any]]) -> list[dict[str, An
                 "fault": s(row, "fault", s(row, "case_name")),
                 "category": s(row, "category"),
                 "grid_pu": f(row, "grid_pu", f(row, "fault_pu")),
-                "cmd_m_energy_d": f(row, "raw_m_energy_d"),
-                "cmd_m_energy_q": f(row, "raw_m_energy_q"),
-                "energy_d_mean": f(row, "energy_d_mean"),
-                "energy_q_mean": f(row, "energy_q_mean"),
+                "cmd_m_energy_d": cmd(row, "cmd_m_energy_d_mean", "raw_m_energy_d", "energy_d_mean"),
+                "cmd_m_energy_q": cmd(row, "cmd_m_energy_q_mean", "raw_m_energy_q", "energy_q_mean"),
+                "energy_d_mean": meas(row, "meas_energy_d_mean", "energy_d_mean"),
+                "energy_q_mean": meas(row, "meas_energy_q_mean", "energy_q_mean"),
                 "lv_pu_mean": f(row, "lv_pu_mean"),
                 "lv_recovery_pu_mean": f(row, "lv_recovery_pu_mean"),
                 "lv_peak_pu": f(row, "lv_peak_pu"),
@@ -271,10 +290,12 @@ def fault_energy_response_table(rows: list[dict[str, Any]]) -> list[dict[str, An
                 "vdc_max_pu": f(row, "vdc_max_pu", f(row, "vdc_max") / 800.0),
                 "energy_i_rms_mean": f(row, "energy_i_rms_mean"),
                 "action_max_abs": f(row, "action_max_abs"),
+                "cmd_action_max_abs": f(row, "cmd_action_max_abs", float("nan")),
+                "bridge_modulation_abs_max": f(row, "bridge_modulation_abs_max", f(row, "action_max_abs")),
                 **grid_metric_values(row),
             }
         )
-    return sorted(table, key=lambda x: (x["grid_pu"], x["energy_d_mean"], x["energy_q_mean"]))
+    return sorted(table, key=lambda x: (x["grid_pu"], x["cmd_m_energy_d"], x["cmd_m_energy_q"]))
 
 
 def fault_joint_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -287,14 +308,14 @@ def fault_joint_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any
                 "fault": s(row, "fault", s(row, "case_name")),
                 "category": s(row, "category"),
                 "grid_pu": f(row, "grid_pu", f(row, "fault_pu")),
-                "cmd_m_reg_d": f(row, "raw_m_reg_d"),
-                "cmd_m_reg_q": f(row, "raw_m_reg_q"),
-                "cmd_m_energy_d": f(row, "raw_m_energy_d"),
-                "cmd_m_energy_q": f(row, "raw_m_energy_q"),
-                "reg_d_mean": f(row, "reg_d_mean"),
-                "reg_q_mean": f(row, "reg_q_mean"),
-                "energy_d_mean": f(row, "energy_d_mean"),
-                "energy_q_mean": f(row, "energy_q_mean"),
+                "cmd_m_reg_d": cmd(row, "cmd_m_reg_d_mean", "raw_m_reg_d", "reg_d_mean"),
+                "cmd_m_reg_q": cmd(row, "cmd_m_reg_q_mean", "raw_m_reg_q", "reg_q_mean"),
+                "cmd_m_energy_d": cmd(row, "cmd_m_energy_d_mean", "raw_m_energy_d", "energy_d_mean"),
+                "cmd_m_energy_q": cmd(row, "cmd_m_energy_q_mean", "raw_m_energy_q", "energy_q_mean"),
+                "reg_d_mean": meas(row, "meas_reg_d_mean", "reg_d_mean"),
+                "reg_q_mean": meas(row, "meas_reg_q_mean", "reg_q_mean"),
+                "energy_d_mean": meas(row, "meas_energy_d_mean", "energy_d_mean"),
+                "energy_q_mean": meas(row, "meas_energy_q_mean", "energy_q_mean"),
                 "lv_pu_mean": f(row, "lv_pu_mean"),
                 "lv_recovery_pu_mean": f(row, "lv_recovery_pu_mean"),
                 "lv_peak_pu": f(row, "lv_peak_pu"),
@@ -305,6 +326,8 @@ def fault_joint_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any
                 "vdc_max_pu": f(row, "vdc_max_pu", f(row, "vdc_max") / 800.0),
                 "energy_i_rms_mean": f(row, "energy_i_rms_mean"),
                 "action_max_abs": f(row, "action_max_abs"),
+                "cmd_action_max_abs": f(row, "cmd_action_max_abs", float("nan")),
+                "bridge_modulation_abs_max": f(row, "bridge_modulation_abs_max", f(row, "action_max_abs")),
                 **grid_metric_values(row),
             }
         )
@@ -312,10 +335,10 @@ def fault_joint_response_table(rows: list[dict[str, Any]]) -> list[dict[str, Any
         table,
         key=lambda x: (
             x["grid_pu"],
-            x["reg_d_mean"],
-            x["reg_q_mean"],
-            x["energy_d_mean"],
-            x["energy_q_mean"],
+            x["cmd_m_reg_d"],
+            x["cmd_m_reg_q"],
+            x["cmd_m_energy_d"],
+            x["cmd_m_energy_q"],
         ),
     )
 
@@ -328,7 +351,7 @@ def fit_fault_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     if len(reg_rows) < 3:
         return {"samples": len(reg_rows)}
     grid = np.asarray([f(r, "grid_pu", f(r, "fault_pu")) for r in reg_rows], dtype=float)
-    reg = np.asarray([f(r, "reg_d_mean") for r in reg_rows], dtype=float)
+    reg = np.asarray([f(r, "cmd_m_reg_d", f(r, "raw_m_reg_d")) for r in reg_rows], dtype=float)
     lv = np.asarray([f(r, "lv_pu_mean") for r in reg_rows], dtype=float)
     vdc = np.asarray([f(r, "vdc_pu_mean", f(r, "vdc_mean") / 800.0) for r in reg_rows], dtype=float)
 

@@ -98,14 +98,14 @@ def featurize(row: dict[str, Any], sweep: str) -> tuple[list[float], list[float]
     raw_reg_d = val(
         row,
         "raw_m_reg_d",
-        val(row, "cmd_m_reg_d", val(row, "reg_d", val(row, "reg_d_mean", 0.0))),
+        val(row, "cmd_m_reg_d_mean", val(row, "cmd_m_reg_d", val(row, "reg_d", val(row, "reg_d_mean", 0.0)))),
     )
-    raw_reg_q = val(row, "raw_m_reg_q", val(row, "cmd_m_reg_q", val(row, "reg_q_mean", 0.0)))
+    raw_reg_q = val(row, "raw_m_reg_q", val(row, "cmd_m_reg_q_mean", val(row, "cmd_m_reg_q", val(row, "reg_q_mean", 0.0))))
     raw_energy_d = val(
-        row, "raw_m_energy_d", val(row, "cmd_m_energy_d", val(row, "energy_d_mean", 0.0))
+        row, "raw_m_energy_d", val(row, "cmd_m_energy_d_mean", val(row, "cmd_m_energy_d", val(row, "energy_d_mean", 0.0)))
     )
     raw_energy_q = val(
-        row, "raw_m_energy_q", val(row, "cmd_m_energy_q", val(row, "energy_q_mean", 0.0))
+        row, "raw_m_energy_q", val(row, "cmd_m_energy_q_mean", val(row, "cmd_m_energy_q", val(row, "energy_q_mean", 0.0)))
     )
 
     feature = [
@@ -116,10 +116,10 @@ def featurize(row: dict[str, Any], sweep: str) -> tuple[list[float], list[float]
         raw_reg_q,
         raw_energy_d,
         raw_energy_q,
-        effective(row, "effective_m_reg_d_mean", "reg_d_mean"),
-        effective(row, "effective_m_reg_q_mean", "reg_q_mean"),
-        effective(row, "effective_m_energy_d_mean", "energy_d_mean"),
-        effective(row, "effective_m_energy_q_mean", "energy_q_mean"),
+        effective(row, "meas_reg_d_mean", "reg_d_mean"),
+        effective(row, "meas_reg_q_mean", "reg_q_mean"),
+        effective(row, "meas_energy_d_mean", "energy_d_mean"),
+        effective(row, "meas_energy_q_mean", "energy_q_mean"),
         controller_enabled,
         1.0 if sweep == "reg" else 0.0,
         1.0 if sweep == "energy" else 0.0,

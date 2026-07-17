@@ -208,6 +208,10 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
     Igrid = out.get('Igrid_abc');
     obs = out.get('HPTSAC_obs');
     act = out.get('HPTSAC_action');
+    mref = out.get('Mref6_cmd');
+    meng = out.get('Menergy_cmd');
+    mregDbg = out.get('Mreg_cmd');
+    energyDbg = out.get('Energy_dbg');
     if has_logged_var(out, 'Energy_Iabc')
         Ienergy = out.get('Energy_Iabc');
     else
@@ -216,9 +220,16 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
 
     obsRows = orient_channels(obs, 24);
     actRows = orient_channels(act, 4);
+    mrefRows = orient_channels(mref, 6);
+    mengRows = orient_channels(meng, 3);
+    mregDbgRows = orient_channels(mregDbg, 7);
+    energyDbgRows = orient_channels(energyDbg, 12);
     gridVRows = orient_channels(Vgrid, 3);
     gridIRows = orient_channels(Igrid, 3);
     iRows = orient_channels(Ienergy, 3);
+    energyIdMax = getVariable(get_param(M, 'ModelWorkspace'), 'hpt_energy_id_max');
+    measRows = measured_response_rows(actRows, mrefRows, mregDbgRows, ...
+        energyDbgRows, energyIdMax);
     t = (0:size(Vlv, 1)-1)' * Ts;
     phaseRmsInst = sqrt(mean(Vlv(:, 1:3).^2, 2));
     faultIdx = t > (faultStart + 0.010) & t < (faultClear - 0.002);
@@ -249,7 +260,7 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
     row.raw_m_energy_q = mEnergyQ;
     row.reg_enable = regEnable;
     row.energy_enable = energyEnable;
-    row.action_semantics = "fixed_frt_calibration_command";
+    row.action_semantics = "fixed_frt_command_with_measured_response";
     row.action_raw_available = true;
     row.action_projected_available = true;
     row.action_effective_available = true;
@@ -270,11 +281,21 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
     row.vdc_min_pu = row.vdc_min / 800.0;
     row.vdc_max_pu = row.vdc_max / 800.0;
     row.energy_i_rms_mean = safe_mean(iRmsFault);
-    row.action_max_abs = max(abs(actRows), [], 'all');
-    row.reg_d_mean = safe_mean(actRows(1, tailStart:end));
-    row.reg_q_mean = safe_mean(actRows(2, tailStart:end));
-    row.energy_d_mean = safe_mean(actRows(3, tailStart:end));
-    row.energy_q_mean = safe_mean(actRows(4, tailStart:end));
+    row.cmd_action_max_abs = matrix_max_abs(actRows);
+    row.bridge_modulation_abs_max = matrix_max_abs([mrefRows(:); mengRows(:)]);
+    row.action_max_abs = row.bridge_modulation_abs_max;
+    row.cmd_m_reg_d_mean = safe_mean(actRows(1, tailStart:end));
+    row.cmd_m_reg_q_mean = safe_mean(actRows(2, tailStart:end));
+    row.cmd_m_energy_d_mean = safe_mean(actRows(3, tailStart:end));
+    row.cmd_m_energy_q_mean = safe_mean(actRows(4, tailStart:end));
+    row.meas_reg_d_mean = tail_row_mean(measRows, 1);
+    row.meas_reg_q_mean = tail_row_mean(measRows, 2);
+    row.meas_energy_d_mean = tail_row_mean(measRows, 3);
+    row.meas_energy_q_mean = tail_row_mean(measRows, 4);
+    row.reg_d_mean = row.meas_reg_d_mean;
+    row.reg_q_mean = row.meas_reg_q_mean;
+    row.energy_d_mean = row.meas_energy_d_mean;
+    row.energy_q_mean = row.meas_energy_q_mean;
     row = add_grid_current_metrics(row, gridVRows, gridIRows, t, ...
         faultStart, faultClear);
     row.obs_dim = size(obsRows, 1);
@@ -284,6 +305,7 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
     row.trace_vdc = Vdc(:, 1);
     row.trace_obs = obsRows;
     row.trace_act = actRows;
+    row.trace_meas_act = measRows;
     row.trace_grid_vpos_pu = row.trace_grid_metrics.vpos_pu;
     row.trace_grid_iq_pu = row.trace_grid_metrics.iq_pu;
     row.trace_grid_iq_ref_pu = row.trace_grid_metrics.iq_ref_pu;
@@ -327,6 +349,12 @@ function traceCells = append_trace_cells(traceCells, row, sampleStride)
         end
         for ii = 1:4
             tr.(sprintf('actor_action_%02d', ii)) = row.trace_act(ii, j);
+            tr.(sprintf('cmd_action_%02d', ii)) = row.trace_act(ii, j);
+            if size(row.trace_meas_act, 2) >= j
+                tr.(sprintf('meas_action_%02d', ii)) = row.trace_meas_act(ii, j);
+            else
+                tr.(sprintf('meas_action_%02d', ii)) = NaN;
+            end
         end
         traceCells{end+1} = tr; %#ok<AGROW>
     end
@@ -513,9 +541,60 @@ function m = safe_mean(x)
     end
 end
 
+function actRows = measured_response_rows(hptActRows, mrefRows, mregDbgRows, ...
+    energyDbgRows, energyIdMax)
+    n = min([size(mrefRows, 2), size(mregDbgRows, 2), size(energyDbgRows, 2)]);
+    if isempty(n) || n < 1
+        actRows = hptActRows;
+        return;
+    end
+    actRows = zeros(4, n);
+    for k = 1:n
+        theta = mregDbgRows(1, k);
+        phi = mregDbgRows(7, k);
+        [actRows(1, k), actRows(2, k)] = reg6_to_dq(mrefRows(:, k), theta + phi);
+        actRows(3, k) = clip_scalar(energyDbgRows(6, k) / max(energyIdMax, 1e-9), ...
+            -0.95, 0.95);
+        actRows(4, k) = 0.0;
+    end
+end
+
+function [d, q] = reg6_to_dq(reg6, angle)
+    ma = reg6(1);
+    mb = reg6(3);
+    mc = reg6(5);
+    alpha = (2/3) * (ma - 0.5*mb - 0.5*mc);
+    beta = (sqrt(3)/3) * (mb - mc);
+    s = sin(angle);
+    c = cos(angle);
+    d = s*alpha - c*beta;
+    q = c*alpha + s*beta;
+end
+
+function y = clip_scalar(x, lo, hi)
+    y = min(max(x, lo), hi);
+end
+
+function v = matrix_max_abs(rows)
+    if isempty(rows)
+        v = NaN;
+    else
+        v = max(abs(rows(:)));
+    end
+end
+
+function v = tail_row_mean(rows, idx)
+    if isempty(rows) || size(rows, 1) < idx || size(rows, 2) < 1
+        v = NaN;
+        return;
+    end
+    tailStart = max(1, round(size(rows, 2) * 0.7));
+    v = safe_mean(rows(idx, tailStart:end));
+end
+
 function row = strip_trace(row)
     row = rmfield(row, {'trace_t', 'trace_vlv', 'trace_vdc', 'trace_obs', ...
-        'trace_act', 'trace_grid_vpos_pu', 'trace_grid_iq_pu', ...
+        'trace_act', 'trace_meas_act', 'trace_grid_vpos_pu', 'trace_grid_iq_pu', ...
         'trace_grid_iq_ref_pu', 'trace_grid_i_peak_pu'});
 end
 

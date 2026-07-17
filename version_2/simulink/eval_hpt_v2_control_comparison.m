@@ -274,7 +274,8 @@ function row = run_steady_case(M, topology, mode, gridVoltage, targetPhaseRms, .
     mregDbgRows = orient_channels(mregDbg, 7);
     energyDbgRows = orient_channels(energyDbg, 12);
     energyIdMax = getVariable(get_param(M, 'ModelWorkspace'), 'hpt_energy_id_max');
-    actualActRows = selected_action_rows(mode, topology, actRows, mrefRows, mregDbgRows, ...
+    cmdActRows = actRows;
+    measActRows = measured_response_rows(actRows, mrefRows, mregDbgRows, ...
         energyDbgRows, energyIdMax);
 
     row = base_row(M, topology, "steady", sprintf("grid_%.0fV", gridVoltage), ...
@@ -290,11 +291,7 @@ function row = run_steady_case(M, topology, mode, gridVoltage, targetPhaseRms, .
     row.vdc_mean = mean(Vdc(round(end*0.7):end, 1));
     row.vdc_min = min(Vdc(:, 1));
     row.vdc_max = max(Vdc(:, 1));
-    row.action_max_abs = actual_action_max(mrefRows, mengRows);
-    row.reg_d_mean = mean(actualActRows(1, round(end*0.7):end));
-    row.reg_q_mean = mean(actualActRows(2, round(end*0.7):end));
-    row.energy_d_mean = mean(actualActRows(3, round(end*0.7):end));
-    row.energy_q_mean = mean(actualActRows(4, round(end*0.7):end));
+    row = add_action_semantics(row, cmdActRows, measActRows, mrefRows, mengRows);
     row.obs_vpu_mean = mean(obsRows(1, round(end*0.7):end));
     row.obs_vpos_mean = mean(obsRows(2, round(end*0.7):end));
     row.obs_vdcpu_mean = mean(obsRows(4, round(end*0.7):end));
@@ -354,7 +351,8 @@ function row = run_fault_case(M, topology, faultName, faultPu, mode, ...
     mregDbgRows = orient_channels(mregDbg, 7);
     energyDbgRows = orient_channels(energyDbg, 12);
     energyIdMax = getVariable(get_param(M, 'ModelWorkspace'), 'hpt_energy_id_max');
-    actualActRows = selected_action_rows(mode, topology, actRows, mrefRows, mregDbgRows, ...
+    cmdActRows = actRows;
+    measActRows = measured_response_rows(actRows, mrefRows, mregDbgRows, ...
         energyDbgRows, energyIdMax);
 
     row = base_row(M, topology, "fault", faultName, mode, NaN, faultPu);
@@ -373,11 +371,7 @@ function row = run_fault_case(M, topology, faultName, faultPu, mode, ...
     row.vdc_mean = mean(Vdc(round(end*0.7):end, 1));
     row.vdc_min = min(Vdc(:, 1));
     row.vdc_max = max(Vdc(:, 1));
-    row.action_max_abs = actual_action_max(mrefRows, mengRows);
-    row.reg_d_mean = mean(actualActRows(1, round(end*0.7):end));
-    row.reg_q_mean = mean(actualActRows(2, round(end*0.7):end));
-    row.energy_d_mean = mean(actualActRows(3, round(end*0.7):end));
-    row.energy_q_mean = mean(actualActRows(4, round(end*0.7):end));
+    row = add_action_semantics(row, cmdActRows, measActRows, mrefRows, mengRows);
     row.obs_vpu_mean = mean(obsRows(1, round(end*0.7):end));
     row.obs_vpos_mean = mean(obsRows(2, round(end*0.7):end));
     row.obs_vdcpu_mean = mean(obsRows(4, round(end*0.7):end));
@@ -444,18 +438,13 @@ function v = actual_action_max(mrefRows, mengRows)
     v = max([abs(mrefRows(:)); abs(mengRows(:))]);
 end
 
-function actRows = selected_action_rows(mode, topology, hptActRows, mrefRows, mregDbgRows, ...
+function actRows = measured_response_rows(hptActRows, mrefRows, mregDbgRows, ...
     energyDbgRows, energyIdMax)
-    mode = string(mode);
-    topology = string(topology);
-    hptSelected = (mode == "rule_fallback") || (mode == "sac_actor_raw_guard0") || ...
-        (mode == "conventional_dq");
-    if hptSelected
+    n = min([size(mrefRows, 2), size(mregDbgRows, 2), size(energyDbgRows, 2)]);
+    if isempty(n) || n < 1
         actRows = hptActRows;
         return;
     end
-
-    n = min([size(mrefRows, 2), size(mregDbgRows, 2), size(energyDbgRows, 2)]);
     actRows = zeros(4, n);
     for k = 1:n
         theta = mregDbgRows(1, k);
@@ -465,6 +454,45 @@ function actRows = selected_action_rows(mode, topology, hptActRows, mrefRows, mr
             -0.95, 0.95);
         actRows(4, k) = 0.0;
     end
+end
+
+function row = add_action_semantics(row, cmdRows, measRows, mrefRows, mengRows)
+    row.cmd_action_max_abs = matrix_max_abs(cmdRows);
+    row.bridge_modulation_abs_max = actual_action_max(mrefRows, mengRows);
+    row.action_max_abs = row.bridge_modulation_abs_max;
+
+    row.cmd_m_reg_d_mean = tail_row_mean(cmdRows, 1);
+    row.cmd_m_reg_q_mean = tail_row_mean(cmdRows, 2);
+    row.cmd_m_energy_d_mean = tail_row_mean(cmdRows, 3);
+    row.cmd_m_energy_q_mean = tail_row_mean(cmdRows, 4);
+
+    row.meas_reg_d_mean = tail_row_mean(measRows, 1);
+    row.meas_reg_q_mean = tail_row_mean(measRows, 2);
+    row.meas_energy_d_mean = tail_row_mean(measRows, 3);
+    row.meas_energy_q_mean = tail_row_mean(measRows, 4);
+
+    % Backward-compatible fields now mean effective switch-level response.
+    row.reg_d_mean = row.meas_reg_d_mean;
+    row.reg_q_mean = row.meas_reg_q_mean;
+    row.energy_d_mean = row.meas_energy_d_mean;
+    row.energy_q_mean = row.meas_energy_q_mean;
+end
+
+function v = matrix_max_abs(rows)
+    if isempty(rows)
+        v = NaN;
+    else
+        v = max(abs(rows(:)));
+    end
+end
+
+function v = tail_row_mean(rows, idx)
+    if isempty(rows) || size(rows, 1) < idx || size(rows, 2) < 1
+        v = NaN;
+        return;
+    end
+    tailStart = max(1, round(size(rows, 2) * 0.7));
+    v = mean(rows(idx, tailStart:end));
 end
 
 function [d, q] = reg6_to_dq(reg6, angle)
@@ -525,6 +553,16 @@ function row = base_row(M, topology, scenarioType, caseName, mode, gridVoltage, 
     row.vdc_min = NaN;
     row.vdc_max = NaN;
     row.action_max_abs = NaN;
+    row.cmd_action_max_abs = NaN;
+    row.bridge_modulation_abs_max = NaN;
+    row.cmd_m_reg_d_mean = NaN;
+    row.cmd_m_reg_q_mean = NaN;
+    row.cmd_m_energy_d_mean = NaN;
+    row.cmd_m_energy_q_mean = NaN;
+    row.meas_reg_d_mean = NaN;
+    row.meas_reg_q_mean = NaN;
+    row.meas_energy_d_mean = NaN;
+    row.meas_energy_q_mean = NaN;
     row.reg_d_mean = NaN;
     row.reg_q_mean = NaN;
     row.energy_d_mean = NaN;

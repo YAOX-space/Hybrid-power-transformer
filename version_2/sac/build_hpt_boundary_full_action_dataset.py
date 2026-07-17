@@ -66,6 +66,16 @@ METRIC_NAMES = [
     "vdc_min",
     "vdc_max",
     "action_max_abs",
+    "cmd_action_max_abs",
+    "bridge_modulation_abs_max",
+    "cmd_m_reg_d_mean",
+    "cmd_m_reg_q_mean",
+    "cmd_m_energy_d_mean",
+    "cmd_m_energy_q_mean",
+    "meas_reg_d_mean",
+    "meas_reg_q_mean",
+    "meas_energy_d_mean",
+    "meas_energy_q_mean",
     "grid_iq_mean_pu",
     "grid_iq_ref_mean_pu",
     "grid_iq_shortfall_max_pu",
@@ -201,6 +211,16 @@ def metric_value(row: dict[str, Any], canonical: str) -> float:
         "vdc_min": ("vdc_min",),
         "vdc_max": ("vdc_max",),
         "action_max_abs": ("action_max_abs",),
+        "cmd_action_max_abs": ("cmd_action_max_abs",),
+        "bridge_modulation_abs_max": ("bridge_modulation_abs_max", "action_max_abs"),
+        "cmd_m_reg_d_mean": ("cmd_m_reg_d_mean", "raw_m_reg_d"),
+        "cmd_m_reg_q_mean": ("cmd_m_reg_q_mean", "raw_m_reg_q"),
+        "cmd_m_energy_d_mean": ("cmd_m_energy_d_mean", "raw_m_energy_d"),
+        "cmd_m_energy_q_mean": ("cmd_m_energy_q_mean", "raw_m_energy_q"),
+        "meas_reg_d_mean": ("meas_reg_d_mean", "reg_d_mean"),
+        "meas_reg_q_mean": ("meas_reg_q_mean", "reg_q_mean"),
+        "meas_energy_d_mean": ("meas_energy_d_mean", "energy_d_mean"),
+        "meas_energy_q_mean": ("meas_energy_q_mean", "energy_q_mean"),
         "grid_iq_mean_pu": ("grid_iq_mean_pu",),
         "grid_iq_ref_mean_pu": ("grid_iq_ref_mean_pu",),
         "grid_iq_shortfall_max_pu": ("grid_iq_shortfall_max_pu",),
@@ -246,16 +266,16 @@ def survival_score(row: dict[str, Any], *, pass_column: str = "voltage_survival_
 def action_from_row(row: dict[str, Any], source: str) -> tuple[float, float, float, float]:
     if source == "matrix":
         return (
-            finite(f(row, "raw_m_reg_d", f(row, "reg_d_mean", 0.0))),
-            finite(f(row, "raw_m_reg_q", f(row, "reg_q_mean", 0.0))),
-            finite(f(row, "raw_m_energy_d", f(row, "energy_d_mean", 0.0))),
-            finite(f(row, "raw_m_energy_q", f(row, "energy_q_mean", 0.0))),
+            finite(f(row, "raw_m_reg_d", f(row, "cmd_m_reg_d_mean", 0.0))),
+            finite(f(row, "raw_m_reg_q", f(row, "cmd_m_reg_q_mean", 0.0))),
+            finite(f(row, "raw_m_energy_d", f(row, "cmd_m_energy_d_mean", 0.0))),
+            finite(f(row, "raw_m_energy_q", f(row, "cmd_m_energy_q_mean", 0.0))),
         )
     return (
-        finite(f(row, "reg_d_mean", 0.0)),
-        finite(f(row, "reg_q_mean", 0.0)),
-        finite(f(row, "energy_d_mean", 0.0)),
-        finite(f(row, "energy_q_mean", 0.0)),
+        finite(f(row, "cmd_m_reg_d_mean", f(row, "reg_d_mean", 0.0))),
+        finite(f(row, "cmd_m_reg_q_mean", f(row, "reg_q_mean", 0.0))),
+        finite(f(row, "cmd_m_energy_d_mean", f(row, "energy_d_mean", 0.0))),
+        finite(f(row, "cmd_m_energy_q_mean", f(row, "energy_q_mean", 0.0))),
     )
 
 
@@ -353,6 +373,16 @@ def canonical_row(
         "vdc_min": metric_value(row, "vdc_min"),
         "vdc_max": metric_value(row, "vdc_max"),
         "action_max_abs": metric_value(row, "action_max_abs"),
+        "cmd_action_max_abs": metric_value(row, "cmd_action_max_abs"),
+        "bridge_modulation_abs_max": metric_value(row, "bridge_modulation_abs_max"),
+        "cmd_m_reg_d_mean": metric_value(row, "cmd_m_reg_d_mean"),
+        "cmd_m_reg_q_mean": metric_value(row, "cmd_m_reg_q_mean"),
+        "cmd_m_energy_d_mean": metric_value(row, "cmd_m_energy_d_mean"),
+        "cmd_m_energy_q_mean": metric_value(row, "cmd_m_energy_q_mean"),
+        "meas_reg_d_mean": metric_value(row, "meas_reg_d_mean"),
+        "meas_reg_q_mean": metric_value(row, "meas_reg_q_mean"),
+        "meas_energy_d_mean": metric_value(row, "meas_energy_d_mean"),
+        "meas_energy_q_mean": metric_value(row, "meas_energy_q_mean"),
         "grid_iq_mean_pu": metric_value(row, "grid_iq_mean_pu"),
         "grid_iq_ref_mean_pu": metric_value(row, "grid_iq_ref_mean_pu"),
         "grid_iq_shortfall_max_pu": metric_value(row, "grid_iq_shortfall_max_pu"),
@@ -598,4 +628,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

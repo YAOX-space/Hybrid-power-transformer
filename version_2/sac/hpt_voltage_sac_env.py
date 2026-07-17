@@ -191,6 +191,20 @@ def _has_numeric_key(row: dict, key: str) -> bool:
         return False
 
 
+def _axis_key(table: list[dict], preferred: str, fallback: str) -> str:
+    if any(_has_numeric_key(row, preferred) for row in table):
+        return preferred
+    return fallback
+
+
+def _row_numeric(row: dict, preferred: str, fallback: str, default: float = 0.0) -> float:
+    if _has_numeric_key(row, preferred):
+        return float(row[preferred])
+    if _has_numeric_key(row, fallback):
+        return float(row[fallback])
+    return float(default)
+
+
 def _interp_response_table(
     table: list[dict],
     grid_pu: float,
@@ -209,7 +223,10 @@ def _interp_response_table(
                 continue
             if not _has_numeric_key(row, value_key):
                 continue
-            x = float(row["reg_d_mean"])
+            axis_key = _axis_key(table, "cmd_m_reg_d", "reg_d_mean")
+            if not _has_numeric_key(row, axis_key):
+                continue
+            x = float(row[axis_key])
             bucket.setdefault(x, []).append(float(row[value_key]))
         if not bucket:
             return None
@@ -240,6 +257,8 @@ def _interp_energy_axis(
         for row in table:
             if abs(float(row["grid_pu"]) - grid) > 1e-9:
                 continue
+            if not _has_numeric_key(row, other_axis_key):
+                continue
             if abs(float(row[other_axis_key])) > 1e-6:
                 continue
             if not _has_numeric_key(row, value_key):
@@ -264,10 +283,12 @@ def _interp_energy_response(
     energy_q: float,
     value_key: str,
 ) -> float | None:
+    d_key = _axis_key(table, "cmd_m_energy_d", "energy_d_mean")
+    q_key = _axis_key(table, "cmd_m_energy_q", "energy_q_mean")
     coupled = _interp_grid_axes_table(
         table,
         grid_pu,
-        ["energy_d_mean", "energy_q_mean"],
+        [d_key, q_key],
         [energy_d, energy_q],
         value_key,
     )
@@ -275,13 +296,13 @@ def _interp_energy_response(
         return coupled
 
     baseline = _interp_energy_axis(
-        table, grid_pu, 0.0, "energy_d_mean", "energy_q_mean", value_key
+        table, grid_pu, 0.0, d_key, q_key, value_key
     )
     d_axis = _interp_energy_axis(
-        table, grid_pu, energy_d, "energy_d_mean", "energy_q_mean", value_key
+        table, grid_pu, energy_d, d_key, q_key, value_key
     )
     q_axis = _interp_energy_axis(
-        table, grid_pu, energy_q, "energy_q_mean", "energy_d_mean", value_key
+        table, grid_pu, energy_q, q_key, d_key, value_key
     )
     if baseline is None or d_axis is None or q_axis is None:
         return None
@@ -301,7 +322,7 @@ def _interp_axes(rows: list[dict], axis_keys: list[str], axis_values: list[float
     target = float(axis_values[0])
     bucket: dict[float, list[dict]] = {}
     for row in rows:
-        if axis_key not in row:
+        if not _has_numeric_key(row, axis_key):
             continue
         bucket.setdefault(float(row[axis_key]), []).append(row)
     if not bucket:
@@ -663,10 +684,12 @@ class HPTVoltageSACEnv(gym.Env):
         if cal:
             if self._sc.category != "steady":
                 reg_table = cal.get("fault_reg_response_table", [])
+                reg_d_key = _axis_key(reg_table, "cmd_m_reg_d", "reg_d_mean")
+                reg_q_key = _axis_key(reg_table, "cmd_m_reg_q", "reg_q_mean")
                 value = _interp_grid_axes_table(
                     reg_table,
                     grid_pu,
-                    ["reg_d_mean", "reg_q_mean"],
+                    [reg_d_key, reg_q_key],
                     [reg_d, reg_q],
                     "lv_pu_mean",
                 )
@@ -683,10 +706,12 @@ class HPTVoltageSACEnv(gym.Env):
         if cal:
             if self._sc.category != "steady":
                 reg_table = cal.get("fault_reg_response_table", [])
+                reg_d_key = _axis_key(reg_table, "cmd_m_reg_d", "reg_d_mean")
+                reg_q_key = _axis_key(reg_table, "cmd_m_reg_q", "reg_q_mean")
                 value = _interp_grid_axes_table(
                     reg_table,
                     grid_pu,
-                    ["reg_d_mean", "reg_q_mean"],
+                    [reg_d_key, reg_q_key],
                     [reg_d, reg_q],
                     "vdc_pu_mean",
                 )
@@ -708,10 +733,15 @@ class HPTVoltageSACEnv(gym.Env):
         cal = self._topology_calibration()
         if not cal or self._sc.category == "steady":
             return None
+        table = cal.get("fault_joint_response_table", [])
         return _interp_grid_axes_table(
-            cal.get("fault_joint_response_table", []),
+            table,
             grid_pu,
-            ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
+            [
+                _axis_key(table, "cmd_m_reg_d", "reg_d_mean"),
+                _axis_key(table, "cmd_m_energy_d", "energy_d_mean"),
+                _axis_key(table, "cmd_m_energy_q", "energy_q_mean"),
+            ],
             [reg_d, energy_d, energy_q],
             value_key,
         )
@@ -758,10 +788,10 @@ class HPTVoltageSACEnv(gym.Env):
             return None
         return np.asarray(
             [
-                float(row.get("reg_d_mean", 0.0)),
-                float(row.get("reg_q_mean", 0.0)),
-                float(row.get("energy_d_mean", 0.0)),
-                float(row.get("energy_q_mean", 0.0)),
+                _row_numeric(row, "cmd_m_reg_d", "reg_d_mean"),
+                _row_numeric(row, "cmd_m_reg_q", "reg_q_mean"),
+                _row_numeric(row, "cmd_m_energy_d", "energy_d_mean"),
+                _row_numeric(row, "cmd_m_energy_q", "energy_q_mean"),
             ],
             dtype=np.float32,
         )
@@ -787,10 +817,14 @@ class HPTVoltageSACEnv(gym.Env):
             return max(max(vals) - min(vals), minimum)
 
         grid_span = min(span("grid_pu", 0.02), 0.03)
-        reg_d_span = span("reg_d_mean", 0.08)
-        reg_q_span = span("reg_q_mean", 0.05)
-        energy_d_span = span("energy_d_mean", 0.08)
-        energy_q_span = span("energy_q_mean", 0.05)
+        reg_d_key = _axis_key(rows, "cmd_m_reg_d", "reg_d_mean")
+        reg_q_key = _axis_key(rows, "cmd_m_reg_q", "reg_q_mean")
+        energy_d_key = _axis_key(rows, "cmd_m_energy_d", "energy_d_mean")
+        energy_q_key = _axis_key(rows, "cmd_m_energy_q", "energy_q_mean")
+        reg_d_span = span(reg_d_key, 0.08)
+        reg_q_span = span(reg_q_key, 0.05)
+        energy_d_span = span(energy_d_key, 0.08)
+        energy_q_span = span(energy_q_key, 0.05)
 
         best_row: dict | None = None
         best_distance = float("inf")
@@ -800,10 +834,10 @@ class HPTVoltageSACEnv(gym.Env):
             vec = np.asarray(
                 [
                     (float(grid_pu) - float(row["grid_pu"])) / grid_span,
-                    (float(reg_d) - float(row.get("reg_d_mean", 0.0))) / reg_d_span,
-                    (float(reg_q) - float(row.get("reg_q_mean", 0.0))) / reg_q_span,
-                    (float(energy_d) - float(row.get("energy_d_mean", 0.0))) / energy_d_span,
-                    (float(energy_q) - float(row.get("energy_q_mean", 0.0))) / energy_q_span,
+                    (float(reg_d) - _row_numeric(row, reg_d_key, "reg_d_mean")) / reg_d_span,
+                    (float(reg_q) - _row_numeric(row, reg_q_key, "reg_q_mean")) / reg_q_span,
+                    (float(energy_d) - _row_numeric(row, energy_d_key, "energy_d_mean")) / energy_d_span,
+                    (float(energy_q) - _row_numeric(row, energy_q_key, "energy_q_mean")) / energy_q_span,
                 ],
                 dtype=float,
             )
@@ -870,10 +904,14 @@ class HPTVoltageSACEnv(gym.Env):
             return _finite_or_none(float(row[value_key]))
 
         def from_reg() -> float | None:
+            table = cal.get("fault_reg_response_table", [])
             value = _interp_grid_axes_table(
-                cal.get("fault_reg_response_table", []),
+                table,
                 grid_pu,
-                ["reg_d_mean", "reg_q_mean"],
+                [
+                    _axis_key(table, "cmd_m_reg_d", "reg_d_mean"),
+                    _axis_key(table, "cmd_m_reg_q", "reg_q_mean"),
+                ],
                 [reg_d, reg_q],
                 value_key,
             )
@@ -901,11 +939,16 @@ class HPTVoltageSACEnv(gym.Env):
             )
 
         def from_joint() -> float | None:
+            table = cal.get("fault_joint_response_table", [])
             return _finite_or_none(
                 _interp_grid_axes_table(
-                    cal.get("fault_joint_response_table", []),
+                    table,
                     grid_pu,
-                    ["reg_d_mean", "energy_d_mean", "energy_q_mean"],
+                    [
+                        _axis_key(table, "cmd_m_reg_d", "reg_d_mean"),
+                        _axis_key(table, "cmd_m_energy_d", "energy_d_mean"),
+                        _axis_key(table, "cmd_m_energy_q", "energy_q_mean"),
+                    ],
                     [reg_d, energy_d, energy_q],
                     value_key,
                 )
@@ -968,7 +1011,16 @@ class HPTVoltageSACEnv(gym.Env):
             for row in cal.get(table_name, []):
                 if "category" in row and str(row.get("category", "")).upper() != str(self._sc.category).upper():
                     continue
-                for key in ("reg_d_mean", "reg_q_mean", "energy_d_mean", "energy_q_mean"):
+                for key in (
+                    "cmd_m_reg_d",
+                    "cmd_m_reg_q",
+                    "cmd_m_energy_d",
+                    "cmd_m_energy_q",
+                    "reg_d_mean",
+                    "reg_q_mean",
+                    "energy_d_mean",
+                    "energy_q_mean",
+                ):
                     if _has_numeric_key(row, key):
                         ranges.setdefault(key, []).append(float(row[key]))
 
@@ -986,10 +1038,10 @@ class HPTVoltageSACEnv(gym.Env):
             return 0.0
 
         terms = [
-            excess("reg_d_mean", float(reg_d)),
-            excess("reg_q_mean", float(reg_q)),
-            excess("energy_d_mean", float(energy_d)),
-            excess("energy_q_mean", float(energy_q)),
+            excess("cmd_m_reg_d" if ranges.get("cmd_m_reg_d") else "reg_d_mean", float(reg_d)),
+            excess("cmd_m_reg_q" if ranges.get("cmd_m_reg_q") else "reg_q_mean", float(reg_q)),
+            excess("cmd_m_energy_d" if ranges.get("cmd_m_energy_d") else "energy_d_mean", float(energy_d)),
+            excess("cmd_m_energy_q" if ranges.get("cmd_m_energy_q") else "energy_q_mean", float(energy_q)),
         ]
         return float(np.linalg.norm(np.asarray(terms, dtype=float)))
 

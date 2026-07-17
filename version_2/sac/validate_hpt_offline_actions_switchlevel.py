@@ -241,6 +241,16 @@ def run_switch_case(row: dict[str, str], *, run_dir: Path, matlab_cmd: str) -> d
             "vdc_min",
             "vdc_max",
             "action_max_abs",
+            "cmd_action_max_abs",
+            "bridge_modulation_abs_max",
+            "cmd_m_reg_d_mean",
+            "cmd_m_reg_q_mean",
+            "cmd_m_energy_d_mean",
+            "cmd_m_energy_q_mean",
+            "meas_reg_d_mean",
+            "meas_reg_q_mean",
+            "meas_energy_d_mean",
+            "meas_energy_q_mean",
             "reg_d_mean",
             "reg_q_mean",
             "energy_d_mean",
@@ -291,17 +301,19 @@ def write_report(run_dir: Path, rows: list[dict[str, Any]], source_csv: Path) ->
             "",
             "## Action-Transfer Diagnosis",
             "",
-            "| Candidate | Req reg_d | Sim reg_d | Req energy_d | Sim energy_d | LV recovery | Vdc min/max |",
-            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+            "| Candidate | Req reg_d | Cmd reg_d | Meas reg_d | Req energy_d | Cmd energy_d | Meas energy_d | LV recovery | Vdc min/max |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
         ]
     )
     for row in rows:
         lines.append(
             f"| `{row['candidate_algorithm']} / {row['case_name']}` | "
             f"{fmt_float(row.get('action_m_reg_d'))} | "
-            f"{fmt_float(row.get('switch_fixed_reg_d_mean'))} | "
+            f"{fmt_float(row.get('switch_fixed_cmd_m_reg_d_mean', row.get('switch_fixed_reg_d_mean')))} | "
+            f"{fmt_float(row.get('switch_fixed_meas_reg_d_mean', row.get('switch_fixed_reg_d_mean')))} | "
             f"{fmt_float(row.get('action_m_energy_d'))} | "
-            f"{fmt_float(row.get('switch_fixed_energy_d_mean'))} | "
+            f"{fmt_float(row.get('switch_fixed_cmd_m_energy_d_mean', row.get('switch_fixed_energy_d_mean')))} | "
+            f"{fmt_float(row.get('switch_fixed_meas_energy_d_mean', row.get('switch_fixed_energy_d_mean')))} | "
             f"{fmt_float(row.get('switch_fixed_lv_recovery_mean'))} | "
             f"{fmt_float(row.get('switch_fixed_vdc_min'))}/{fmt_float(row.get('switch_fixed_vdc_max'))} |"
         )
@@ -310,8 +322,8 @@ def write_report(run_dir: Path, rows: list[dict[str, Any]], source_csv: Path) ->
             "",
             "Interpretation aid:",
             "",
-            "- `Req reg_d` should roughly match `Sim reg_d` in fixed-action mode.",
-            "- A large sign or magnitude mismatch between `Req energy_d` and `Sim energy_d` means the offline proxy action semantics do not yet match the switch-level energy branch.",
+            "- `Req` is the offline controller request, `Cmd` is the command logged by the Simulink controller, and `Meas` is the reconstructed/effective switch-level response.",
+            "- `Req` and `Cmd` should match in fixed-action mode. A large gap between `Cmd energy_d` and `Meas energy_d` means the energy-branch command-to-response map still needs calibration.",
         ]
     )
     (run_dir / "REPORT.md").write_text("\n".join(lines), encoding="utf-8")

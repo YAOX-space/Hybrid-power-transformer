@@ -83,6 +83,12 @@ through `run_hpt_sac_pipeline.py` or documented in `experiments/README.md`.
    `version_2/simulink/` are `hpt_sac_actor_weights.mat` and
    `hpt_sac_actor_weights_dynamic.mat`.  Other candidate MAT snapshots should
    live in timestamped result directories, not beside the model scripts.
+8. Full-action data must keep command and response semantics separate:
+   `cmd_m_*` fields are controller/actor commands, while `meas_*` fields are
+   reconstructed switch-level responses.  The legacy `reg_d_mean`,
+   `reg_q_mean`, `energy_d_mean`, and `energy_q_mean` fields are treated as
+   response-compatible fields; action labels must come from `raw_m_*` or
+   `cmd_m_*`.
 
 ## Canonical Workflow
 
@@ -144,6 +150,11 @@ The current full workflow is:
   `hvrt_200ms_1p120pu` beat conventional after fixed-action validation.  The
   main remaining mismatch is energy-branch action semantics and recovery-window
   voltage behavior.
+- Energy-branch command and response can have different signs/magnitudes in
+  switch-level validation.  For example, a fixed-action request near
+  `cmd_m_energy_d=+0.07` in topology2/HVRT can produce a measured effective
+  response near `meas_energy_d=-0.02`.  Do not train new SAC policies from a
+  dataset that lacks both `cmd_m_energy_d_mean` and `meas_energy_d_mean`.
 - The interrupted full fault specialist run at
   `lab/results/hpt_case_specialists_20260717_011726` produced partial results
   only. It should be treated as diagnostic data, not a completed campaign.
