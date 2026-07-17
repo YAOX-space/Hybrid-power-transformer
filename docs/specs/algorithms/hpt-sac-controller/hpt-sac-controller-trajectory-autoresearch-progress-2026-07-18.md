@@ -95,6 +95,8 @@ Reactive-current exploration:
   voltage-survival because Vdc exceeded the upper bound.
 - Fast post-fault down-ramp made DC-link oscillation worse
   (`Vdc min/max ~= 375/1111 V` in the first test).
+- Sweeping `m_energy_q` in the two-stage trajectory did not materially change
+  the limiting `Vdc max ~= 1005.6 V`; it only changed LV/score slightly.
 
 Implication:
 
@@ -103,6 +105,9 @@ Implication:
 - The next controller needs an explicit dynamic tradeoff: delay/shape q-axis
   support while actively damping DC-link energy, instead of cloning a constant
   full-action target.
+- For topology2, the energy branch still needs a dynamic response model or a
+  direct Simulink-in-loop optimizer; simple fixed `m_energy_d/q` labels are not
+  enough for full-FRT training.
 
 ## What This Proves
 
