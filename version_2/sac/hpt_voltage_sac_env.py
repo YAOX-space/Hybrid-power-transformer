@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 import json
 from pathlib import Path
+import re
 from typing import Iterable
 
 import gymnasium as gym
@@ -906,6 +907,97 @@ class HPTVoltageSACEnv(gym.Env):
             return None
         return best_row
 
+    def _row_matches_fault_duration(self, row: dict, *, tolerance_s: float = 2e-3) -> bool:
+        duration = self._fault_duration()
+        if _has_numeric_key(row, "fault_duration_s"):
+            return abs(float(row["fault_duration_s"]) - duration) <= tolerance_s
+        text = f"{row.get('fault', '')} {row.get('case_name', '')}"
+        match = re.search(r"(\d+)\s*ms", text, flags=re.IGNORECASE)
+        if match:
+            return abs(float(match.group(1)) / 1000.0 - duration) <= tolerance_s
+        return True
+
+    @staticmethod
+    def _row_is_voltage_survival_failure(row: dict) -> bool:
+        if "voltage_survival_pass" in row:
+            value = row.get("voltage_survival_pass")
+            if isinstance(value, bool):
+                return not value
+            if str(value).strip().lower() in {"0", "0.0", "false", "no"}:
+                return True
+        vref = 207.0
+        vdc_ref = 800.0
+        checks = [
+            ("lv_recovery_pu_mean", 180.0 / vref, 235.0 / vref),
+            ("lv_min_pu", 180.0 / vref, float("inf")),
+            ("lv_peak_pu", -float("inf"), 235.0 / vref),
+            ("vdc_min_pu", 650.0 / vdc_ref, float("inf")),
+            ("vdc_max_pu", -float("inf"), 1000.0 / vdc_ref),
+        ]
+        for key, lo, hi in checks:
+            if not _has_numeric_key(row, key):
+                continue
+            value = float(row[key])
+            if value < lo - 1e-9 or value > hi + 1e-9:
+                return True
+        return False
+
+    def _nearest_failed_joint_fault_row(
+        self,
+        grid_pu: float,
+        reg_d: float,
+        energy_d: float,
+        energy_q: float,
+        value_key: str,
+        *,
+        max_distance: float = 0.20,
+    ) -> dict | None:
+        cal = self._topology_calibration()
+        rows = [
+            row
+            for row in cal.get("fault_joint_response_table", [])
+            if str(row.get("category", "")).upper() == str(self._sc.category).upper()
+            and self._row_matches_fault_duration(row)
+            and self._row_is_voltage_survival_failure(row)
+            and _has_numeric_key(row, value_key)
+        ]
+        if not rows:
+            return None
+
+        def span(key: str, minimum: float) -> float:
+            vals = [float(row[key]) for row in rows if _has_numeric_key(row, key)]
+            if not vals:
+                return minimum
+            return max(max(vals) - min(vals), minimum)
+
+        grid_span = span("grid_pu", 0.03)
+        reg_d_key = _axis_key(rows, "cmd_m_reg_d", "reg_d_mean")
+        energy_d_key = _axis_key(rows, "cmd_m_energy_d", "energy_d_mean")
+        energy_q_key = _axis_key(rows, "cmd_m_energy_q", "energy_q_mean")
+        reg_d_span = span(reg_d_key, 0.10)
+        energy_d_span = span(energy_d_key, 0.06)
+        energy_q_span = span(energy_q_key, 0.04)
+
+        best_row: dict | None = None
+        best_distance = float("inf")
+        for row in rows:
+            vec = np.asarray(
+                [
+                    (float(grid_pu) - _row_numeric(row, "grid_pu", "fault_pu")) / grid_span,
+                    (float(reg_d) - _row_numeric(row, reg_d_key, "reg_d_mean")) / reg_d_span,
+                    (float(energy_d) - _row_numeric(row, energy_d_key, "energy_d_mean")) / energy_d_span,
+                    (float(energy_q) - _row_numeric(row, energy_q_key, "energy_q_mean")) / energy_q_span,
+                ],
+                dtype=float,
+            )
+            distance = float(np.linalg.norm(vec))
+            if distance < best_distance:
+                best_distance = distance
+                best_row = row
+        if best_row is None or best_distance > max_distance:
+            return None
+        return best_row
+
     def _calibrated_fault_metric(
         self,
         grid_pu: float,
@@ -996,6 +1088,26 @@ class HPTVoltageSACEnv(gym.Env):
 
         def from_joint() -> float | None:
             table = cal.get("fault_joint_response_table", [])
+            if value_key in {
+                "lv_pu_mean",
+                "lv_recovery_pu_mean",
+                "lv_peak_pu",
+                "lv_min_pu",
+                "vdc_pu_mean",
+                "vdc_min_pu",
+                "vdc_max_pu",
+                "grid_iq_shortfall_max_pu",
+                "grid_current_peak_pu",
+            }:
+                failed_row = self._nearest_failed_joint_fault_row(
+                    grid_pu,
+                    reg_d,
+                    energy_d,
+                    energy_q,
+                    value_key,
+                )
+                if failed_row is not None:
+                    return _finite_or_none(float(failed_row[value_key]))
             return _finite_or_none(
                 _interp_grid_axes_table(
                     table,
@@ -1010,18 +1122,26 @@ class HPTVoltageSACEnv(gym.Env):
                 )
             )
 
-        value = from_conventional()
-        if value is not None:
-            return cached(value)
-
         if mode == "baseline":
-            return cached(from_baseline())
+            value = from_baseline()
+            if value is not None:
+                return cached(value)
+            return cached(from_conventional())
         if mode == "reg_sweep":
-            return cached(from_reg())
+            value = from_reg()
+            if value is not None:
+                return cached(value)
+            return cached(from_conventional())
         if mode == "energy_sweep":
-            return cached(from_energy())
+            value = from_energy()
+            if value is not None:
+                return cached(value)
+            return cached(from_conventional())
         if mode == "joint_sweep":
             value = from_joint()
+            if value is not None:
+                return cached(value)
+            value = from_conventional()
             if value is not None:
                 return cached(value)
 

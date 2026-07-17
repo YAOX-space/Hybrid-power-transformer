@@ -520,7 +520,13 @@ def write_report(path: Path, rows: list[dict[str, Any]], manifest: dict[str, Any
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--conventional-csv", type=Path, default=None)
-    parser.add_argument("--matrix-csv", type=Path, default=None)
+    parser.add_argument(
+        "--matrix-csv",
+        type=Path,
+        nargs="+",
+        default=None,
+        help="One or more switch-level FRT calibration matrices to use as candidate action evidence.",
+    )
     parser.add_argument("--out-root", type=Path, default=DEFAULT_OUT_ROOT)
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--seed", type=int, default=20260717)
@@ -536,7 +542,7 @@ def main() -> int:
     conventional_csv = args.conventional_csv or latest_csv(
         CONTROL_DIR, "control_comparison_*conventional_boundary*.csv"
     )
-    matrix_csv = args.matrix_csv or latest_csv(MATRIX_DIR, "frt_calibration_matrix_expanded_full_holdout_*.csv")
+    matrix_csvs = args.matrix_csv or [latest_csv(MATRIX_DIR, "frt_calibration_matrix_*_all_*.csv")]
     run_id = args.run_id or f"hpt_boundary_full_action_{time.strftime('%Y%m%d_%H%M%S')}"
     out_dir = args.out_root / run_id
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -553,7 +559,9 @@ def main() -> int:
         for row, role in selected_pairs
     ]
 
-    matrix_rows = read_csv(matrix_csv)
+    matrix_rows: list[dict[str, Any]] = []
+    for matrix_csv in matrix_csvs:
+        matrix_rows.extend(read_csv(matrix_csv))
     for row in matrix_rows:
         if not include_matrix_row(row, args.candidate_selection, selected_conv_rows):
             continue
@@ -591,9 +599,9 @@ def main() -> int:
         "run_id": run_id,
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "conventional_boundary_csv": str(conventional_csv),
-        "matrix_csv": str(matrix_csv),
+        "matrix_csv": [str(path) for path in matrix_csvs],
         "conventional_boundary_hash": sha256_file(conventional_csv),
-        "matrix_hash": sha256_file(matrix_csv),
+        "matrix_hash": [sha256_file(path) for path in matrix_csvs],
         "dataset_csv": str(dataset_csv),
         "dataset_npz": str(dataset_npz),
         "report": str(out_dir / "REPORT.md"),
@@ -618,6 +626,7 @@ def main() -> int:
             "candidate_selection": args.candidate_selection,
             "pass_column": args.pass_column,
             "seed": args.seed,
+            "matrix_csv": [str(path) for path in matrix_csvs],
         },
         dataset_manifest=out_dir / "manifest.json",
         extra=manifest,

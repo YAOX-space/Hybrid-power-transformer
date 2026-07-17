@@ -470,8 +470,7 @@ def train_policy(
     lr: float,
     behavior_alpha: float,
     seed: int,
-    reg_limit: float,
-    energy_limit: float,
+    action_scale: np.ndarray,
     hidden: int,
 ) -> tuple[OfflinePolicy, Path, float, float]:
     if not samples:
@@ -498,7 +497,9 @@ def train_policy(
     )
     loader = DataLoader(dataset, batch_size=max(1, batch_size), shuffle=True)
     device = torch.device(pick_device())
-    action_scale = np.asarray([reg_limit, reg_limit, energy_limit, energy_limit], dtype=np.float32)
+    action_scale = np.asarray(action_scale, dtype=np.float32)
+    if action_scale.shape != (ACT_DIM_HPT,):
+        raise RuntimeError(f"Bad action_scale shape: {action_scale.shape}")
     model = ContextActor(contexts.shape[1], hidden, action_scale).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-5)
     last_loss = float("nan")
@@ -539,6 +540,7 @@ def train_policy(
                 "behavior_alpha": behavior_alpha,
                 "hidden": hidden,
                 "seed": seed,
+                "action_scale": action_scale.tolist(),
             },
         },
         model_path,
@@ -763,6 +765,15 @@ def run_algorithm_sequence(
     case_rows_out: list[dict[str, Any]] = []
     viable_found = False
     safe_group_label = group_label.replace("/", "_").replace("\\", "_").replace(" ", "_")
+    action_scale = np.asarray(
+        [
+            env_config.reg_d_limit,
+            env_config.reg_q_limit,
+            env_config.energy_d_limit,
+            env_config.energy_q_limit,
+        ],
+        dtype=np.float32,
+    )
     for idx, algorithm in enumerate(algorithms):
         if algorithm == "td3_bc_style":
             samples = make_td3_bc_style_samples(pairs)
@@ -791,8 +802,7 @@ def run_algorithm_sequence(
             lr=args.lr,
             behavior_alpha=behavior_alpha,
             seed=args.seed + idx * 1000 + (sum(ord(ch) for ch in group_label) % 1000),
-            reg_limit=args.reg_limit,
-            energy_limit=args.energy_limit,
+            action_scale=action_scale,
             hidden=args.hidden,
         )
         summary, case_rows = evaluate_policy(
@@ -834,6 +844,10 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=20260717)
     parser.add_argument("--reg-limit", type=float, default=0.80)
     parser.add_argument("--energy-limit", type=float, default=0.95)
+    parser.add_argument("--reg-d-limit", type=float, default=0.80)
+    parser.add_argument("--reg-q-limit", type=float, default=0.40)
+    parser.add_argument("--energy-d-limit", type=float, default=0.40)
+    parser.add_argument("--energy-q-limit", type=float, default=0.20)
     parser.add_argument(
         "--group-specialists",
         action="store_true",
@@ -873,6 +887,10 @@ def main() -> int:
     env_config = HPTVoltageEnvConfig(
         reg_limit=args.reg_limit,
         energy_limit=args.energy_limit,
+        reg_d_limit=args.reg_d_limit,
+        reg_q_limit=args.reg_q_limit,
+        energy_d_limit=args.energy_d_limit,
+        energy_q_limit=args.energy_q_limit,
         action_projection_enable=False,
     )
     summaries: list[AlgorithmSummary] = []

@@ -247,8 +247,24 @@ def collect_conventional_teacher_samples(
             np.zeros((0, ACT_DIM_HPT), dtype=np.float32),
         )
 
-    action_low = np.asarray([-config.reg_limit, -config.reg_limit, -config.energy_limit, -config.energy_limit], dtype=np.float32)
-    action_high = np.asarray([config.reg_limit, config.reg_limit, config.energy_limit, config.energy_limit], dtype=np.float32)
+    action_low = np.asarray(
+        [
+            -config.reg_d_limit,
+            -config.reg_q_limit,
+            -config.energy_d_limit,
+            -config.energy_q_limit,
+        ],
+        dtype=np.float32,
+    )
+    action_high = np.asarray(
+        [
+            config.reg_d_limit,
+            config.reg_q_limit,
+            config.energy_d_limit,
+            config.energy_q_limit,
+        ],
+        dtype=np.float32,
+    )
     for case in cases:
         scenario = scenario_from_case(case)
         target = np.clip(conventional_action_from_case(case), action_low, action_high)
@@ -810,6 +826,10 @@ def main() -> int:
     parser.add_argument("--pass-column", default="voltage_survival_pass")
     parser.add_argument("--reg-limit", type=float, default=0.80)
     parser.add_argument("--energy-limit", type=float, default=0.95)
+    parser.add_argument("--reg-d-limit", type=float, default=0.80)
+    parser.add_argument("--reg-q-limit", type=float, default=0.40)
+    parser.add_argument("--energy-d-limit", type=float, default=0.40)
+    parser.add_argument("--energy-q-limit", type=float, default=0.20)
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--sac-batch-size", type=int, default=128)
     parser.add_argument("--sac-buffer-size", type=int, default=None)
@@ -890,6 +910,10 @@ def main() -> int:
     env_config = HPTVoltageEnvConfig(
         reg_limit=args.reg_limit,
         energy_limit=args.energy_limit,
+        reg_d_limit=args.reg_d_limit,
+        reg_q_limit=args.reg_q_limit,
+        energy_d_limit=args.energy_d_limit,
+        energy_q_limit=args.energy_q_limit,
         teacher_prior_weight=args.teacher_prior_weight,
         action_projection_enable=args.action_projection,
         calibration_ood_reward_weight=args.calibration_ood_reward_weight,
