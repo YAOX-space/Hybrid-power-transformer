@@ -42,6 +42,19 @@ OBS_DIM_HPT = 24
 ACT_DIM_HPT = 4
 DEFAULT_PROXY_CALIBRATION = Path(__file__).with_name("hpt_proxy_calibration.json")
 _INTERP_EPS = 1e-6
+_VDC_COLLAPSE_PU = 0.25
+
+_HIGH_IS_BAD_METRIC_KEYS = {
+    "lv_peak_pu",
+    "vdc_max_pu",
+    "energy_i_rms_mean",
+    "action_max_abs",
+    "bridge_modulation_abs_max",
+    "grid_iq_shortfall_max_pu",
+    "grid_iq_wrong_sign",
+    "grid_current_peak_pu",
+    "grid_idq_peak_pu",
+}
 
 
 @dataclass(frozen=True)
@@ -79,6 +92,10 @@ class HPTVoltageEnvConfig:
     vdc_ref: float = 800.0
     reg_limit: float = 0.80
     energy_limit: float = 0.95
+    reg_d_limit: float = 0.80
+    reg_q_limit: float = 0.40
+    energy_d_limit: float = 0.40
+    energy_q_limit: float = 0.20
     v_tau: float = 0.012
     vdc_tau: float = 0.018
     use_switch_calibration: bool = True
@@ -120,6 +137,7 @@ class HPTVoltageEnvConfig:
     grid_reactive_reward_weight: float = 40.0
     grid_current_reward_weight: float = 50.0
     grid_wrong_sign_reward_weight: float = 8.0
+    voltage_wrong_sign_reward_weight: float = 80.0
     calibrated_survival_reward_weight: float = 140.0
     calibration_ood_reward_weight: float = 220.0
     action_projection_enable: bool = False
@@ -236,7 +254,12 @@ def _interp_response_table(
             return None
         values_by_grid.append(float(np.interp(float(reg_d), xs, ys)))
 
-    return float(np.interp(float(grid_pu), np.asarray(grids, dtype=float), np.asarray(values_by_grid, dtype=float)))
+    return _conservative_grid_interp(
+        float(grid_pu),
+        np.asarray(grids, dtype=float),
+        np.asarray(values_by_grid, dtype=float),
+        value_key,
+    )
 
 
 def _interp_energy_axis(
@@ -273,7 +296,12 @@ def _interp_energy_axis(
             return None
         values_by_grid.append(float(np.interp(float(action_value), xs, ys)))
 
-    return float(np.interp(float(grid_pu), np.asarray(grids, dtype=float), np.asarray(values_by_grid, dtype=float)))
+    return _conservative_grid_interp(
+        float(grid_pu),
+        np.asarray(grids, dtype=float),
+        np.asarray(values_by_grid, dtype=float),
+        value_key,
+    )
 
 
 def _interp_energy_response(
@@ -368,7 +396,12 @@ def _interp_grid_axes_table(
         return None
     if float(grid_pu) < min(xs) - _INTERP_EPS or float(grid_pu) > max(xs) + _INTERP_EPS:
         return None
-    return float(np.interp(float(grid_pu), np.asarray(xs, dtype=float), np.asarray(ys, dtype=float)))
+    return _conservative_grid_interp(
+        float(grid_pu),
+        np.asarray(xs, dtype=float),
+        np.asarray(ys, dtype=float),
+        value_key,
+    )
 
 
 def _neg_seq_for_fault(fault_type: str, target: float) -> float:
@@ -392,6 +425,29 @@ def _finite_or_none(value: float | None) -> float | None:
     if not np.isfinite(out):
         return None
     return out
+
+
+def _conservative_grid_interp(grid_pu: float, xs: np.ndarray, ys: np.ndarray, value_key: str) -> float:
+    """Interpolate grid-voltage tables without smoothing DC-collapse edges."""
+
+    target = float(grid_pu)
+    if len(xs) <= 1:
+        return float(ys[0])
+    exact = np.where(np.isclose(xs, target, atol=_INTERP_EPS, rtol=0.0))[0]
+    if exact.size:
+        return float(ys[int(exact[0])])
+    upper = int(np.searchsorted(xs, target, side="right"))
+    lower = max(0, upper - 1)
+    upper = min(len(xs) - 1, upper)
+    if lower == upper:
+        return float(ys[lower])
+    y0 = float(ys[lower])
+    y1 = float(ys[upper])
+    if value_key.startswith("vdc_") and ((y0 < _VDC_COLLAPSE_PU) != (y1 < _VDC_COLLAPSE_PU)):
+        if value_key in _HIGH_IS_BAD_METRIC_KEYS:
+            return max(y0, y1)
+        return min(y0, y1)
+    return float(np.interp(target, xs, ys))
 
 
 def default_hpt_voltage_scenarios() -> list[HPTVoltageScenario]:
@@ -565,10 +621,10 @@ class HPTVoltageSACEnv(gym.Env):
         self.train_mode = train_mode
         low = np.array(
             [
-                -self.config.reg_limit,
-                -self.config.reg_limit,
-                -self.config.energy_limit,
-                -self.config.energy_limit,
+                -self.config.reg_d_limit,
+                -self.config.reg_q_limit,
+                -self.config.energy_d_limit,
+                -self.config.energy_q_limit,
             ],
             dtype=np.float32,
         )
@@ -1111,7 +1167,7 @@ class HPTVoltageSACEnv(gym.Env):
         if wrong_sign_metric is None:
             wrong_sign = bool((vpos < 0.9 and iq < -1e-3) or (vpos > 1.1 and iq > 1e-3))
         else:
-            wrong_sign = bool(wrong_sign_metric > 0.5)
+            wrong_sign = bool(wrong_sign_metric >= 0.5)
 
         current = self._calibrated_fault_metric(
             grid_pu, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "grid_current_peak_pu"
@@ -1236,7 +1292,7 @@ class HPTVoltageSACEnv(gym.Env):
 
         if self.vdc < 0.95:
             projected[0] *= np.clip((self.vdc - 0.75) / 0.20, 0.0, 1.0)
-            projected[2] = max(projected[2], min(cfg.energy_limit, 0.20 + 1.2 * (0.82 - self.vdc)))
+            projected[2] = max(projected[2], min(cfg.energy_d_limit, 0.20 + 1.2 * (0.82 - self.vdc)))
         elif self.vdc > 1.12:
             projected[2] = min(projected[2], -0.05)
         dynamic_fault = (
@@ -1573,7 +1629,7 @@ class HPTVoltageSACEnv(gym.Env):
             -(90.0 + 35.0 * fault_or_recovery) * voltage_err * voltage_err
             -45.0 * unbalance * unbalance
             -55.0 * vdc_soft * vdc_soft
-            -8.0 * wrong_sign
+            -cfg.voltage_wrong_sign_reward_weight * wrong_sign
             -topology2_dynamic_stress
             -cfg.calibrated_survival_reward_weight * calibrated_survival_violation
             -cfg.calibration_ood_reward_weight * support_violation * support_violation

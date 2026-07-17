@@ -20,6 +20,28 @@ DEFAULT_MATRIX_DIR = ROOT / "lab" / "results" / "hpt_v2_frt_calibration_matrix"
 DEFAULT_CALIBRATION = ROOT / "version_2" / "sac" / "hpt_proxy_calibration.json"
 DEFAULT_OUT_DIR = ROOT / "lab" / "results" / "hpt_v2_frt_proxy_gap"
 INTERP_EPS = 1e-6
+VDC_COLLAPSE_PU = 0.25
+
+
+LOW_IS_BAD_KEYS = {
+    "lv_pu_mean",
+    "lv_recovery_pu_mean",
+    "lv_min_pu",
+    "vdc_pu_mean",
+    "vdc_min_pu",
+}
+
+HIGH_IS_BAD_KEYS = {
+    "lv_peak_pu",
+    "vdc_max_pu",
+    "energy_i_rms_mean",
+    "action_max_abs",
+    "bridge_modulation_abs_max",
+    "grid_iq_shortfall_max_pu",
+    "grid_iq_wrong_sign",
+    "grid_current_peak_pu",
+    "grid_idq_peak_pu",
+}
 
 
 def latest_csv(directory: Path, pattern: str) -> Path:
@@ -119,6 +141,36 @@ def row_response(row: dict[str, Any]) -> tuple[float, float, float, float]:
     )
 
 
+def conservative_grid_interp(grid_pu: float, xs: np.ndarray, ys: np.ndarray, key: str) -> float:
+    """Interpolate over grid voltage without smoothing across DC-collapse edges.
+
+    The switch-level HPT model can jump between a normal DC-link state and a
+    collapsed state over a narrow voltage interval.  Linear interpolation across
+    that edge invents nonphysical medium-Vdc points, which then gives SAC the
+    wrong reward ordering.  When the two bracketing samples straddle the
+    collapse threshold, return the pessimistic endpoint instead.
+    """
+
+    target = float(grid_pu)
+    if len(xs) <= 1:
+        return float(ys[0])
+    exact = np.where(np.isclose(xs, target, atol=INTERP_EPS, rtol=0.0))[0]
+    if exact.size:
+        return float(ys[int(exact[0])])
+    upper = int(np.searchsorted(xs, target, side="right"))
+    lower = max(0, upper - 1)
+    upper = min(len(xs) - 1, upper)
+    if lower == upper:
+        return float(ys[lower])
+    y0 = float(ys[lower])
+    y1 = float(ys[upper])
+    if key.startswith("vdc_") and ((y0 < VDC_COLLAPSE_PU) != (y1 < VDC_COLLAPSE_PU)):
+        if key in HIGH_IS_BAD_KEYS:
+            return max(y0, y1)
+        return min(y0, y1)
+    return float(np.interp(target, xs, ys))
+
+
 def interp_response(table: list[dict[str, Any]], grid_pu: float, reg_d: float, key: str) -> float | None:
     if not table:
         return None
@@ -146,7 +198,12 @@ def interp_response(table: list[dict[str, Any]], grid_pu: float, reg_d: float, k
         used_grids.append(grid)
     if not vals:
         return None
-    return float(np.interp(grid_pu, np.asarray(used_grids), np.asarray(vals)))
+    return conservative_grid_interp(
+        grid_pu,
+        np.asarray(used_grids, dtype=float),
+        np.asarray(vals, dtype=float),
+        key,
+    )
 
 
 def interp_by_grid(table: list[dict[str, Any]], grid_pu: float, key: str) -> float | None:
@@ -161,7 +218,7 @@ def interp_by_grid(table: list[dict[str, Any]], grid_pu: float, key: str) -> flo
         return None
     xs = np.asarray(sorted(bucket), dtype=float)
     ys = np.asarray([np.mean(bucket[float(x)]) for x in xs], dtype=float)
-    return float(np.interp(grid_pu, xs, ys))
+    return conservative_grid_interp(grid_pu, xs, ys, key)
 
 
 def interp_energy_axis(
@@ -197,7 +254,12 @@ def interp_energy_axis(
         used_grids.append(grid)
     if not vals:
         return None
-    return float(np.interp(grid_pu, np.asarray(used_grids), np.asarray(vals)))
+    return conservative_grid_interp(
+        grid_pu,
+        np.asarray(used_grids, dtype=float),
+        np.asarray(vals, dtype=float),
+        value_key,
+    )
 
 
 def interp_energy(table: list[dict[str, Any]], grid_pu: float, ed: float, eq: float, key: str) -> float | None:
@@ -279,7 +341,12 @@ def interp_grid_axes(
         return None
     if float(grid_pu) < min(xs) - INTERP_EPS or float(grid_pu) > max(xs) + INTERP_EPS:
         return None
-    return float(np.interp(float(grid_pu), np.asarray(xs), np.asarray(ys)))
+    return conservative_grid_interp(
+        float(grid_pu),
+        np.asarray(xs, dtype=float),
+        np.asarray(ys, dtype=float),
+        key,
+    )
 
 
 def analyze(rows: list[dict[str, Any]], calibration: dict[str, Any]) -> list[dict[str, Any]]:

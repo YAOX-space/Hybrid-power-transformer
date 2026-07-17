@@ -69,6 +69,15 @@ def read_rows(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def read_rows_many(paths: list[Path]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in paths:
+        rows.extend(read_rows(path))
+    if not rows:
+        raise ValueError("No rows loaded from FRT matrix CSV inputs")
+    return rows
+
+
 def f(row: dict[str, Any], key: str, default: float = 0.0) -> float:
     value = row.get(key, default)
     if value in ("", None):
@@ -372,17 +381,17 @@ def fit_fault_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def merge_frt_calibration(calibration_path: Path, matrix_csv: Path) -> dict[str, Any]:
+def merge_frt_calibration(calibration_path: Path, matrix_csvs: list[Path]) -> dict[str, Any]:
     calibration = json.loads(Path(calibration_path).read_text(encoding="utf-8"))
     if calibration.get("schema") != "hpt_proxy_calibration_v1":
         raise ValueError(f"Unsupported calibration schema: {calibration.get('schema')}")
 
-    rows = read_rows(matrix_csv)
+    rows = read_rows_many(matrix_csvs)
     by_topology: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         by_topology[s(row, "topology")].append(row)
 
-    calibration["frt_source_csv"] = str(matrix_csv)
+    calibration["frt_source_csv"] = str(matrix_csvs[0]) if len(matrix_csvs) == 1 else [str(p) for p in matrix_csvs]
     calibration["frt_matrix"] = {
         "fault_depths": sorted({f(r, "grid_pu", f(r, "fault_pu")) for r in rows}),
         "categories": sorted({s(r, "category") for r in rows}),
@@ -417,7 +426,7 @@ def merge_conventional_boundary(calibration: dict[str, Any], boundary_csv: Path 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--matrix-csv", type=Path, default=None)
+    parser.add_argument("--matrix-csv", type=Path, nargs="+", default=None)
     parser.add_argument("--matrix-dir", type=Path, default=DEFAULT_MATRIX_DIR)
     parser.add_argument("--conventional-csv", type=Path, default=None)
     parser.add_argument("--control-dir", type=Path, default=DEFAULT_CONTROL_DIR)
@@ -426,8 +435,8 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=DEFAULT_CALIBRATION)
     args = parser.parse_args()
 
-    matrix_csv = args.matrix_csv or latest_csv(args.matrix_dir, "frt_calibration_matrix_*.csv")
-    calibration = merge_frt_calibration(args.calibration, matrix_csv)
+    matrix_csvs = args.matrix_csv or [latest_csv(args.matrix_dir, "frt_calibration_matrix_*.csv")]
+    calibration = merge_frt_calibration(args.calibration, matrix_csvs)
     conventional_csv = None if args.skip_conventional else (args.conventional_csv or latest_boundary_csv(args.control_dir))
     calibration = merge_conventional_boundary(calibration, conventional_csv)
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -436,7 +445,7 @@ def main() -> None:
         json.dumps(
             {
                 "out": str(args.out),
-                "matrix_csv": str(matrix_csv),
+                "matrix_csv": [str(p) for p in matrix_csvs],
                 "conventional_csv": str(conventional_csv) if conventional_csv is not None else None,
                 "topologies": sorted(calibration.get("topologies", {}).keys()),
                 "fault_depths": calibration.get("frt_matrix", {}).get("fault_depths", []),

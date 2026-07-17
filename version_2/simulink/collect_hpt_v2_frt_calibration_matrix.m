@@ -2,7 +2,7 @@
 % Switch-level FRT calibration matrix for the version-2 HPT SAC proxy.
 %
 % Workspace overrides:
-%   hpt_calib_mode       "pilot" | "full" | "holdout"        default: "full"
+%   hpt_calib_mode       "pilot" | "full" | "holdout" | "edgeholdout" default: "full"
 %   hpt_calib_topology   "topology1" | "topology2" | "all"
 %
 % The script records both aggregate metrics and 2-ms traces.  It uses fixed
@@ -70,6 +70,20 @@ elseif hpt_calib_mode == "holdout"
         'sag_0p65',   0.65, 'LVRT';
         'swell_1p15', 1.15, 'HVRT';
     };
+elseif hpt_calib_mode == "edgeholdout"
+    regDValues = [-0.50, -0.10, 0.10, 0.50];
+    regQValues = -0.20;
+    energyActions = [
+        0.15, 0.00;
+        0.35, 0.00;
+        0.00, 0.15;
+        0.35, 0.15
+    ];
+    jointEnergyValues = [0.15, 0.35];
+    faults = {
+        'sag_0p575',    0.575, 'LVRT';
+        'swell_1p175',  1.175, 'HVRT';
+    };
 else
     regDValues = [-0.80, -0.60, -0.40, -0.20, 0.00, 0.20, 0.40, 0.60, 0.80];
     regQValues = [-0.40, 0.00, 0.40];
@@ -129,9 +143,9 @@ for c = 1:size(cases, 1)
             traceCells = append_trace_cells(traceCells, rowCells{end}, sampleStride); %#ok<AGROW>
         end
 
-        if hpt_calib_mode == "holdout" && faultPu < 1.0
+        if (hpt_calib_mode == "holdout" || hpt_calib_mode == "edgeholdout") && faultPu < 1.0
             jointRegValues = [0.30, 0.50];
-        elseif hpt_calib_mode == "holdout"
+        elseif hpt_calib_mode == "holdout" || hpt_calib_mode == "edgeholdout"
             jointRegValues = [-0.30, -0.50];
         elseif faultPu < 1.0
             jointRegValues = [0.20, 0.40, 0.60];

@@ -172,7 +172,7 @@ def proxy_reward_from_lookup(row: dict[str, Any], proxy_row: dict[str, Any]) -> 
     grid = f(row, "grid_pu", f(row, "fault_pu", 1.0))
     wrong_sign = float((grid < 0.92 and reg_d < -1e-9) or (grid > 1.08 and reg_d > 1e-9))
     grid_iq_shortfall = finite_or(proxy_row, "proxy_grid_iq_shortfall_pu", 0.0)
-    grid_iq_wrong_sign = bool(finite_or(proxy_row, "proxy_grid_iq_wrong_sign", 0.0) > 0.5)
+    grid_iq_wrong_sign = bool(finite_or(proxy_row, "proxy_grid_iq_wrong_sign", 0.0) >= 0.5)
     grid_current = finite_or(proxy_row, "proxy_grid_current_peak_pu", 0.0)
     grid_current_violation = max(0.0, grid_current - 1.5)
 
