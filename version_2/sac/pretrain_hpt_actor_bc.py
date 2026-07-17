@@ -199,8 +199,12 @@ def _contains_filter_allowed(value: str, needle_csv: str) -> bool:
     if needle_csv in {"", "all", "*"}:
         return True
     value_l = str(value or "").lower()
+    value_case = value_l.replace(".", "p")
     needles = [item.strip().lower() for item in needle_csv.split(",") if item.strip()]
-    return any(needle in value_l for needle in needles)
+    return any(
+        needle in value_l or needle.replace(".", "p") in value_case
+        for needle in needles
+    )
 
 
 def _trace_row_allowed(
@@ -733,6 +737,11 @@ def main() -> None:
         repeat=args.bc_obs_noise_repeat,
         seed=args.seed + 17,
     )
+    if X.shape[0] == 0:
+        raise ValueError(
+            "No BC training samples matched the requested sources/filters. "
+            "Check switch_trace_case_contains, topology, scenario_type, and window_zone filters."
+        )
     model = build_or_load_model(args, scenarios, config)
     metrics = train_actor_bc(
         model,

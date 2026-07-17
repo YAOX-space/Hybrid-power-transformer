@@ -43,6 +43,42 @@ Case: `topology2 / LVRT / 0.95 pu / 80 ms`.
 | DAgger4 Vdc-feedback actor | `sac_actor_always_raw` | pass | 127.85 | 194.99 | 220.86 | 716.15 | 999.56 | First direct actor to pass voltage-survival and beat conventional. |
 | fault-window trajectory | `trajectory_action` | fail | 115.44 | 202.63 | 207.51 | 783.66 | 1006.65 | Best score so far, but DC-link upper bound fails. |
 
+## Autoresearch Update
+
+The reusable trajectory-specialist campaign is now implemented in
+`version_2/sac/run_hpt_trajectory_specialist_campaign.py`.
+
+Engineering fixes:
+
+- Fixed switch-trace case filtering so `lvrt_080ms_0.950pu` and
+  `lvrt_080ms_0p950pu` both match.
+- Added a hard failure when BC training receives zero switch-level samples.
+  The first smoke run silently trained with `samples=0`; that result is invalid.
+- Fixed campaign promotion logic so the final exported actor is the best
+  evaluated model, not always the last DAgger iteration.  This matters because
+  DAgger can improve one topology but degrade another.
+
+New switch-level specialist results:
+
+| Case | Traditional Baseline | Fixed/Trajectory Teacher | Best Actor | Result |
+| --- | ---: | ---: | ---: | --- |
+| `topology2 / LVRT / 0.95 pu / 80 ms` | pass, score `239.88` | pass, score `127.58` | DAgger1, score `127.02` | Actor passes voltage-survival and beats baseline. |
+| `topology2 / LVRT / 0.90 pu / 80 ms` | fail, score `296.53` | pass, score `135.13` | DAgger1, score `135.70` | Actor passes voltage-survival while baseline fails. |
+| `topology1 / LVRT / 0.90 pu / 80 ms` | pass, score `152.69` | pass, score `145.31` | BC0, score `150.76` | Actor passes voltage-survival and slightly beats baseline. |
+| `topology2 / HVRT / 1.10 pu / 80 ms` | `12/12` candidate sweeps pass baseline | `0/12` fixed candidates pass | not trained | Treat as a traditional-baseline strong case for now. |
+
+Important interpretation:
+
+- The autoresearch loop can now create continuous 2-ms action trajectories,
+  collect switch-level state/action traces, train a direct actor, and verify the
+  actor in switch-level Simulink.
+- The strongest current evidence is for LVRT specialists, not one unified SAC.
+- Full GB/T FRT still fails because recovery envelope, grid-current limit, and
+  reactive-current support/sign are not yet solved.
+- HVRT requires a different action search/control law.  The simple negative
+  `m_reg_d` sweep degraded voltage-survival while the traditional baseline
+  already passed.
+
 ## What This Proves
 
 - The new trajectory interface works: constant trajectory is exactly
