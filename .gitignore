@@ -23,6 +23,7 @@ slprj/
 *.slx.r*
 codegen/
 version_2/simulink/*.mat
+version_2/simulink/**/hpt_sac_trajectory.mat
 
 # ── OS / editor / agent tooling ─────────────────────────────────────────────────
 .DS_Store
