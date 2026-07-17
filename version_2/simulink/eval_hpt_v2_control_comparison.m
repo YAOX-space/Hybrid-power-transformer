@@ -15,8 +15,12 @@
 %   hpt_compare_fault_stop_margin optional post-fault window after clear, default 0.125 s
 %   hpt_compare_fixed_action optional 1x4 fixed action for mode "fixed_action":
 %                            [m_reg_d, m_reg_q, m_energy_d, m_energy_q]
+%   hpt_compare_trajectory_file optional MAT file for mode "trajectory_action".
+%                            The MAT file must contain:
+%                            hpt_traj_t        Nx1 time vector, seconds
+%                            hpt_traj_action   Nx4 action matrix
 
-clearvars -except hpt_compare_topology hpt_compare_scenario_type hpt_compare_case_name hpt_compare_modes hpt_compare_energy_enable hpt_compare_conventional_profile hpt_compare_conventional_params hpt_compare_faults hpt_compare_fault_start hpt_compare_fault_stop_margin hpt_compare_run_label hpt_compare_fixed_action;
+clearvars -except hpt_compare_topology hpt_compare_scenario_type hpt_compare_case_name hpt_compare_modes hpt_compare_energy_enable hpt_compare_conventional_profile hpt_compare_conventional_params hpt_compare_faults hpt_compare_fault_start hpt_compare_fault_stop_margin hpt_compare_run_label hpt_compare_fixed_action hpt_compare_trajectory_file;
 close all;
 
 if ~exist('hpt_compare_topology', 'var')
@@ -52,9 +56,26 @@ end
 if ~exist('hpt_compare_fixed_action', 'var')
     hpt_compare_fixed_action = [0, 0, 0, 0];
 end
+if ~exist('hpt_compare_trajectory_file', 'var')
+    hpt_compare_trajectory_file = "";
+end
 hpt_compare_fixed_action = double(hpt_compare_fixed_action(:)');
 assert(numel(hpt_compare_fixed_action) == 4, ...
     'hpt_compare_fixed_action must be [m_reg_d,m_reg_q,m_energy_d,m_energy_q]');
+hpt_compare_trajectory_file = string(hpt_compare_trajectory_file);
+if any(string(hpt_compare_modes) == "trajectory_action")
+    assert(strlength(hpt_compare_trajectory_file) > 0, ...
+        'hpt_compare_trajectory_file is required for trajectory_action mode');
+    assert(exist(hpt_compare_trajectory_file, 'file') == 2, ...
+        'Missing trajectory file: %s', hpt_compare_trajectory_file);
+    trajCheck = load(hpt_compare_trajectory_file, 'hpt_traj_t', 'hpt_traj_action');
+    assert(isfield(trajCheck, 'hpt_traj_t') && isfield(trajCheck, 'hpt_traj_action'), ...
+        'Trajectory file must contain hpt_traj_t and hpt_traj_action');
+    assert(size(trajCheck.hpt_traj_action, 2) == 4, ...
+        'hpt_traj_action must be Nx4');
+    assert(numel(trajCheck.hpt_traj_t) == size(trajCheck.hpt_traj_action, 1), ...
+        'hpt_traj_t length must match hpt_traj_action rows');
+end
 
 hpt_compare_topology = string(hpt_compare_topology);
 hpt_compare_scenario_type = string(hpt_compare_scenario_type);
@@ -234,10 +255,20 @@ function [sacEnable, energyEnable, policyMode, actorSelectMode] = mode_settings(
         else
             actorSelectMode = 0.0;
         end
+    elseif mode == "sac_actor_always_raw"
+        sacEnable = 1.0;
+        energyEnable = energyEnableDefault;
+        policyMode = 1.0;
+        actorSelectMode = 3.0;
     elseif mode == "fixed_action"
         sacEnable = 1.0;
         energyEnable = energyEnableDefault;
         policyMode = -1.0;
+        actorSelectMode = 0.0;
+    elseif mode == "trajectory_action"
+        sacEnable = 1.0;
+        energyEnable = energyEnableDefault;
+        policyMode = -2.0;
         actorSelectMode = 0.0;
     else
         error('Unknown comparison mode: %s', mode);
@@ -525,6 +556,13 @@ function in = set_common_variables(in, M, sacEnable, energyEnable, policyMode, .
     in = in.setVariable('hpt_sac_fixed_reg_q', fixedAction(2), 'Workspace', M);
     in = in.setVariable('hpt_sac_fixed_energy_d', fixedAction(3), 'Workspace', M);
     in = in.setVariable('hpt_sac_fixed_energy_q', fixedAction(4), 'Workspace', M);
+    trajectoryFile = evalin('base', 'hpt_compare_trajectory_file');
+    if strlength(string(trajectoryFile)) > 0
+        dstFile = fullfile(pwd, 'hpt_sac_trajectory.mat');
+        if ~strcmp(char(trajectoryFile), dstFile)
+            copyfile(char(trajectoryFile), dstFile, 'f');
+        end
+    end
 end
 
 function row = base_row(M, topology, scenarioType, caseName, mode, gridVoltage, faultPu)

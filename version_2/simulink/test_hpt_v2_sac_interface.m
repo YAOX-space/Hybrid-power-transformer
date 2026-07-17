@@ -25,12 +25,18 @@ for c = 1:size(cases, 1)
     hits = find_system(M, 'SearchDepth', 1, 'Name', 'HPTSACController');
     assert(~isempty(hits), '%s does not contain HPTSACController', M);
 
-    for policyMode = [0.0, 1.0]
+    hpt_traj_t = (0:0.002:0.03)';
+    hpt_traj_action = repmat([0.12, 0.0, 0.02, 0.0], numel(hpt_traj_t), 1);
+    save(fullfile(pwd, 'hpt_sac_trajectory.mat'), 'hpt_traj_t', 'hpt_traj_action');
+
+    for policyMode = [0.0, 1.0, -2.0]
         in = Simulink.SimulationInput(M);
         if policyMode == 0.0
             in = in.setModelParameter('StopTime', '0.03');
-        else
+        elseif policyMode == 1.0
             in = in.setModelParameter('StopTime', '0.006');
+        else
+            in = in.setModelParameter('StopTime', '0.012');
         end
         in = in.setBlockParameter([M '/Grid'], 'Voltage', '10000');
         in = in.setVariable('hpt_sac_enable', 1.0, 'Workspace', M);
