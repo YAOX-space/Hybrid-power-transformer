@@ -58,9 +58,9 @@ Export and deployment:
 
 Long-running experiments:
 
-- `overnight_hpt_sac_simulink_optimize.py`
-- `overnight_hpt_sac_steptrace_specialists.py`
-- `overnight_hpt_case_specialists.py`
+- `legacy/overnight_hpt_sac_simulink_optimize.py`
+- `legacy/overnight_hpt_sac_steptrace_specialists.py`
+- `legacy/overnight_hpt_case_specialists.py`
 
 These are retained for reproducibility.  New long experiments should be launched
 through `run_hpt_sac_pipeline.py` or documented in `experiments/README.md`.
@@ -77,6 +77,12 @@ through `run_hpt_sac_pipeline.py` or documented in `experiments/README.md`.
 5. A switch-level actor is promoted only after the Simulink case evaluator marks
    the case as passed.  "Improved but failed" actors remain research artifacts,
    not final candidates.
+6. Do not commit or depend on generated caches such as `__pycache__/`, `slprj/`,
+   or `*.slxc`.
+7. The only active Simulink actor MAT files expected in
+   `version_2/simulink/` are `hpt_sac_actor_weights.mat` and
+   `hpt_sac_actor_weights_dynamic.mat`.  Other candidate MAT snapshots should
+   live in timestamped result directories, not beside the model scripts.
 
 ## Canonical Workflow
 
@@ -141,3 +147,27 @@ The current full workflow is:
 - The interrupted full fault specialist run at
   `lab/results/hpt_case_specialists_20260717_011726` produced partial results
   only. It should be treated as diagnostic data, not a completed campaign.
+
+## Cleanup Notes
+
+The version 2 tree was cleaned so that the top-level `sac/` package contains
+current workflow modules, while old overnight runners are isolated under
+`version_2/sac/legacy/`.
+
+The following files are intentionally not part of the maintained source tree:
+
+- Python bytecode caches: `__pycache__/`, `*.pyc`
+- Simulink generated caches: `slprj/`, `*.slxc`
+- one-off or broken MAT candidates beside the Simulink scripts
+
+The following Simulink sweep scripts are still in `version_2/simulink/` because
+they depend on that directory layout to find `topoloty1/` and `topology2/`.
+Treat them as diagnostics/calibration helpers, not as the main experiment
+entrypoint:
+
+- `sweep_hpt_v2_sac_action_response.m`
+- `sweep_hpt_v2_sac_energy_response.m`
+- `sweep_hpt_v2_reg_energy_response.m`
+- `sweep_hpt_v2_fault_fixed_reg_response.m`
+- `sweep_hpt_v2_topology2_energy_signs.m`
+- `sweep_hpt_v2_topology2_fault_fixed_reg.m`

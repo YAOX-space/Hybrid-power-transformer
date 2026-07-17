@@ -25,7 +25,15 @@ from datetime import datetime
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[2]
+def find_repo_root() -> Path:
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "version_2").is_dir() and (parent / "lab").is_dir():
+            return parent
+    raise RuntimeError("Could not locate repository root from legacy runner path")
+
+
+ROOT = find_repo_root()
 SIMULINK = ROOT / "version_2" / "simulink"
 RESULTS = ROOT / "lab" / "results"
 MODELS = ROOT / "data" / "models"

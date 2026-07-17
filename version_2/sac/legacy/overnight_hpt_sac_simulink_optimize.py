@@ -21,12 +21,20 @@ from pathlib import Path
 from typing import Iterable
 
 try:
-    from .experiment_metadata import write_experiment_metadata
+    from ..experiment_metadata import write_experiment_metadata
 except ImportError:  # pragma: no cover - keeps direct script execution working.
     from version_2.sac.experiment_metadata import write_experiment_metadata
 
 
-ROOT = Path(__file__).resolve().parents[2]
+def find_repo_root() -> Path:
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "version_2").is_dir() and (parent / "lab").is_dir():
+            return parent
+    raise RuntimeError("Could not locate repository root from legacy runner path")
+
+
+ROOT = find_repo_root()
 RESULTS = ROOT / "lab" / "results"
 SIMULINK = ROOT / "version_2" / "simulink"
 MODELS = ROOT / "data" / "models"
