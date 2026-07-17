@@ -10,6 +10,9 @@ controller baselines:
 * ``awac_style``: advantage-weighted behavior cloning over all candidate
   actions, matching the practical data weighting used by IQL/AWAC-style
   offline policies when only ranked action evidence is available.
+* ``success_bc_style``: imitate only nearby switch-evidence actions that pass
+  and improve over the conventional baseline, useful when the feasible action
+  region is a narrow island.
 * ``bc_conventional``: reproduce the conventional DQ action as a sanity check.
 
 Each trained policy maps a fault/topology context to the final direct action
@@ -346,6 +349,60 @@ def make_td3_bc_style_samples(pairs: list[dict[str, Any]]) -> list[TrainingSampl
                 case_name=s(conv, "case_name"),
             )
         )
+    return samples
+
+
+def make_success_bc_style_samples(
+    conventional_rows: list[dict[str, Any]],
+    candidate_rows: list[dict[str, Any]],
+) -> list[TrainingSample]:
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for row in candidate_rows:
+        grouped.setdefault((s(row, "topology"), category(row)), []).append(row)
+
+    samples: list[TrainingSample] = []
+    for conv in conventional_rows:
+        conv_action = action_from_row(conv)
+        conv_score = row_score(conv)
+        conv_pu = finite(f(conv, "fault_pu"), 1.0)
+        conv_dur = finite(f(conv, "fault_duration_s"), 0.08)
+        bucket = grouped.get((s(conv, "topology"), category(conv)), [])
+        nearby: list[tuple[float, dict[str, Any]]] = []
+        for row in bucket:
+            if not b(row, "voltage_survival_pass"):
+                continue
+            score = row_score(row)
+            if score + 1e-6 >= conv_score:
+                continue
+            dist = 30.0 * abs(finite(f(row, "fault_pu"), conv_pu) - conv_pu)
+            dist += 4.0 * abs(finite(f(row, "fault_duration_s"), conv_dur) - conv_dur)
+            if dist > 0.75:
+                continue
+            nearby.append((score + 0.05 * dist, row))
+        if nearby:
+            for _, row in sorted(nearby, key=lambda item: item[0])[:6]:
+                improvement = max(0.0, conv_score - row_score(row))
+                samples.append(
+                    TrainingSample(
+                        context=context_from_row(conv),
+                        target=action_from_row(row),
+                        conventional=conv_action,
+                        weight=float(4.0 + min(6.0, improvement / 20.0)),
+                        source_role=s(row, "role"),
+                        case_name=s(conv, "case_name"),
+                    )
+                )
+        else:
+            samples.append(
+                TrainingSample(
+                    context=context_from_row(conv),
+                    target=conv_action,
+                    conventional=conv_action,
+                    weight=0.25,
+                    source_role="conventional_fallback",
+                    case_name=s(conv, "case_name"),
+                )
+            )
     return samples
 
 
@@ -687,6 +744,7 @@ def write_report(
             "",
             "- `td3_bc_style` is the first fallback target: it learns from best switch-evidence actions but keeps an explicit penalty toward conventional DQ behavior.",
             "- `awac_style` is the second fallback: it uses all nearby candidate actions with advantage-like weights, so the model can learn a smoother action surface.",
+            "- `success_bc_style` learns only nearby switch-evidence actions that pass and improve over conventional, intended for narrow feasible islands.",
             "- `bc_conventional` is only a sanity check.  It should reproduce the traditional baseline and is not expected to beat it.",
             "- A row is `viable` only when it beats conventional on at least one case and does not reduce the number of passed cases in this proxy gate.",
             "",
@@ -720,7 +778,7 @@ def write_report(
 def parse_algorithms(value: str) -> list[str]:
     if value.strip().lower() == "auto":
         return ["td3_bc_style", "awac_style", "bc_conventional"]
-    allowed = {"td3_bc_style", "awac_style", "bc_conventional"}
+    allowed = {"td3_bc_style", "awac_style", "success_bc_style", "bc_conventional"}
     out = [item.strip() for item in value.split(",") if item.strip()]
     bad = [item for item in out if item not in allowed]
     if bad:
@@ -786,6 +844,9 @@ def run_algorithm_sequence(
                 behavior_weight=args.awac_behavior_weight,
             )
             behavior_alpha = args.behavior_alpha
+        elif algorithm == "success_bc_style":
+            samples = make_success_bc_style_samples(conventional_rows, candidate_rows)
+            behavior_alpha = 0.0
         elif algorithm == "bc_conventional":
             samples = make_bc_conventional_samples(conventional_rows)
             behavior_alpha = 0.0
