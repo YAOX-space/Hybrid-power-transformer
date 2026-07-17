@@ -226,6 +226,7 @@ def main() -> int:
     build_report(report_path, matrix_csv, fit_rows)
     write_experiment_metadata(
         run_dir,
+        experiment_name="hpt_energy_cmd_response_fit",
         config={"matrix_csv": str(matrix_csv), "run_id": run_id},
         dataset_manifest=matrix_csv,
         extra={"matrix_hash": sha256_file(matrix_csv), "fit_csv": str(csv_path), "fit_json": str(json_path)},

@@ -304,6 +304,7 @@ def main() -> int:
 
     write_experiment_metadata(
         run_dir,
+        experiment_name="hpt_full_action_recalibration_campaign",
         config=vars(args),
         dataset_manifest=matrix_csv,
         extra={"artifacts": artifacts},
