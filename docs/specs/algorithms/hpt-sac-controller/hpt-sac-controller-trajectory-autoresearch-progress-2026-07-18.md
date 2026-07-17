@@ -79,6 +79,31 @@ Important interpretation:
   `m_reg_d` sweep degraded voltage-survival while the traditional baseline
   already passed.
 
+Reactive-current exploration:
+
+- Added q-axis support to `build_hpt_local_action_sweep.py`.
+- For `topology2 / LVRT / 0.90 pu / 80 ms`, constant `m_reg_q=0` preserves
+  voltage-survival but fails reactive-current direction.
+- Constant negative q can make the reactive-current status pass:
+  - Example: `m_reg_d=0.172`, `m_reg_q=-0.300`, `m_energy_d=0.010`
+    gives `gbt_reactive_status=pass`.
+  - But it fails LV fault-window mean and/or DC-link survival.
+- A two-stage trajectory was added to test delayed q injection:
+  - `two_stage`: base -> voltage support -> voltage+q support.
+  - `two_stage_window`: same, then down-ramp after fault clearing.
+- Delayed q reduced the score and reactive shortfall, but still failed
+  voltage-survival because Vdc exceeded the upper bound.
+- Fast post-fault down-ramp made DC-link oscillation worse
+  (`Vdc min/max ~= 375/1111 V` in the first test).
+
+Implication:
+
+- Full FRT is now limited by coupled reactive-current and DC-link dynamics, not
+  by the trajectory interface.
+- The next controller needs an explicit dynamic tradeoff: delay/shape q-axis
+  support while actively damping DC-link energy, instead of cloning a constant
+  full-action target.
+
 ## What This Proves
 
 - The new trajectory interface works: constant trajectory is exactly

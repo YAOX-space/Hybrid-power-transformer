@@ -157,6 +157,8 @@ def build_initial_trajectory(args: argparse.Namespace, run_dir: Path) -> Path:
         step_time=args.step_time,
         ramp_start=args.ramp_start,
         ramp_end=args.ramp_end,
+        down_start=args.down_start,
+        down_end=args.down_end,
     )
     t, action = make_trajectory(spec)
     path = run_dir / "initial_trajectory.mat"
@@ -211,6 +213,10 @@ def validate_trajectory(args: argparse.Namespace, run_dir: Path) -> dict[str, An
         "--timeout-s",
         str(args.matlab_timeout_s),
     ]
+    if args.down_start is not None:
+        cmd += ["--down-start", str(args.down_start)]
+    if args.down_end is not None:
+        cmd += ["--down-end", str(args.down_end)]
     run_command(cmd, run_dir=run_dir, log_name="trajectory_validation.log", timeout_s=args.matlab_timeout_s + 60)
     summary_path = RESULTS / f"{args.run_id}_trajectory_validation" / "summary.json"
     data = json.loads(summary_path.read_text(encoding="utf-8"))
@@ -409,7 +415,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fault-start", type=float, default=0.035)
     parser.add_argument("--fault-stop-margin", type=float, default=0.125)
     parser.add_argument("--case-name", default="")
-    parser.add_argument("--preset", default="constant", choices=["zero", "constant", "step", "ramp", "fault_window"])
+    parser.add_argument(
+        "--preset",
+        default="constant",
+        choices=["zero", "constant", "step", "ramp", "two_stage", "two_stage_window", "fault_window"],
+    )
     parser.add_argument("--decision-dt", type=float, default=2e-3)
     parser.add_argument("--action", type=float, nargs=4, default=[0.172, 0.0, 0.022, 0.002])
     parser.add_argument("--start-action", type=float, nargs=4, default=[0.0, 0.0, 0.0, 0.0])
@@ -418,6 +428,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--step-time", type=float, default=0.035)
     parser.add_argument("--ramp-start", type=float, default=0.035)
     parser.add_argument("--ramp-end", type=float, default=0.055)
+    parser.add_argument("--down-start", type=float, default=None)
+    parser.add_argument("--down-end", type=float, default=None)
     parser.add_argument("--dagger-iters", type=int, default=2)
     parser.add_argument("--vdc-feedback-gain", type=float, default=0.10)
     parser.add_argument("--vdc-feedback-ref-pu", type=float, default=1.0)

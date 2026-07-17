@@ -196,7 +196,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--topology", default="topology2", choices=["topology1", "topology2"])
-    parser.add_argument("--preset", default="constant", choices=["zero", "constant", "step", "ramp", "fault_window"])
+    parser.add_argument(
+        "--preset",
+        default="constant",
+        choices=["zero", "constant", "step", "ramp", "two_stage", "two_stage_window", "fault_window"],
+    )
     parser.add_argument("--fault-pu", type=float, default=0.95)
     parser.add_argument("--duration-s", type=float, default=0.08)
     parser.add_argument("--fault-start", type=float, default=0.035)
@@ -208,6 +212,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--step-time", type=float, default=0.035)
     parser.add_argument("--ramp-start", type=float, default=0.035)
     parser.add_argument("--ramp-end", type=float, default=0.055)
+    parser.add_argument("--down-start", type=float, default=None)
+    parser.add_argument("--down-end", type=float, default=None)
     parser.add_argument("--case-name", default="")
     parser.add_argument("--matlab-cmd", default="matlab")
     parser.add_argument("--timeout-s", type=int, default=900)
@@ -230,6 +236,8 @@ def main() -> int:
         step_time=args.step_time,
         ramp_start=args.ramp_start,
         ramp_end=args.ramp_end,
+        down_start=args.down_start,
+        down_end=args.down_end,
     )
     t, action = make_trajectory(spec)
     trajectory_file = run_dir / "hpt_sac_trajectory.mat"

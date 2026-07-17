@@ -8,8 +8,8 @@ The generated MAT file is consumed by ``HPTSACController`` when
 
 This is the bridge from fixed-action experiments to true time-varying
 trajectory control.  The first research gate is intentionally simple:
-constant, step, and ramp trajectories around already validated fixed-action
-setpoints.
+constant, step, ramp, and two-stage trajectories around already validated
+fixed-action setpoints.
 """
 from __future__ import annotations
 
@@ -34,6 +34,8 @@ class TrajectorySpec:
     step_time: float
     ramp_start: float
     ramp_end: float
+    down_start: float | None = None
+    down_end: float | None = None
 
 
 def _as_action(values: list[float] | tuple[float, ...]) -> np.ndarray:
@@ -70,6 +72,29 @@ def make_trajectory(spec: TrajectorySpec) -> tuple[np.ndarray, np.ndarray]:
             raise ValueError("ramp_end must be greater than ramp_start")
         frac = np.clip((t - spec.ramp_start) / (spec.ramp_end - spec.ramp_start), 0.0, 1.0)
         action = start[None, :] + frac[:, None] * (target - start)[None, :]
+    elif preset == "two_stage":
+        if not (spec.ramp_start < spec.step_time < spec.ramp_end):
+            raise ValueError("two_stage requires ramp_start < step_time < ramp_end")
+        first = np.clip((t - spec.ramp_start) / (spec.step_time - spec.ramp_start), 0.0, 1.0)
+        second = np.clip((t - spec.step_time) / (spec.ramp_end - spec.step_time), 0.0, 1.0)
+        action = base[None, :] + first[:, None] * (start - base)[None, :]
+        action = action + second[:, None] * (target - start)[None, :]
+    elif preset == "two_stage_window":
+        if not (spec.ramp_start < spec.step_time < spec.ramp_end):
+            raise ValueError("two_stage_window requires ramp_start < step_time < ramp_end")
+        down_start = spec.down_start if spec.down_start is not None else spec.stop_time
+        down_end = spec.down_end if spec.down_end is not None else spec.stop_time
+        if down_end < down_start:
+            raise ValueError("two_stage_window requires down_end >= down_start")
+        first = np.clip((t - spec.ramp_start) / (spec.step_time - spec.ramp_start), 0.0, 1.0)
+        second = np.clip((t - spec.step_time) / (spec.ramp_end - spec.step_time), 0.0, 1.0)
+        staged = base[None, :] + first[:, None] * (start - base)[None, :]
+        staged = staged + second[:, None] * (target - start)[None, :]
+        if down_end == down_start:
+            down = (t < down_start).astype(float)
+        else:
+            down = 1.0 - np.clip((t - down_start) / (down_end - down_start), 0.0, 1.0)
+        action = base[None, :] + down[:, None] * (staged - base[None, :])
     elif preset == "fault_window":
         # Hold base before/after the fault support window, ramp into target
         # during the transition, then ramp back down after fault clearing.
@@ -115,7 +140,11 @@ def write_csv(path: Path, t: np.ndarray, action: np.ndarray) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--preset", default="constant", choices=["zero", "constant", "step", "ramp", "fault_window"])
+    parser.add_argument(
+        "--preset",
+        default="constant",
+        choices=["zero", "constant", "step", "ramp", "two_stage", "two_stage_window", "fault_window"],
+    )
     parser.add_argument("--dt", type=float, default=2e-3)
     parser.add_argument("--stop-time", type=float, default=0.24)
     parser.add_argument("--base-action", type=float, nargs=4, default=[0.0, 0.0, 0.0, 0.0])
@@ -124,6 +153,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--step-time", type=float, default=0.035)
     parser.add_argument("--ramp-start", type=float, default=0.035)
     parser.add_argument("--ramp-end", type=float, default=0.055)
+    parser.add_argument("--down-start", type=float, default=None)
+    parser.add_argument("--down-end", type=float, default=None)
     parser.add_argument("--write-csv", action="store_true")
     parser.add_argument("--metadata-dir", type=Path, default=None)
     return parser.parse_args()
@@ -141,6 +172,8 @@ def main() -> int:
         step_time=args.step_time,
         ramp_start=args.ramp_start,
         ramp_end=args.ramp_end,
+        down_start=args.down_start,
+        down_end=args.down_end,
     )
     t, action = make_trajectory(spec)
     write_mat(args.out, t, action)

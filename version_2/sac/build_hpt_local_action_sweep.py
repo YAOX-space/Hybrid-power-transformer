@@ -51,37 +51,57 @@ def main() -> int:
     parser.add_argument("--energy-d-grid", type=parse_grid, default=parse_grid("0.017,0.022,0.027"))
     parser.add_argument("--reg-q", type=float, default=0.0)
     parser.add_argument("--energy-q", type=float, default=0.002)
+    parser.add_argument(
+        "--reg-q-grid",
+        type=parse_grid,
+        default=None,
+        help="Optional comma-separated q-axis grid. Overrides --reg-q.",
+    )
+    parser.add_argument(
+        "--energy-q-grid",
+        type=parse_grid,
+        default=None,
+        help="Optional comma-separated energy q-axis grid. Overrides --energy-q.",
+    )
     args = parser.parse_args()
 
     run_id = args.run_id or f"hpt_local_action_sweep_{datetime.now():%Y%m%d_%H%M%S}"
     run_dir = RESULTS / run_id
     rows: list[dict[str, object]] = []
+    reg_q_grid = args.reg_q_grid if args.reg_q_grid is not None else [args.reg_q]
+    energy_q_grid = args.energy_q_grid if args.energy_q_grid is not None else [args.energy_q]
     for reg_d in args.reg_d_grid:
-        for energy_d in args.energy_d_grid:
-            token = f"r{reg_d:.3f}_e{energy_d:.3f}".replace(".", "p").replace("-", "m")
-            rows.append(
-                {
-                    "algorithm": f"local_sweep/{token}",
-                    "topology": args.topology,
-                    "category": args.category,
-                    "duration_ms": args.duration_ms,
-                    "case_name": args.case_name,
-                    "fault_pu": args.fault_pu,
-                    "baseline_pass": True,
-                    "baseline_score": "",
-                    "baseline_reason": "",
-                    "policy_pass": True,
-                    "policy_score": "",
-                    "policy_reason": "",
-                    "beat": True,
-                    "improved": True,
-                    "action_m_reg_d": reg_d,
-                    "action_m_reg_q": args.reg_q,
-                    "action_m_energy_d": energy_d,
-                    "action_m_energy_q": args.energy_q,
-                    "action_max_abs": max(abs(reg_d), abs(args.reg_q), abs(energy_d), abs(args.energy_q)),
-                }
-            )
+        for reg_q in reg_q_grid:
+            for energy_d in args.energy_d_grid:
+                for energy_q in energy_q_grid:
+                    token = (
+                        f"r{reg_d:.3f}_rq{reg_q:.3f}_e{energy_d:.3f}_eq{energy_q:.3f}"
+                        .replace(".", "p")
+                        .replace("-", "m")
+                    )
+                    rows.append(
+                        {
+                            "algorithm": f"local_sweep/{token}",
+                            "topology": args.topology,
+                            "category": args.category,
+                            "duration_ms": args.duration_ms,
+                            "case_name": args.case_name,
+                            "fault_pu": args.fault_pu,
+                            "baseline_pass": True,
+                            "baseline_score": "",
+                            "baseline_reason": "",
+                            "policy_pass": True,
+                            "policy_score": "",
+                            "policy_reason": "",
+                            "beat": True,
+                            "improved": True,
+                            "action_m_reg_d": reg_d,
+                            "action_m_reg_q": reg_q,
+                            "action_m_energy_d": energy_d,
+                            "action_m_energy_q": energy_q,
+                            "action_max_abs": max(abs(reg_d), abs(reg_q), abs(energy_d), abs(energy_q)),
+                        }
+                    )
 
     csv_path = run_dir / "case_results.csv"
     write_csv(csv_path, rows)
@@ -99,8 +119,8 @@ def main() -> int:
             "duration_ms": args.duration_ms,
             "reg_d_grid": args.reg_d_grid,
             "energy_d_grid": args.energy_d_grid,
-            "reg_q": args.reg_q,
-            "energy_q": args.energy_q,
+            "reg_q_grid": reg_q_grid,
+            "energy_q_grid": energy_q_grid,
         },
     }
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
