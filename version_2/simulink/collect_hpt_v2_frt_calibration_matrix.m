@@ -212,6 +212,7 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
     meng = out.get('Menergy_cmd');
     mregDbg = out.get('Mreg_cmd');
     energyDbg = out.get('Energy_dbg');
+    Venergy = out.get('Energy_Vabc');
     if has_logged_var(out, 'Energy_Iabc')
         Ienergy = out.get('Energy_Iabc');
     else
@@ -226,10 +227,11 @@ function row = run_fixed_case(M, topology, faultName, category, faultPu, mode, .
     energyDbgRows = orient_channels(energyDbg, 12);
     gridVRows = orient_channels(Vgrid, 3);
     gridIRows = orient_channels(Igrid, 3);
+    energyVRows = orient_channels(Venergy, 3);
     iRows = orient_channels(Ienergy, 3);
     energyIdMax = getVariable(get_param(M, 'ModelWorkspace'), 'hpt_energy_id_max');
     measRows = measured_response_rows(actRows, mrefRows, mregDbgRows, ...
-        energyDbgRows, energyIdMax);
+        energyDbgRows, energyVRows, iRows, energyIdMax);
     t = (0:size(Vlv, 1)-1)' * Ts;
     phaseRmsInst = sqrt(mean(Vlv(:, 1:3).^2, 2));
     faultIdx = t > (faultStart + 0.010) & t < (faultClear - 0.002);
@@ -418,6 +420,7 @@ function tf = has_logged_var(out, name)
 end
 
 function y = orient_channels(x, nChannels)
+    x = squeeze(x);
     if size(x, 1) == nChannels
         y = x;
     elseif size(x, 2) == nChannels
@@ -542,20 +545,52 @@ function m = safe_mean(x)
 end
 
 function actRows = measured_response_rows(hptActRows, mrefRows, mregDbgRows, ...
-    energyDbgRows, energyIdMax)
-    n = min([size(mrefRows, 2), size(mregDbgRows, 2), size(energyDbgRows, 2)]);
+    energyDbgRows, energyVRows, energyIRows, energyIdMax)
+    hasEnergyVI = size(energyVRows, 1) >= 3 && size(energyIRows, 1) >= 3 && ...
+        size(energyVRows, 2) >= 1 && size(energyIRows, 2) >= 1;
+    n = size(hptActRows, 2);
     if isempty(n) || n < 1
         actRows = hptActRows;
         return;
     end
     actRows = zeros(4, n);
     for k = 1:n
-        theta = mregDbgRows(1, k);
-        phi = mregDbgRows(7, k);
-        [actRows(1, k), actRows(2, k)] = reg6_to_dq(mrefRows(:, k), theta + phi);
-        actRows(3, k) = clip_scalar(energyDbgRows(6, k) / max(energyIdMax, 1e-9), ...
-            -0.95, 0.95);
-        actRows(4, k) = 0.0;
+        if k <= size(mrefRows, 2) && k <= size(mregDbgRows, 2) && size(mregDbgRows, 1) >= 7
+            theta = mregDbgRows(1, k);
+            phi = mregDbgRows(7, k);
+            [actRows(1, k), actRows(2, k)] = reg6_to_dq(mrefRows(:, k), theta + phi);
+        else
+            actRows(1, k) = hptActRows(1, k);
+            actRows(2, k) = hptActRows(2, k);
+        end
+        if hasEnergyVI && k <= size(energyVRows, 2) && k <= size(energyIRows, 2)
+            % Measure the physical energy-branch current directly.  The dq
+            % frame is aligned to the measured energy-branch voltage, and
+            % the result is normalized to the command contract scale where
+            % act4(3:4)=idq_ref/hpt_energy_id_max.
+            va = energyVRows(1, k);
+            vb = energyVRows(2, k);
+            vc = energyVRows(3, k);
+            ia = energyIRows(1, k);
+            ib = energyIRows(2, k);
+            ic = energyIRows(3, k);
+            valpha = (2/3) * (va - 0.5*vb - 0.5*vc);
+            vbeta = (sqrt(3)/3) * (vb - vc);
+            ialpha = (2/3) * (ia - 0.5*ib - 0.5*ic);
+            ibeta = (sqrt(3)/3) * (ib - ic);
+            theta = atan2(vbeta, valpha);
+            actRows(3, k) = (ialpha*cos(theta) + ibeta*sin(theta)) / max(energyIdMax, 1e-9);
+            actRows(4, k) = (-ialpha*sin(theta) + ibeta*cos(theta)) / max(energyIdMax, 1e-9);
+        elseif size(energyDbgRows, 1) >= 5 && k <= size(energyDbgRows, 2)
+            % Conventional energy controller debug order is
+            % [theta; vd; vq; id; iq; id_ref; ...].  Use actual id/iq, not
+            % id_ref, when HPTSAC observations are unavailable.
+            actRows(3, k) = energyDbgRows(4, k) / max(energyIdMax, 1e-9);
+            actRows(4, k) = energyDbgRows(5, k) / max(energyIdMax, 1e-9);
+        else
+            actRows(3, k) = hptActRows(3, k);
+            actRows(4, k) = hptActRows(4, k);
+        end
     end
 end
 
