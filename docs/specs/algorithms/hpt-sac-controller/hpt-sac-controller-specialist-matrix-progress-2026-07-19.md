@@ -343,3 +343,69 @@ Interpretation:
   `gbt_recover`, `grid_current_limit`, and `reactive_wrong_sign`.
 - It is not yet a strict "beats conventional" result on the aggregate score,
   but it has better fault-window LV mean and better Vdc minimum.
+
+## Follow-up: Q-Aware Topology2 LVRT 0.925 Specialist
+
+The accepted topology2/LVRT 0.925 actor was upgraded from the previous q=0
+candidate to a q-aware candidate.  A focused switch-level probe around the
+successful voltage-survival island found that small negative `m_reg_q` is the
+useful direction for LVRT reactive-current support in the current topology2
+model.  Larger negative q commands improve the reactive direction more, but
+they either drain the DC link or pull the LV fault-window mean below the
+survival threshold.
+
+Accepted teacher command:
+
+```text
+[m_reg_d, m_reg_q, m_energy_d, m_energy_q] = [0.21, -0.04, 0.02, 0.002]
+```
+
+Training command:
+
+```powershell
+py -3 -m version_2.sac.run_hpt_trajectory_specialist_campaign --run-id hpt_traj_specialist_topo2_lvrt0925_qaware_20260719 --topology topology2 --fault-pu 0.925 --duration-s 0.08 --fault-start 0.035 --fault-stop-margin 0.125 --teacher-source trajectory --preset constant --decision-dt 0.002 --base-action 0 0 0 0 --start-action 0 0 0 0 --action 0.21 -0.04 0.02 0.002 --safe-target 0.21 -0.04 0.02 0.002 --dagger-iters 1 --switch-trace-repeat 3 --window-zones fault,recovery --epochs 220 --batch-size 256 --lr 0.0008 --action-weights 1.0,2.0,8.0,4.0 --fault-window-repeat-mult 4 --recovery-window-repeat-mult 4 --dagger-label-source safe_target --collect-final-actor-trace --matlab-timeout-s 300 --train-timeout-s 900
+```
+
+Result:
+
+- Best actor: `bc0`, not `dagger1`.
+- Model:
+  `data/models/hpt_traj_specialist_topo2_lvrt0925_qaware_20260719_bc0.zip`
+- SAC score / conventional score: `140.000 / 279.629`.
+- LV mean / recovery: `176.32 / 219.33 V`.
+- DC link min / max: `788.03 / 977.05 V`.
+- `grid_iq_mean_pu`: `0.0396`.
+- `grid_iq_shortfall_max_pu`: `0.3304`.
+- `grid_current_peak_pu`: `1.736`.
+
+The q-aware actor passes the voltage-survival gate and beats conventional, and
+it improves the reactive-current direction relative to the previous q=0 actor.
+It still fails full FRT because the reactive support is not sustained enough
+and the grid-current peak remains above the current full-FRT limit.
+
+The accepted manifest was updated and revalidated:
+
+```powershell
+py -3 -m version_2.sac.validate_hpt_accepted_specialists --run-id hpt_accepted_specialist_validation_qaware_20260719 --timeout-s 900
+```
+
+Revalidation summary:
+
+- Cases: `4`.
+- Voltage-survival pass: `4 / 4`.
+- Beats conventional: `2 / 4`.
+- Full FRT pass: `0 / 4`.
+
+## Follow-up: Topology2 HVRT Boundary Probe
+
+Additional topology2/HVRT 1.12 fixed-action probes were run around negative
+`m_energy_d` and small q commands.  None passed the voltage-survival gate.  In
+the current switch-level model, simple negative energy commands pushed the
+DC-link peak to about `1135 V`, so these points are not safe SAC teachers.
+
+Interpretation:
+
+- The topology2 HVRT branch is not ready for specialist SAC training from
+  fixed full-action labels.
+- The next HVRT step must recalibrate the topology2 energy/DC-link response or
+  introduce a separate DC-link-safe teacher before training an actor.
