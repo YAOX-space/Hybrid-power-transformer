@@ -161,6 +161,18 @@ The current full workflow is:
 - The interrupted full fault specialist run at
   `lab/results/hpt_case_specialists_20260717_011726` produced partial results
   only. It should be treated as diagnostic data, not a completed campaign.
+- The active specialist trajectory workflow is
+  `run_hpt_trajectory_specialist_campaign.py`.  For fault-window policies use:
+  `--fault-window-repeat-mult`, `--recovery-window-repeat-mult`,
+  `--dagger-label-source trajectory`, and optionally
+  `--collect-final-actor-trace`.  `--dagger-label-source trajectory` means the
+  DAgger states come from the actor rollout, but labels are recomputed from the
+  same trajectory preset used in switch-level validation.
+- The current deep-LVRT boundary case is topology1 / 0.75 pu / 80 ms.  The best
+  actor so far is diagnostic, not promoted:
+  `hpt_traj_specialist_topo1_lvrt075_delayed_daggertraj_clean_20260719`,
+  with `policy_lv_mean=175.36 V` against a `176 V` fault-window gate.  Do not
+  use it as a final specialist until it passes the switch-level gate.
 
 ## Cleanup Notes
 

@@ -102,6 +102,48 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
+def trace_alignment_summary(reference_csv: Path, actor_csv: Path) -> dict[str, Any]:
+    reference = read_csv(reference_csv)
+    actor = read_csv(actor_csv)
+    n = min(len(reference), len(actor))
+    if n == 0:
+        return {
+            "schema": "hpt-trace-alignment-v1",
+            "reference_csv": str(reference_csv),
+            "actor_csv": str(actor_csv),
+            "samples": 0,
+            "error": "empty_trace",
+        }
+
+    def values(rows: list[dict[str, str]], key: str) -> list[float]:
+        return [to_float(row.get(key), 0.0) for row in rows[:n]]
+
+    out: dict[str, Any] = {
+        "schema": "hpt-trace-alignment-v1",
+        "reference_csv": str(reference_csv),
+        "actor_csv": str(actor_csv),
+        "samples": n,
+    }
+    for idx, name in enumerate(("m_reg_d", "m_reg_q", "m_energy_d", "m_energy_q"), 1):
+        key = f"action_{idx:02d}"
+        ref = values(reference, key)
+        act = values(actor, key)
+        diff = [a - r for a, r in zip(act, ref)]
+        out[f"{name}_mae"] = sum(abs(x) for x in diff) / n
+        out[f"{name}_max_abs_error"] = max(abs(x) for x in diff)
+        out[f"{name}_ref_mean"] = sum(ref) / n
+        out[f"{name}_actor_mean"] = sum(act) / n
+    for key, name in (("lv_rms_inst", "lv_rms"), ("vdc_inst", "vdc")):
+        ref = values(reference, key)
+        act = values(actor, key)
+        diff = [a - r for a, r in zip(act, ref)]
+        out[f"{name}_mae"] = sum(abs(x) for x in diff) / n
+        out[f"{name}_max_abs_error"] = max(abs(x) for x in diff)
+        out[f"{name}_ref_mean"] = sum(ref) / n
+        out[f"{name}_actor_mean"] = sum(act) / n
+    return out
+
+
 def summarize_control_csv(path: Path, policy_mode: str) -> dict[str, Any]:
     rows = read_csv(path)
     by_mode = {row.get("mode", ""): row for row in rows}
@@ -272,6 +314,7 @@ def train_bc(
     init_model: Path | None,
     fixed_target: list[float] | None,
     vdc_feedback_gain: float,
+    relabel_with_trajectory: bool,
 ) -> dict[str, Any]:
     cmd = [
         "py",
@@ -300,6 +343,8 @@ def train_bc(
         str(args.batch_size),
         "--lr",
         str(args.lr),
+        "--action-weights",
+        args.action_weights,
         "--model-out",
         str(model_out),
     ]
@@ -328,6 +373,42 @@ def train_bc(
         cmd += ["--switch-trace-q-gate-lv-full-pu", str(args.q_gate_lv_full_pu)]
     if math.isfinite(args.q_gate_time_full_s):
         cmd += ["--switch-trace-q-gate-time-full-s", str(args.q_gate_time_full_s)]
+    if args.fault_window_repeat_mult > 1:
+        cmd += [
+            "--switch-trace-fault-window-repeat-mult",
+            str(args.fault_window_repeat_mult),
+        ]
+    if args.recovery_window_repeat_mult > 1:
+        cmd += [
+            "--switch-trace-recovery-window-repeat-mult",
+            str(args.recovery_window_repeat_mult),
+        ]
+    if relabel_with_trajectory:
+        stop_time = args.fault_start + args.duration_s + args.fault_stop_margin
+        cmd += [
+            "--switch-trace-target-profile",
+            args.preset,
+            "--switch-trace-profile-dt",
+            str(args.decision_dt),
+            "--switch-trace-profile-stop-time",
+            str(stop_time),
+            "--switch-trace-profile-base-action",
+            *[str(x) for x in args.base_action],
+            "--switch-trace-profile-start-action",
+            *[str(x) for x in args.start_action],
+            "--switch-trace-profile-action",
+            *[str(x) for x in args.action],
+            "--switch-trace-profile-step-time",
+            str(args.step_time),
+            "--switch-trace-profile-ramp-start",
+            str(args.ramp_start),
+            "--switch-trace-profile-ramp-end",
+            str(args.ramp_end),
+        ]
+        if args.down_start is not None:
+            cmd += ["--switch-trace-profile-down-start", str(args.down_start)]
+        if args.down_end is not None:
+            cmd += ["--switch-trace-profile-down-end", str(args.down_end)]
     if args.bc_obs_noise_repeat > 0 and args.bc_obs_noise_std > 0:
         cmd += [
             "--bc-obs-noise-std",
@@ -469,8 +550,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=80)
     parser.add_argument("--batch-size", type=int, default=512)
     parser.add_argument("--lr", type=float, default=2e-4)
+    parser.add_argument("--action-weights", default="4,1,0.5,0.5")
     parser.add_argument("--bc-obs-noise-std", type=float, default=0.012)
     parser.add_argument("--bc-obs-noise-repeat", type=int, default=4)
+    parser.add_argument(
+        "--fault-window-repeat-mult",
+        type=int,
+        default=1,
+        help="Extra BC repeat multiplier for switch trace rows marked window_zone=fault.",
+    )
+    parser.add_argument(
+        "--recovery-window-repeat-mult",
+        type=int,
+        default=1,
+        help="Extra BC repeat multiplier for switch trace rows marked window_zone=recovery.",
+    )
+    parser.add_argument(
+        "--dagger-label-source",
+        choices=["safe_target", "trajectory"],
+        default="safe_target",
+        help="How to relabel actor-visited states during DAgger iterations.",
+    )
+    parser.add_argument(
+        "--collect-final-actor-trace",
+        action="store_true",
+        help="After promotion selection, collect actor-visited trace and compare it with the initial teacher trace.",
+    )
     parser.add_argument("--matlab-cmd", default="matlab")
     parser.add_argument("--matlab-timeout-s", type=int, default=1200)
     parser.add_argument("--train-timeout-s", type=int, default=600)
@@ -535,6 +640,7 @@ def main() -> int:
             init_model=None,
             fixed_target=None,
             vdc_feedback_gain=0.0,
+            relabel_with_trajectory=False,
         )
     )
 
@@ -563,8 +669,9 @@ def main() -> int:
                 run_id=f"{args.run_id}_dagger{idx}",
                 model_out=next_model,
                 init_model=model,
-                fixed_target=list(args.safe_target),
+                fixed_target=list(args.safe_target) if args.dagger_label_source == "safe_target" else None,
                 vdc_feedback_gain=args.vdc_feedback_gain,
+                relabel_with_trajectory=args.dagger_label_source == "trajectory",
             )
         )
         model = next_model
@@ -585,6 +692,21 @@ def main() -> int:
     best_model = Path(best["model_path"])
     final_actor = SIMULINK_DIR / f"hpt_sac_actor_weights_{safe_token(args.run_id)}.mat"
     export_actor(args, run_dir, model=best_model, out=final_actor, label=f"final_specialist_{best['label']}")
+    final_actor_trace = ""
+    trace_alignment: dict[str, Any] = {}
+    if args.collect_final_actor_trace:
+        export_actor(args, run_dir, model=best_model, out=actor_mat, label=f"final_dynamic_{best['label']}")
+        actor_trace_path = collect_trace(
+            args,
+            run_dir,
+            label="final_actor_trace",
+            policy_mode=1.0,
+            actor_select_mode=3.0,
+            trajectory_file=None,
+        )
+        final_actor_trace = str(actor_trace_path)
+        trace_alignment = trace_alignment_summary(initial_trace, actor_trace_path)
+        write_json(run_dir / "trace_alignment_summary.json", trace_alignment)
     summary = {
         "schema": "hpt-trajectory-specialist-campaign-v1",
         "run_id": args.run_id,
@@ -598,6 +720,8 @@ def main() -> int:
         "best_actor_evaluation": best,
         "final_model": str(best_model),
         "final_actor_mat": str(final_actor),
+        "final_actor_trace": final_actor_trace,
+        "trace_alignment": trace_alignment,
         "promoted_voltage_survival": bool(best["policy_voltage_pass"]),
         "promoted_beats_baseline": bool(best["policy_beats_baseline"]),
         "config": vars(args),

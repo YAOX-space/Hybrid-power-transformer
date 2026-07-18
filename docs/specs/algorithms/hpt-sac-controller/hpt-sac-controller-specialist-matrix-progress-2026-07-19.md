@@ -95,6 +95,56 @@ Result:
   Simulink.  This is a rollout-alignment problem, not only an action-label MSE
   problem.
 
+Rollout-alignment follow-up:
+
+```powershell
+py -3 -m version_2.sac.run_hpt_trajectory_specialist_campaign --run-id hpt_rule_teacher_topo1_lvrt075_align_strongbc_20260719 --topology topology1 --fault-pu 0.75 --duration-s 0.08 --teacher-source rule --dagger-iters 0 --switch-trace-repeat 128 --epochs 200 --bc-obs-noise-repeat 6 --collect-final-actor-trace --matlab-timeout-s 1200 --train-timeout-s 1200
+```
+
+Result:
+
+- Score improved from `168.3` to `165.5`, but still did not beat/pass the
+  baseline gate.
+- Actor trace vs teacher trace:
+  - `m_reg_d_mae`: `0.065`
+  - `m_energy_d_mae`: `0.033`
+  - `lv_rms_mae`: `4.53 V`
+  - `vdc_mae`: `7.13 V`
+- The main problem is not static BC loss; it is recovery/fault-window rollout
+  drift.
+
+Delayed-window trajectory follow-up:
+
+```powershell
+py -3 -m version_2.sac.validate_hpt_trajectory_switchlevel --run-id hpt_topo1_lvrt075_delayed_ds145_de185_20260719 --topology topology1 --fault-pu 0.75 --duration-s 0.08 --preset two_stage_window --base-action 0 0 0 0 --start-action 0.45 0 0 0 --action 0.45 0 0 0 --ramp-start 0.035 --step-time 0.040 --ramp-end 0.045 --down-start 0.145 --down-end 0.185 --timeout-s 1200
+```
+
+Result:
+
+- The trajectory itself passes voltage-survival:
+  - LV mean: `178.35 V`
+  - LV recovery mean: `185.03 V`
+  - Vdc min/max: `762.98 / 911.22 V`
+- It does not beat conventional score (`179.6` vs `162.8`), but it proves a
+  hand-designed fault-window action can survive the deeper sag.
+
+BC actor from that delayed trajectory:
+
+```powershell
+py -3 -m version_2.sac.run_hpt_trajectory_specialist_campaign --run-id hpt_traj_specialist_topo1_lvrt075_delayed_20260719 --topology topology1 --fault-pu 0.75 --duration-s 0.08 --preset two_stage_window --base-action 0 0 0 0 --start-action 0.45 0 0 0 --action 0.45 0 0 0 --safe-target 0.45 0 0 0 --ramp-start 0.035 --step-time 0.040 --ramp-end 0.045 --down-start 0.145 --down-end 0.185 --dagger-iters 0 --switch-trace-repeat 96 --epochs 120 --bc-obs-noise-repeat 4 --collect-final-actor-trace --matlab-timeout-s 1200 --train-timeout-s 1200
+```
+
+Result:
+
+- The BC actor failed badly:
+  - LV mean dropped to `123.64 V`.
+  - `m_reg_d` trace alignment MAE was `0.206`.
+  - actor mean `m_reg_d` was only `0.057` vs teacher mean `0.237`.
+- Interpretation:
+  ordinary BC is not reliable for short fault-window pulse policies.  Training
+  must overweight the fault window and preserve the delayed-down transition, or
+  the controller needs an explicit state-machine/gating variable.
+
 ### topology2 / HVRT / 1.10 pu / 80 ms
 
 - New specialist probe:
@@ -157,15 +207,92 @@ The main blocker is now clear:
    the closed-loop switch-level model.
 2. Add rollout-alignment evaluation for rule-teacher BC:
    compare teacher trace, actor trace, LV/Vdc waveforms, and action error along
-   actor-visited states, not just static sampled states.
-3. Train BC warm-start actors from those conventional traces, then apply small
+   actor-visited states, not just static sampled states. This is now implemented
+   through `--collect-final-actor-trace`.
+3. Add fault-window weighted BC:
+   oversample/weight fault and delayed recovery windows so the actor preserves
+   short pulse actions instead of averaging them away.
+4. Train BC warm-start actors from those conventional traces, then apply small
    residual action targets only inside switch-level validated safe regions.
-4. Add a dynamic energy/DC-link constraint to the teacher label generator:
+5. Add a dynamic energy/DC-link constraint to the teacher label generator:
    reduce regulating action when `Vdc < 0.80 pu`, and prefer energy current
    recovery before voltage/recovery-window aggressiveness.
-5. Re-run the specialist matrix with:
+6. Re-run the specialist matrix with:
    - topology1: LVRT 0.75/0.85/0.90
    - topology2: LVRT 0.90/0.95 and HVRT 1.10
-6. Only if the conventional-trace actor survives the switch-level gate, train a
+7. Only if the conventional-trace actor survives the switch-level gate, train a
    residual/SAC specialist to beat conventional score without violating DC link
    or grid-current constraints.
+
+## Follow-up: Fault-Window DAgger BC
+
+New code added after the first matrix run:
+
+- `pretrain_hpt_actor_bc.py`
+  - Added fault/recovery window repeat multipliers for switch trace BC.
+  - Added trajectory-profile relabeling for actor-visited switch traces.
+- `run_hpt_trajectory_specialist_campaign.py`
+  - Added `--fault-window-repeat-mult` and
+    `--recovery-window-repeat-mult`.
+  - Added `--dagger-label-source trajectory`, so DAgger can use states from
+    the actor rollout but labels from the same dynamic trajectory teacher.
+  - Added `--action-weights` passthrough.
+  - Added optional final actor trace collection and rollout alignment summary.
+
+### topology1 / LVRT / 0.75 pu / 80 ms
+
+Three variants were tested:
+
+1. `hpt_traj_specialist_topo1_lvrt075_delayed_weighted_20260719`
+   - Only fault/recovery oversampling.
+   - Result: failed.
+   - Actor still averaged the pulse away:
+     `m_reg_d_mean = 0.066` vs teacher `0.237`.
+2. `hpt_traj_specialist_topo1_lvrt075_delayed_daggertraj_20260719`
+   - Added trajectory-label DAgger.
+   - Result: failed but improved.
+   - Best actor reached `policy_lv_mean = 163.82 V`.
+3. `hpt_traj_specialist_topo1_lvrt075_delayed_daggertraj_clean_20260719`
+   - Removed observation-noise augmentation and increased `m_reg_d` loss
+     weight.
+   - Result: closest boundary actor so far.
+   - Best switch-level actor:
+     - `policy_lv_mean = 175.36 V`
+     - `policy_lv_recovery_mean = 199.49 V`
+     - `policy_vdc_min = 765.90 V`
+     - `policy_score = 169.86`
+   - It still fails the voltage gate by roughly `0.65 V` on the aggregated
+     fault-window metric.
+
+Additional teacher search:
+
+- `hpt_validate_topo1_lvrt075_spike060_hold045_20260719`
+  validates a startup-spike teacher:
+  `start_action=[0.60,0,0,0]`, `action=[0.45,0,0,0]`,
+  `down_start=0.145`, `down_end=0.185`.
+  The teacher itself passes voltage survival:
+  `lv_mean=176.86 V`, `lv_recovery_mean=184.39 V`, `vdc_min=729.54 V`.
+- The corresponding BC/DAgger actor
+  `hpt_traj_specialist_topo1_lvrt075_spike060_hold045_daggertraj_clean_20260719`
+  did not pass; the best actor over-injected in recovery and still failed
+  `lv_fault_mean_bounds`.
+
+Interpretation:
+
+- Fault-window weighted BC alone is insufficient.
+- Trajectory-label DAgger is useful and moves the closed-loop actor toward the
+  teacher, but a memoryless actor still produces high-frequency action
+  variation around the fault/recovery boundary.
+- The next modeling change should be either:
+  - add an explicit controller-stage feature / fault timer feature that is
+    guaranteed consistent between Simulink and proxy, or
+  - add a normal actuator-side action slew/low-pass block and train/evaluate
+    with that same dynamic action interface.
+
+Current promoted specialist set is unchanged:
+
+- topology1 LVRT 0.90: voltage-survival specialist.
+- topology2 LVRT 0.95: voltage-survival specialist.
+- topology2 LVRT 0.90: voltage-survival specialist.
+
+No topology1 LVRT 0.75 specialist is promoted yet.

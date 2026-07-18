@@ -24,6 +24,7 @@ if SRC.exists() and str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from hpt_frt.device.train_common import pick_device
+from .build_hpt_action_trajectory import TrajectorySpec, make_trajectory
 from .experiment_metadata import write_experiment_metadata
 from .hpt_voltage_sac_env import (
     ACT_DIM_HPT,
@@ -254,11 +255,43 @@ def append_switch_trace_samples(
     q_gate_mode: str,
     q_gate_lv_full_pu: float,
     q_gate_time_full_s: float,
+    fault_window_repeat_mult: int,
+    recovery_window_repeat_mult: int,
+    target_profile: str,
+    profile_dt: float,
+    profile_stop_time: float,
+    profile_base_action: list[float],
+    profile_start_action: list[float],
+    profile_action: list[float],
+    profile_step_time: float,
+    profile_ramp_start: float,
+    profile_ramp_end: float,
+    profile_down_start: float | None,
+    profile_down_end: float | None,
 ) -> tuple[np.ndarray, np.ndarray, int]:
     if csv_path is None:
         return X, Y, 0
     if not csv_path.exists():
         raise FileNotFoundError(csv_path)
+
+    profile_t: np.ndarray | None = None
+    profile_y: np.ndarray | None = None
+    if target_profile != "csv":
+        spec = TrajectorySpec(
+            preset=target_profile,
+            dt=profile_dt,
+            stop_time=profile_stop_time,
+            base_action=tuple(float(v) for v in profile_base_action),
+            start_action=tuple(float(v) for v in profile_start_action),
+            action=tuple(float(v) for v in profile_action),
+            step_time=profile_step_time,
+            ramp_start=profile_ramp_start,
+            ramp_end=profile_ramp_end,
+            down_start=profile_down_start,
+            down_end=profile_down_end,
+        )
+        profile_t, profile_y = make_trajectory(spec)
+        profile_t = profile_t.reshape(-1)
 
     extra_x: list[np.ndarray] = []
     extra_y: list[np.ndarray] = []
@@ -277,11 +310,18 @@ def append_switch_trace_samples(
                 [float(row[f"obs_{idx:02d}"]) for idx in range(1, OBS_DIM_HPT + 1)],
                 dtype=np.float32,
             )
-            target = np.asarray(
-                [float(row[f"action_{idx:02d}"]) for idx in range(1, ACT_DIM_HPT + 1)],
-                dtype=np.float32,
-            )
-            if fixed_target:
+            if profile_t is not None and profile_y is not None:
+                row_t = float(row.get("t") or 0.0)
+                idx = int(np.clip(np.searchsorted(profile_t, row_t, side="left"), 0, len(profile_t) - 1))
+                if idx > 0 and abs(float(profile_t[idx - 1]) - row_t) <= abs(float(profile_t[idx]) - row_t):
+                    idx -= 1
+                target = np.asarray(profile_y[idx, :], dtype=np.float32)
+            else:
+                target = np.asarray(
+                    [float(row[f"action_{idx:02d}"]) for idx in range(1, ACT_DIM_HPT + 1)],
+                    dtype=np.float32,
+                )
+            if fixed_target and profile_t is None:
                 parts = [p.strip() for p in fixed_target.split(",") if p.strip()]
                 if len(parts) != ACT_DIM_HPT:
                     raise ValueError(
@@ -330,7 +370,14 @@ def append_switch_trace_samples(
                 reg_d = float(target[0])
                 target[0] = reg_d * np.cos(phase_shift_rad)
                 target[1] = reg_d * np.sin(phase_shift_rad)
-            for _ in range(max(1, repeat)):
+            window_zone = str(row.get("window_zone", "")).strip().lower()
+            zone_mult = 1
+            if window_zone == "fault":
+                zone_mult = max(1, fault_window_repeat_mult)
+            elif window_zone == "recovery":
+                zone_mult = max(1, recovery_window_repeat_mult)
+            row_repeat = max(1, repeat) * zone_mult
+            for _ in range(row_repeat):
                 extra_x.append(obs)
                 extra_y.append(target)
 
@@ -666,6 +713,34 @@ def main() -> None:
     parser.add_argument("--switch-trace-q-gate-mode", choices=["binary", "continuous"], default="binary")
     parser.add_argument("--switch-trace-q-gate-lv-full-pu", type=float, default=float("inf"))
     parser.add_argument("--switch-trace-q-gate-time-full-s", type=float, default=float("inf"))
+    parser.add_argument(
+        "--switch-trace-fault-window-repeat-mult",
+        type=int,
+        default=1,
+        help="Extra repeat multiplier for switch-trace samples with window_zone=fault.",
+    )
+    parser.add_argument(
+        "--switch-trace-recovery-window-repeat-mult",
+        type=int,
+        default=1,
+        help="Extra repeat multiplier for switch-trace samples with window_zone=recovery.",
+    )
+    parser.add_argument(
+        "--switch-trace-target-profile",
+        choices=["csv", "zero", "constant", "step", "ramp", "two_stage", "two_stage_window", "fault_window"],
+        default="csv",
+        help="Relabel switch trace states with a generated trajectory profile instead of CSV action columns.",
+    )
+    parser.add_argument("--switch-trace-profile-dt", type=float, default=0.002)
+    parser.add_argument("--switch-trace-profile-stop-time", type=float, default=0.24)
+    parser.add_argument("--switch-trace-profile-base-action", type=float, nargs=4, default=[0.0, 0.0, 0.0, 0.0])
+    parser.add_argument("--switch-trace-profile-start-action", type=float, nargs=4, default=[0.0, 0.0, 0.0, 0.0])
+    parser.add_argument("--switch-trace-profile-action", type=float, nargs=4, default=[0.0, 0.0, 0.0, 0.0])
+    parser.add_argument("--switch-trace-profile-step-time", type=float, default=0.04)
+    parser.add_argument("--switch-trace-profile-ramp-start", type=float, default=0.035)
+    parser.add_argument("--switch-trace-profile-ramp-end", type=float, default=0.045)
+    parser.add_argument("--switch-trace-profile-down-start", type=float, default=None)
+    parser.add_argument("--switch-trace-profile-down-end", type=float, default=None)
     parser.add_argument("--switch-trace-topology2-phase-equivalent", action="store_true")
     parser.add_argument("--switch-trace-phase-shift-rad", type=float, default=0.55)
     parser.add_argument("--raw-smoke-correction-csv", type=Path, default=None)
@@ -755,6 +830,19 @@ def main() -> None:
         q_gate_mode=args.switch_trace_q_gate_mode,
         q_gate_lv_full_pu=args.switch_trace_q_gate_lv_full_pu,
         q_gate_time_full_s=args.switch_trace_q_gate_time_full_s,
+        fault_window_repeat_mult=args.switch_trace_fault_window_repeat_mult,
+        recovery_window_repeat_mult=args.switch_trace_recovery_window_repeat_mult,
+        target_profile=args.switch_trace_target_profile,
+        profile_dt=args.switch_trace_profile_dt,
+        profile_stop_time=args.switch_trace_profile_stop_time,
+        profile_base_action=args.switch_trace_profile_base_action,
+        profile_start_action=args.switch_trace_profile_start_action,
+        profile_action=args.switch_trace_profile_action,
+        profile_step_time=args.switch_trace_profile_step_time,
+        profile_ramp_start=args.switch_trace_profile_ramp_start,
+        profile_ramp_end=args.switch_trace_profile_ramp_end,
+        profile_down_start=args.switch_trace_profile_down_start,
+        profile_down_end=args.switch_trace_profile_down_end,
     )
     X, Y, raw_smoke_samples = append_raw_smoke_corrections(
         X,
