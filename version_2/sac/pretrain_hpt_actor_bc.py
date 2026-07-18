@@ -241,6 +241,10 @@ def append_switch_trace_samples(
     fixed_target: str | None,
     energy_vdc_feedback_gain: float,
     energy_vdc_ref_pu: float,
+    q_gate_lv_min_pu: float,
+    q_gate_time_min_s: float,
+    q_gate_vdc_min_pu: float,
+    q_gate_vdc_max_pu: float,
 ) -> tuple[np.ndarray, np.ndarray, int]:
     if csv_path is None:
         return X, Y, 0
@@ -275,6 +279,27 @@ def append_switch_trace_samples(
                         f"--switch-trace-fixed-target must have {ACT_DIM_HPT} values"
                     )
                 target = np.asarray([float(p) for p in parts], dtype=np.float32)
+                if target[1] != 0.0 and (
+                    q_gate_lv_min_pu > 0.0
+                    or q_gate_time_min_s > 0.0
+                    or q_gate_vdc_min_pu > 0.0
+                    or np.isfinite(q_gate_vdc_max_pu)
+                ):
+                    lv_pu = float(row.get("lv_rms_inst") or 0.0) / 207.0
+                    if lv_pu <= 0.0:
+                        lv_pu = float(obs[0])
+                    vdc_pu = float(row.get("vdc_inst") or 0.0) / 800.0
+                    if vdc_pu <= 0.0:
+                        vdc_pu = float(obs[3])
+                    t_s = float(row.get("t") or 0.0)
+                    q_allowed = (
+                        lv_pu >= q_gate_lv_min_pu
+                        and t_s >= q_gate_time_min_s
+                        and vdc_pu >= q_gate_vdc_min_pu
+                        and vdc_pu <= q_gate_vdc_max_pu
+                    )
+                    if not q_allowed:
+                        target[1] = 0.0
             if energy_vdc_feedback_gain != 0.0:
                 target[2] = float(
                     np.clip(
@@ -621,6 +646,10 @@ def main() -> None:
     parser.add_argument("--switch-trace-fixed-target", default=None)
     parser.add_argument("--switch-trace-energy-vdc-feedback-gain", type=float, default=0.0)
     parser.add_argument("--switch-trace-energy-vdc-ref-pu", type=float, default=1.0)
+    parser.add_argument("--switch-trace-q-gate-lv-min-pu", type=float, default=0.0)
+    parser.add_argument("--switch-trace-q-gate-time-min-s", type=float, default=0.0)
+    parser.add_argument("--switch-trace-q-gate-vdc-min-pu", type=float, default=0.0)
+    parser.add_argument("--switch-trace-q-gate-vdc-max-pu", type=float, default=float("inf"))
     parser.add_argument("--switch-trace-topology2-phase-equivalent", action="store_true")
     parser.add_argument("--switch-trace-phase-shift-rad", type=float, default=0.55)
     parser.add_argument("--raw-smoke-correction-csv", type=Path, default=None)
@@ -703,6 +732,10 @@ def main() -> None:
         fixed_target=args.switch_trace_fixed_target,
         energy_vdc_feedback_gain=args.switch_trace_energy_vdc_feedback_gain,
         energy_vdc_ref_pu=args.switch_trace_energy_vdc_ref_pu,
+        q_gate_lv_min_pu=args.switch_trace_q_gate_lv_min_pu,
+        q_gate_time_min_s=args.switch_trace_q_gate_time_min_s,
+        q_gate_vdc_min_pu=args.switch_trace_q_gate_vdc_min_pu,
+        q_gate_vdc_max_pu=args.switch_trace_q_gate_vdc_max_pu,
     )
     X, Y, raw_smoke_samples = append_raw_smoke_corrections(
         X,

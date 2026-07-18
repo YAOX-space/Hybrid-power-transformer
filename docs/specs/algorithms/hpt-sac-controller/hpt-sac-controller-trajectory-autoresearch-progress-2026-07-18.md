@@ -129,6 +129,43 @@ Dynamic trajectory sweep update:
   - The tested static `m_energy_d/q` offsets do not provide enough dynamic
     damping for topology2 LVRT reactive support.
 
+State-gated q-label update:
+
+- Added q-axis label gating to `pretrain_hpt_actor_bc.py` and
+  `run_hpt_trajectory_specialist_campaign.py`.
+- Purpose:
+  - preserve the full-action contract `[m_reg_d, m_reg_q, m_energy_d, m_energy_q]`;
+  - keep `m_reg_q=0` while LV voltage or Vdc margin is unsafe;
+  - allow negative `m_reg_q` only after the fault trajectory enters a safer
+    support region.
+- New training arguments:
+  - `--q-gate-lv-min-pu`
+  - `--q-gate-time-min-s`
+  - `--q-gate-vdc-min-pu`
+  - `--q-gate-vdc-max-pu`
+
+Gated-q switch-level campaigns:
+
+| Run | Label Strategy | Voltage Pass | Score | LV Mean | LV Recovery | Vdc Min/Max | Full-FRT Reason |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `topology2_lvrt090_qm03_vdcfb` DAgger1 | no q gate, `m_reg_d=0.172`, `q=-0.3` | fail | `180.94` | `129.92` | `211.24` | `346.09/1036.21` | `gbt_voltage_envelope;gbt_recover;gbt_vdc_survive;grid_current_limit` |
+| `topology2_lvrt090_rd025_qm03_vdcfb08` DAgger1 | no q gate, `m_reg_d=0.25`, `q=-0.3` | fail | `150.31` | `136.27` | `181.75` | `729.35/937.57` | `gbt_voltage_envelope;gbt_recover;grid_current_limit` |
+| `topology2_lvrt090_rd025_qm03_gatedq` DAgger1 | strict gate: `LV>=0.88 pu`, `t>=75 ms` | fail | `144.22` | `183.90` | `215.58` | `796.57/1012.12` | `gbt_voltage_envelope;gbt_recover;gbt_vdc_survive;grid_current_limit;reactive_wrong_sign` |
+| `topology2_lvrt090_rd025_qm03_gatedq2` DAgger1 | relaxed gate: `LV>=0.70 pu`, `t>=55 ms` | pass | `181.46` | `193.08` | `226.99` | `797.45/965.02` | `gbt_voltage_envelope;gbt_recover;grid_current_limit;reactive_wrong_sign` |
+
+Interpretation:
+
+- Negative q is physically active: the aggressive no-gate cases remove
+  `reactive_wrong_sign`, but they over-prioritize q and collapse LV fault mean.
+- State-gated q labels restore LV and DC-link survival.
+- The relaxed gate is currently the best compromise:
+  - it passes staged voltage-survival;
+  - it beats the failed conventional baseline on the LVRT 0.90 case;
+  - it still does not satisfy full GB/T reactive-current support.
+- The next label/controller iteration should increase q support only in the
+  later part of the fault/recovery window or use a continuous q target rather
+  than binary `q=0` vs `q=-0.3`.
+
 Implication:
 
 - Full FRT is now limited by coupled reactive-current and DC-link dynamics, not

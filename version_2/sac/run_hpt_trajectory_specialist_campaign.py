@@ -313,6 +313,14 @@ def train_bc(
             "--switch-trace-energy-vdc-ref-pu",
             str(args.vdc_feedback_ref_pu),
         ]
+    if args.q_gate_lv_min_pu > 0.0:
+        cmd += ["--switch-trace-q-gate-lv-min-pu", str(args.q_gate_lv_min_pu)]
+    if args.q_gate_time_min_s > 0.0:
+        cmd += ["--switch-trace-q-gate-time-min-s", str(args.q_gate_time_min_s)]
+    if args.q_gate_vdc_min_pu > 0.0:
+        cmd += ["--switch-trace-q-gate-vdc-min-pu", str(args.q_gate_vdc_min_pu)]
+    if math.isfinite(args.q_gate_vdc_max_pu):
+        cmd += ["--switch-trace-q-gate-vdc-max-pu", str(args.q_gate_vdc_max_pu)]
     if args.bc_obs_noise_repeat > 0 and args.bc_obs_noise_std > 0:
         cmd += [
             "--bc-obs-noise-std",
@@ -433,6 +441,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dagger-iters", type=int, default=2)
     parser.add_argument("--vdc-feedback-gain", type=float, default=0.10)
     parser.add_argument("--vdc-feedback-ref-pu", type=float, default=1.0)
+    parser.add_argument("--q-gate-lv-min-pu", type=float, default=0.0)
+    parser.add_argument("--q-gate-time-min-s", type=float, default=0.0)
+    parser.add_argument("--q-gate-vdc-min-pu", type=float, default=0.0)
+    parser.add_argument("--q-gate-vdc-max-pu", type=float, default=float("inf"))
     parser.add_argument("--switch-trace-repeat", type=int, default=64)
     parser.add_argument("--window-zones", default="all")
     parser.add_argument("--case-contains", default="")
