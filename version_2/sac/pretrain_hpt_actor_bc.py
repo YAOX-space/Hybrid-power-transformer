@@ -40,6 +40,10 @@ def make_env_config(args: argparse.Namespace) -> HPTVoltageEnvConfig:
     return HPTVoltageEnvConfig(
         reg_limit=args.reg_limit,
         energy_limit=args.energy_limit,
+        reg_d_limit=args.reg_limit,
+        reg_q_limit=args.reg_limit,
+        energy_d_limit=args.energy_limit,
+        energy_q_limit=args.energy_limit,
         teacher_prior_weight=args.teacher_prior_weight,
     )
 

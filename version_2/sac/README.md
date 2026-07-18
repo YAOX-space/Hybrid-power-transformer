@@ -178,6 +178,16 @@ The current full workflow is:
   normal actuator-dynamic change, the same topology1 / 0.75 pu / 80 ms actor
   passed voltage survival (`lv_mean=177.13 V`, `vdc_min=764.85 V`) but still did
   not beat the strong conventional aggregate score and did not pass full FRT.
+- `pretrain_hpt_actor_bc.py` now maps `--reg-limit` and `--energy-limit` into
+  the actual Gym action-space limits for all four action channels.  Before this
+  fix, `m_energy_d` was still capped at +/-0.40 during BC/SAC actor training
+  even when `--energy-limit 0.95` was requested.
+- Current switch-level voltage-survival specialists are summarized in
+  `docs/specs/algorithms/hpt-sac-controller/hpt-sac-controller-specialist-matrix-addendum-2026-07-19.md`.
+  The strongest promoted rows so far are topology2 / LVRT 0.95 and topology2 /
+  LVRT 0.925, both of which pass voltage survival and beat the tuned
+  `conventional_dq` score.  Topology1 / LVRT 0.75 and 0.90 pass voltage
+  survival but do not yet beat the tuned conventional score.
 
 ## Cleanup Notes
 
