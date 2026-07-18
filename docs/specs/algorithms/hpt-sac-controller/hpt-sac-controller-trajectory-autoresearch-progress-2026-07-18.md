@@ -98,6 +98,37 @@ Reactive-current exploration:
 - Sweeping `m_energy_q` in the two-stage trajectory did not materially change
   the limiting `Vdc max ~= 1005.6 V`; it only changed LV/score slightly.
 
+Dynamic trajectory sweep update:
+
+- Added `version_2/sac/run_hpt_dynamic_trajectory_sweep.py` to run compact
+  switch-level trajectory matrices and summarize the same promotion metrics
+  used by `validate_hpt_trajectory_switchlevel`.
+- Completed
+  `hpt_dynamic_traj_sweep_topo2_lvrt090_tradeoff_20260718`:
+  - topology: `topology2`
+  - fault: `LVRT 0.90 pu / 80 ms`
+  - cases: `12/12` completed
+  - voltage-survival passes: `0/12`
+  - full-FRT passes: `0/12`
+- Best score was:
+  `m_reg_d=0.25`, `m_reg_q=-0.4`, `m_energy_d=-0.02`,
+  `m_energy_q=0.002`, `d_ramp=20 ms`, `q_ramp=40 ms`.
+  - score: `119.54`
+  - LV mean: `192.17 V`
+  - LV recovery mean: `211.17 V`
+  - Vdc range: `783.66-1005.62 V`
+  - reactive status: `reactive_wrong_sign`
+  - full-FRT reason:
+    `gbt_voltage_envelope;gbt_recover;gbt_vdc_survive;grid_current_limit;reactive_wrong_sign`
+- Interpretation:
+  - More negative `m_reg_q` improves the objective and reduces reactive-current
+    shortfall, but pushes the case out of the voltage-survival gate because
+    DC-link upper-bound survival fails.
+  - Raising `m_reg_d` from `0.172` to `0.25` improves recovery voltage and the
+    score, but does not solve the DC-link or GB/T reactive-current criteria.
+  - The tested static `m_energy_d/q` offsets do not provide enough dynamic
+    damping for topology2 LVRT reactive support.
+
 Implication:
 
 - Full FRT is now limited by coupled reactive-current and DC-link dynamics, not
