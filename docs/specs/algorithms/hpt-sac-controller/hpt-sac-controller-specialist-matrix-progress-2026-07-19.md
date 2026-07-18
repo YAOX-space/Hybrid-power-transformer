@@ -296,3 +296,50 @@ Current promoted specialist set is unchanged:
 - topology2 LVRT 0.90: voltage-survival specialist.
 
 No topology1 LVRT 0.75 specialist is promoted yet.
+
+## Follow-up: Actor Execution Smoothing
+
+The deep-LVRT actor trace showed high-frequency action variation at the
+fault/recovery boundary.  The HPTSACController already keeps `last_act`, but
+there was no actor-side actuator dynamic.  A 1-ms first-order action smoothing
+stage was added only for actor modes:
+
+- `policy_mode >= 0.5`
+- `actor_select_mode >= 1.5`
+
+This does not affect:
+
+- `conventional_dq`
+- fixed-action validation
+- trajectory-teacher validation
+
+Re-test after rebuilding the switch-level model:
+
+```powershell
+py -3 -m version_2.sac.export_hpt_sac_actor --model data/models/hpt_traj_specialist_topo1_lvrt075_delayed_daggertraj_clean_20260719_dagger2.zip --out version_2/simulink/hpt_sac_actor_weights_dynamic.mat
+matlab --% -batch "cd('E:/research_space/Hybrid-power-transformer/version_2/simulink'); hpt_compare_topology='topology1'; hpt_compare_scenario_type='fault'; hpt_compare_case_name='lvrt_080ms_0p750pu'; hpt_compare_faults={'lvrt_080ms_0p750pu',0.75,0.08}; hpt_compare_modes={'conventional_dq','sac_actor_raw_guard0'}; hpt_compare_run_label='smooth_check2_topo1_lvrt075_dagger2'; eval_hpt_v2_control_comparison"
+```
+
+Result:
+
+- `sac_actor_raw_guard0`
+  - `voltage_survival_pass = 1`
+  - `lv_mean = 177.13 V`
+  - `lv_recovery_mean = 205.99 V`
+  - `vdc_min = 764.85 V`
+  - `control_score = 163.88`
+- `conventional_dq`
+  - `voltage_survival_pass = 1`
+  - `lv_mean = 176.00 V`
+  - `lv_recovery_mean = 191.30 V`
+  - `vdc_min = 760.91 V`
+  - `control_score = 162.76`
+
+Interpretation:
+
+- topology1 / LVRT 0.75 now has a switch-level voltage-survival SAC
+  specialist candidate.
+- It is not yet a full-FRT success because both SAC and conventional still fail
+  `gbt_recover`, `grid_current_limit`, and `reactive_wrong_sign`.
+- It is not yet a strict "beats conventional" result on the aggregate score,
+  but it has better fault-window LV mean and better Vdc minimum.

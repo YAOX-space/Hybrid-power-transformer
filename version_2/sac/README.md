@@ -169,10 +169,15 @@ The current full workflow is:
   DAgger states come from the actor rollout, but labels are recomputed from the
   same trajectory preset used in switch-level validation.
 - The current deep-LVRT boundary case is topology1 / 0.75 pu / 80 ms.  The best
-  actor so far is diagnostic, not promoted:
+  actor before execution smoothing was diagnostic:
   `hpt_traj_specialist_topo1_lvrt075_delayed_daggertraj_clean_20260719`,
   with `policy_lv_mean=175.36 V` against a `176 V` fault-window gate.  Do not
   use it as a final specialist until it passes the switch-level gate.
+- The Simulink HPTSACController now applies a 1-ms first-order low-pass only to
+  SAC actor modes (`policy_mode>=0.5`, `actor_select_mode>=1.5`).  After this
+  normal actuator-dynamic change, the same topology1 / 0.75 pu / 80 ms actor
+  passed voltage survival (`lv_mean=177.13 V`, `vdc_min=764.85 V`) but still did
+  not beat the strong conventional aggregate score and did not pass full FRT.
 
 ## Cleanup Notes
 
