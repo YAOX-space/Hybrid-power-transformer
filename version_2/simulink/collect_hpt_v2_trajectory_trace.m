@@ -104,6 +104,10 @@ t = (0:n-1) * Ts;
 sampleIdx = 1:hpt_trace_sample_stride:n;
 
 rows = repmat(base_row(), 0, 1);
+faultPrefix = "lvrt";
+if hpt_trace_fault_pu > 1.0
+    faultPrefix = "hvrt";
+end
 for kk = 1:numel(sampleIdx)
     j = sampleIdx(kk);
     row = base_row();
@@ -111,7 +115,7 @@ for kk = 1:numel(sampleIdx)
     row.topology = hpt_trace_topology;
     row.scenario_type = "fault";
     row.condition_class = condition_class(hpt_trace_fault_pu);
-    row.case_name = string(sprintf('lvrt_%03dms_%.3fpu', round(1000*hpt_trace_fault_duration), hpt_trace_fault_pu));
+    row.case_name = string(sprintf('%s_%03dms_%.3fpu', faultPrefix, round(1000*hpt_trace_fault_duration), hpt_trace_fault_pu));
     row.t = t(j);
     row.grid_V = NaN;
     row.fault_pu = hpt_trace_fault_pu;

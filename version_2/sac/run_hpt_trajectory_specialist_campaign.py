@@ -142,7 +142,8 @@ def summarize_control_csv(path: Path, policy_mode: str) -> dict[str, Any]:
 
 
 def make_case_name(duration_s: float, fault_pu: float) -> str:
-    return f"lvrt_{int(round(duration_s * 1000)):03d}ms_{fault_pu:.3f}pu".replace(".", "p")
+    prefix = "hvrt" if fault_pu > 1.0 else "lvrt"
+    return f"{prefix}_{int(round(duration_s * 1000)):03d}ms_{fault_pu:.3f}pu".replace(".", "p")
 
 
 def build_initial_trajectory(args: argparse.Namespace, run_dir: Path) -> Path:
@@ -321,6 +322,12 @@ def train_bc(
         cmd += ["--switch-trace-q-gate-vdc-min-pu", str(args.q_gate_vdc_min_pu)]
     if math.isfinite(args.q_gate_vdc_max_pu):
         cmd += ["--switch-trace-q-gate-vdc-max-pu", str(args.q_gate_vdc_max_pu)]
+    if args.q_gate_mode != "binary":
+        cmd += ["--switch-trace-q-gate-mode", args.q_gate_mode]
+    if math.isfinite(args.q_gate_lv_full_pu):
+        cmd += ["--switch-trace-q-gate-lv-full-pu", str(args.q_gate_lv_full_pu)]
+    if math.isfinite(args.q_gate_time_full_s):
+        cmd += ["--switch-trace-q-gate-time-full-s", str(args.q_gate_time_full_s)]
     if args.bc_obs_noise_repeat > 0 and args.bc_obs_noise_std > 0:
         cmd += [
             "--bc-obs-noise-std",
@@ -424,6 +431,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fault-stop-margin", type=float, default=0.125)
     parser.add_argument("--case-name", default="")
     parser.add_argument(
+        "--teacher-source",
+        choices=["trajectory", "rule"],
+        default="trajectory",
+        help="Initial BC teacher source. 'rule' collects policy_mode=0 conventional/rule-DQ traces.",
+    )
+    parser.add_argument("--teacher-policy-mode", type=float, default=0.0)
+    parser.add_argument("--teacher-actor-select-mode", type=float, default=0.0)
+    parser.add_argument(
         "--preset",
         default="constant",
         choices=["zero", "constant", "step", "ramp", "two_stage", "two_stage_window", "fault_window"],
@@ -445,6 +460,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--q-gate-time-min-s", type=float, default=0.0)
     parser.add_argument("--q-gate-vdc-min-pu", type=float, default=0.0)
     parser.add_argument("--q-gate-vdc-max-pu", type=float, default=float("inf"))
+    parser.add_argument("--q-gate-mode", choices=["binary", "continuous"], default="binary")
+    parser.add_argument("--q-gate-lv-full-pu", type=float, default=float("inf"))
+    parser.add_argument("--q-gate-time-full-s", type=float, default=float("inf"))
     parser.add_argument("--switch-trace-repeat", type=int, default=64)
     parser.add_argument("--window-zones", default="all")
     parser.add_argument("--case-contains", default="")
@@ -471,16 +489,38 @@ def main() -> int:
     run_dir.mkdir(parents=True, exist_ok=True)
     MODELS.mkdir(parents=True, exist_ok=True)
 
-    trajectory_file = build_initial_trajectory(args, run_dir)
-    trajectory_summary = validate_trajectory(args, run_dir)
-    trajectory_trace = collect_trace(
-        args,
-        run_dir,
-        label="trajectory_teacher",
-        policy_mode=-2.0,
-        actor_select_mode=0.0,
-        trajectory_file=trajectory_file,
-    )
+    trajectory_file: Path | None = None
+    if args.teacher_source == "trajectory":
+        trajectory_file = build_initial_trajectory(args, run_dir)
+        trajectory_summary = validate_trajectory(args, run_dir)
+        initial_trace = collect_trace(
+            args,
+            run_dir,
+            label="trajectory_teacher",
+            policy_mode=-2.0,
+            actor_select_mode=0.0,
+            trajectory_file=trajectory_file,
+        )
+    else:
+        trajectory_summary = {
+            "schema": "hpt-trajectory-switch-validation-v1",
+            "run_id": f"{args.run_id}_rule_teacher",
+            "topology": args.topology,
+            "fault_pu": args.fault_pu,
+            "duration_s": args.duration_s,
+            "teacher_source": "rule",
+            "trajectory_voltage_pass": False,
+            "trajectory_beats_baseline": False,
+            "trajectory_reason": "not_applicable_rule_teacher",
+        }
+        initial_trace = collect_trace(
+            args,
+            run_dir,
+            label="rule_teacher",
+            policy_mode=args.teacher_policy_mode,
+            actor_select_mode=args.teacher_actor_select_mode,
+            trajectory_file=None,
+        )
 
     model = MODELS / f"{args.run_id}_bc0.zip"
     train_summaries: list[dict[str, Any]] = []
@@ -489,7 +529,7 @@ def main() -> int:
         train_bc(
             args,
             run_dir,
-            trace_csv=trajectory_trace,
+            trace_csv=initial_trace,
             run_id=f"{args.run_id}_bc0",
             model_out=model,
             init_model=None,
@@ -552,7 +592,7 @@ def main() -> int:
         "fault_pu": args.fault_pu,
         "duration_s": args.duration_s,
         "trajectory_summary": trajectory_summary,
-        "trajectory_trace": str(trajectory_trace),
+        "trajectory_trace": str(initial_trace),
         "train_summaries": train_summaries,
         "actor_evaluations": actor_evals,
         "best_actor_evaluation": best,
@@ -568,8 +608,8 @@ def main() -> int:
         run_dir,
         experiment_name="hpt_trajectory_specialist_campaign",
         config=summary["config"],
-        dataset_manifest=trajectory_trace,
-        policy_checkpoint=model,
+        dataset_manifest=initial_trace,
+        policy_checkpoint=best_model,
         extra={
             "summary_path": str(run_dir / "summary.json"),
             "final_actor_mat": str(final_actor),

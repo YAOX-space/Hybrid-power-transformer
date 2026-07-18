@@ -49,6 +49,9 @@ Training:
   proxy SAC drifts outside switch-level support.
 - `train_hpt_case_specialists.py` - topology/case specialist training and
   switch-level promotion gate.
+- `run_hpt_specialist_matrix_campaign.py` - resumable per-topology/per-fault
+  specialist matrix runner.  It reuses or launches switch-level campaigns and
+  reports each actor as `full_frt`, `voltage_survival`, or `diagnostic`.
 - `train_hpt_learned_proxy.py` - learned proxy experiments.
 - `train_hpt_safety_classifier.py` - safety classifier experiments.
 

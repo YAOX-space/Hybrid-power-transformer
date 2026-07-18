@@ -225,6 +225,12 @@ def _trace_row_allowed(
     )
 
 
+def _unit_ramp(value: float, zero_at: float, full_at: float) -> float:
+    if not np.isfinite(full_at) or full_at <= zero_at:
+        return 1.0 if value >= zero_at else 0.0
+    return float(np.clip((value - zero_at) / (full_at - zero_at), 0.0, 1.0))
+
+
 def append_switch_trace_samples(
     X: np.ndarray,
     Y: np.ndarray,
@@ -245,6 +251,9 @@ def append_switch_trace_samples(
     q_gate_time_min_s: float,
     q_gate_vdc_min_pu: float,
     q_gate_vdc_max_pu: float,
+    q_gate_mode: str,
+    q_gate_lv_full_pu: float,
+    q_gate_time_full_s: float,
 ) -> tuple[np.ndarray, np.ndarray, int]:
     if csv_path is None:
         return X, Y, 0
@@ -298,7 +307,11 @@ def append_switch_trace_samples(
                         and vdc_pu >= q_gate_vdc_min_pu
                         and vdc_pu <= q_gate_vdc_max_pu
                     )
-                    if not q_allowed:
+                    if q_gate_mode == "continuous" and q_allowed:
+                        lv_scale = _unit_ramp(lv_pu, q_gate_lv_min_pu, q_gate_lv_full_pu)
+                        time_scale = _unit_ramp(t_s, q_gate_time_min_s, q_gate_time_full_s)
+                        target[1] = float(target[1] * min(lv_scale, time_scale))
+                    elif not q_allowed:
                         target[1] = 0.0
             if energy_vdc_feedback_gain != 0.0:
                 target[2] = float(
@@ -650,6 +663,9 @@ def main() -> None:
     parser.add_argument("--switch-trace-q-gate-time-min-s", type=float, default=0.0)
     parser.add_argument("--switch-trace-q-gate-vdc-min-pu", type=float, default=0.0)
     parser.add_argument("--switch-trace-q-gate-vdc-max-pu", type=float, default=float("inf"))
+    parser.add_argument("--switch-trace-q-gate-mode", choices=["binary", "continuous"], default="binary")
+    parser.add_argument("--switch-trace-q-gate-lv-full-pu", type=float, default=float("inf"))
+    parser.add_argument("--switch-trace-q-gate-time-full-s", type=float, default=float("inf"))
     parser.add_argument("--switch-trace-topology2-phase-equivalent", action="store_true")
     parser.add_argument("--switch-trace-phase-shift-rad", type=float, default=0.55)
     parser.add_argument("--raw-smoke-correction-csv", type=Path, default=None)
@@ -736,6 +752,9 @@ def main() -> None:
         q_gate_time_min_s=args.switch_trace_q_gate_time_min_s,
         q_gate_vdc_min_pu=args.switch_trace_q_gate_vdc_min_pu,
         q_gate_vdc_max_pu=args.switch_trace_q_gate_vdc_max_pu,
+        q_gate_mode=args.switch_trace_q_gate_mode,
+        q_gate_lv_full_pu=args.switch_trace_q_gate_lv_full_pu,
+        q_gate_time_full_s=args.switch_trace_q_gate_time_full_s,
     )
     X, Y, raw_smoke_samples = append_raw_smoke_corrections(
         X,

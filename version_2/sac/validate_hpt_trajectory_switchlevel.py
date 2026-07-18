@@ -57,6 +57,11 @@ def truthy(value: Any) -> bool:
     return str(value).strip().lower() in {"1", "1.0", "true", "yes"}
 
 
+def make_case_name(duration_s: float, fault_pu: float) -> str:
+    prefix = "hvrt" if fault_pu > 1.0 else "lvrt"
+    return f"{prefix}_{int(round(duration_s * 1000)):03d}ms_{fault_pu:.3f}pu".replace(".", "p")
+
+
 def to_float(value: Any, default: float = float("nan")) -> float:
     try:
         return float(value)
@@ -159,7 +164,7 @@ def write_report(run_dir: Path, summary: dict[str, Any], rows: list[dict[str, st
 def run_matlab_case(args: argparse.Namespace, run_dir: Path, trajectory_file: Path) -> tuple[Path, str, str, int]:
     modes = "{'conventional_dq','fixed_action','trajectory_action'}"
     action = [float(x) for x in args.action]
-    case_name = args.case_name or f"lvrt_{int(round(args.duration_s * 1000)):03d}ms_{args.fault_pu:.3f}pu".replace(".", "p")
+    case_name = args.case_name or make_case_name(args.duration_s, args.fault_pu)
     label = safe_token(f"traj_{args.topology}_{args.preset}_{case_name}")
     statement = "; ".join(
         [
