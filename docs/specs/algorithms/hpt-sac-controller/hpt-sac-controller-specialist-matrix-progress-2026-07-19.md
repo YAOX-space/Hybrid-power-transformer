@@ -409,3 +409,36 @@ Interpretation:
   fixed full-action labels.
 - The next HVRT step must recalibrate the topology2 energy/DC-link response or
   introduce a separate DC-link-safe teacher before training an actor.
+
+## Follow-up: Topology1 HVRT 1.18 Specialist
+
+Topology1/HVRT 1.18 was a better HVRT boundary case: conventional DQ fails the
+current voltage-survival gate because of DC-link bounds, while several
+mid-range fixed actions pass.  The best fixed teacher tested was:
+
+```text
+[m_reg_d, m_reg_q, m_energy_d, m_energy_q] = [0.145, 0, 0.08, 0]
+```
+
+Training command:
+
+```powershell
+py -3 -m version_2.sac.run_hpt_trajectory_specialist_campaign --run-id hpt_traj_specialist_topo1_hvrt118_20260719 --topology topology1 --fault-pu 1.18 --duration-s 0.08 --fault-start 0.035 --fault-stop-margin 0.125 --teacher-source trajectory --preset constant --decision-dt 0.002 --base-action 0 0 0 0 --start-action 0 0 0 0 --action 0.145 0 0.08 0 --safe-target 0.145 0 0.08 0 --dagger-iters 1 --switch-trace-repeat 3 --window-zones fault,recovery --epochs 220 --batch-size 256 --lr 0.0008 --action-weights 2.0,1.0,6.0,2.0 --fault-window-repeat-mult 4 --recovery-window-repeat-mult 4 --dagger-label-source safe_target --collect-final-actor-trace --matlab-timeout-s 300 --train-timeout-s 900
+```
+
+Best actor:
+
+```text
+data/models/hpt_traj_specialist_topo1_hvrt118_20260719_bc0.zip
+```
+
+Switch-level result:
+
+- SAC score / conventional score: `143.790 / 155.854`.
+- LV mean / recovery: `210.36 / 185.64 V`.
+- DC link min / max: `762.74 / 904.16 V`.
+- The actor passes voltage-survival and beats conventional.
+- Full FRT still fails due `gbt_recover`, `grid_current_limit`, and
+  `reactive_wrong_sign`.
+
+This is the first accepted HVRT specialist in the version_2 matrix.

@@ -35,6 +35,7 @@ actors could not reproduce teacher actions such as `m_energy_d = 0.55-0.60`.
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | `topology1_lvrt075_80ms` | topology1 | 0.750 pu / 80 ms | `data/models/hpt_traj_specialist_topo1_lvrt075_delayed_daggertraj_clean_20260719_dagger2.zip` | yes | no | 163.877 / 162.763 | 177.13 / 205.99 | 764.85 / 870.96 | Deep LVRT survives; conventional still slightly better on total score due grid-current/reactive penalties. |
 | `topology1_lvrt090_80ms` | topology1 | 0.900 pu / 80 ms | `data/models/hpt_traj_specialist_topo1_lvrt090_rd050_ed055_currentgate_20260719_bc0.zip` | yes | no | 153.133 / 152.692 | 203.42 / 229.99 | 767.55 / 879.80 | Uses fixed teacher `[0.50, 0, 0.55, 0]`; passes current voltage/DC gate but does not yet beat tuned DQ. |
+| `topology1_hvrt118_80ms` | topology1 | 1.180 pu / 80 ms | `data/models/hpt_traj_specialist_topo1_hvrt118_20260719_bc0.zip` | yes | yes | 143.790 / 155.854 | 210.36 / 185.64 | 762.74 / 904.16 | HVRT boundary specialist.  Conventional fails DC-link bounds while SAC keeps LV/DC inside the voltage-survival gate. |
 | `topology2_lvrt095_80ms` | topology2 | 0.950 pu / 80 ms | `data/models/hpt_traj_specialist_topo2_lvrt095_currentgate_energyw_20260719_dagger1.zip` | yes | yes | 126.719 / 239.881 | 194.85 / 221.38 | 663.98 / 997.85 | DAgger fixed the BC0 DC-link dip and produced a clear switch-level win. |
 | `topology2_lvrt0925_80ms` | topology2 | 0.925 pu / 80 ms | `data/models/hpt_traj_specialist_topo2_lvrt0925_qaware_20260719_bc0.zip` | yes | yes | 140.000 / 279.629 | 176.32 / 219.33 | 788.03 / 977.05 | Q-aware boundary specialist.  A small negative `m_reg_q` improves reactive-current direction relative to the prior q=0 actor while preserving the voltage/DC gate. |
 
@@ -67,6 +68,24 @@ passes switch-level voltage survival:
 - DC link min/max: `788.03 / 977.05 V`.
 - `grid_iq_mean_pu` improved to `0.0396`, but full FRT still fails due
   `grid_current_limit` and `reactive_wrong_sign`.
+
+## 2026-07-19 HVRT Boundary Update
+
+For `topology1_hvrt118_80ms`, the conventional DQ baseline fails the current
+voltage-survival gate because the DC link exceeds the allowed range.  A small
+fixed-action sweep found a safe island around:
+
+```text
+[m_reg_d, m_reg_q, m_energy_d, m_energy_q] = [0.145, 0, 0.08, 0]
+```
+
+The trained `bc0` actor was promoted:
+
+- SAC score: `143.790` versus conventional `155.854`.
+- LV mean/recovery: `210.36 / 185.64 V`.
+- DC link min/max: `762.74 / 904.16 V`.
+- Full FRT still fails due `gbt_recover`, `grid_current_limit`, and
+  `reactive_wrong_sign`.
 
 ## Next Work
 
