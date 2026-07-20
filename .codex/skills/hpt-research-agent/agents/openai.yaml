@@ -1,0 +1,4 @@
+interface:
+  display_name: "HPT Research Agent"
+  short_description: "Autonomous research workflow for HPT FRT control."
+  default_prompt: "Use $hpt-research-agent to continue the HPT FRT research loop from the project charter and run the highest-priority reproducible baseline."
