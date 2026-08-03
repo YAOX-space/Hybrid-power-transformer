@@ -9,6 +9,7 @@
 - `simulink/`: two switch-level plants, collectors, evaluators, sweeps, and
   regression tests.
 - `docs/autonomy/`: Git, experiment, debugging, migration, and paper policies.
+- `archive/`: read-only historical artifacts excluded from the active pipeline.
 
 Canonical commands:
 

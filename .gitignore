@@ -1,6 +1,8 @@
 # ── Data (large files, generated) ──────────────────────────────────────────────
 data/
-version_2/data/
+version_2/archive/legacy_data/**
+!version_2/archive/legacy_data/README.md
+!version_2/archive/legacy_data/inventory.csv
 version_2/experts/*/results/*/
 .venv/
 lab/results/
