@@ -20,6 +20,13 @@ The phase families are:
 
 Every expert directory has:
 
+- `data/raw_switch_level/`: immutable Simulink trajectory exports;
+- `data/train/`: family training split;
+- `data/validation/`: model-selection split;
+- `data/holdout/`: untouched final family evaluation split;
+- `data/support_anchor/`: behavior-support or safety-anchor datasets;
+- `proxy/model/`: family-specific learned proxy artifacts;
+- `proxy/alignment/`: proxy-versus-Simulink calibration and holdout evidence;
 - `models/`: candidate and promoted actor checkpoints plus sidecars;
 - `results/`: training traces and switch-level validation runs;
 - `manifests/`: model hashes, provenance, and promotion records;

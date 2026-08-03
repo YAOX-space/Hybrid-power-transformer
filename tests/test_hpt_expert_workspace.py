@@ -40,6 +40,15 @@ def test_workspace_stays_under_version_2_experts() -> None:
     workspace = expert_workspace("topology1", "HVRT", "ab")
     parts = workspace.root.parts
     assert parts[-2:] == ("experts", "topology1_two_phase_hvrt")
+    assert workspace.data == workspace.root / "data"
+    assert workspace.raw_switch_level == workspace.data / "raw_switch_level"
+    assert workspace.train_data == workspace.data / "train"
+    assert workspace.validation_data == workspace.data / "validation"
+    assert workspace.holdout_data == workspace.data / "holdout"
+    assert workspace.support_anchor == workspace.data / "support_anchor"
+    assert workspace.proxy == workspace.root / "proxy"
+    assert workspace.proxy_model == workspace.proxy / "model"
+    assert workspace.proxy_alignment == workspace.proxy / "alignment"
     assert workspace.models == workspace.root / "models"
     assert workspace.results == workspace.root / "results"
     assert workspace.manifests == workspace.root / "manifests"
@@ -56,3 +65,25 @@ def test_committed_registry_matches_the_twelve_specs() -> None:
     assert {entry["expert_id"] for entry in registry["experts"]} == {
         spec.expert_id for spec in EXPERT_SPECS
     }
+    for entry in registry["experts"]:
+        assert entry["data"] == f"{entry['workspace']}/data"
+        assert entry["proxy"] == f"{entry['workspace']}/proxy"
+
+
+def test_all_committed_experts_have_data_and_proxy_layout() -> None:
+    for spec in EXPERT_SPECS:
+        workspace = expert_workspace(
+            spec.topology,
+            spec.category,
+            spec.representative_phase_key,
+        )
+        for directory in (
+            workspace.raw_switch_level,
+            workspace.train_data,
+            workspace.validation_data,
+            workspace.holdout_data,
+            workspace.support_anchor,
+            workspace.proxy_model,
+            workspace.proxy_alignment,
+        ):
+            assert directory.is_dir(), directory

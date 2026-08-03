@@ -11,6 +11,15 @@
     "c"
   ],
   "paths": {
+    "data": "data",
+    "raw_switch_level": "data/raw_switch_level",
+    "train_data": "data/train",
+    "validation_data": "data/validation",
+    "holdout_data": "data/holdout",
+    "support_anchor": "data/support_anchor",
+    "proxy": "proxy",
+    "proxy_model": "proxy/model",
+    "proxy_alignment": "proxy/alignment",
     "models": "models",
     "results": "results",
     "manifests": "manifests"

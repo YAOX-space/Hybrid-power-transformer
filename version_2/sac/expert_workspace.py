@@ -59,6 +59,15 @@ EXPERT_BY_ID = {spec.expert_id: spec for spec in EXPERT_SPECS}
 class ExpertWorkspace:
     spec: ExpertSpec
     root: Path
+    data: Path
+    raw_switch_level: Path
+    train_data: Path
+    validation_data: Path
+    holdout_data: Path
+    support_anchor: Path
+    proxy: Path
+    proxy_model: Path
+    proxy_alignment: Path
     models: Path
     results: Path
     manifests: Path
@@ -110,9 +119,20 @@ def expert_workspace(
 ) -> ExpertWorkspace:
     spec = expert_spec(topology, category, phase_key)
     root = EXPERTS_ROOT / spec.expert_id
+    data = root / "data"
+    proxy = root / "proxy"
     workspace = ExpertWorkspace(
         spec=spec,
         root=root,
+        data=data,
+        raw_switch_level=data / "raw_switch_level",
+        train_data=data / "train",
+        validation_data=data / "validation",
+        holdout_data=data / "holdout",
+        support_anchor=data / "support_anchor",
+        proxy=proxy,
+        proxy_model=proxy / "model",
+        proxy_alignment=proxy / "alignment",
         models=root / "models",
         results=root / "results",
         manifests=root / "manifests",
@@ -121,6 +141,15 @@ def expert_workspace(
         for directory in (
             EXPERTS_ROOT,
             workspace.root,
+            workspace.data,
+            workspace.raw_switch_level,
+            workspace.train_data,
+            workspace.validation_data,
+            workspace.holdout_data,
+            workspace.support_anchor,
+            workspace.proxy,
+            workspace.proxy_model,
+            workspace.proxy_alignment,
             workspace.models,
             workspace.results,
             workspace.manifests,
@@ -142,6 +171,15 @@ def initialize_expert_workspaces() -> dict:
             "schema": "hpt-v2-expert-workspace-v1",
             **asdict(spec),
             "paths": {
+                "data": "data",
+                "raw_switch_level": "data/raw_switch_level",
+                "train_data": "data/train",
+                "validation_data": "data/validation",
+                "holdout_data": "data/holdout",
+                "support_anchor": "data/support_anchor",
+                "proxy": "proxy",
+                "proxy_model": "proxy/model",
+                "proxy_alignment": "proxy/alignment",
                 "models": "models",
                 "results": "results",
                 "manifests": "manifests",
@@ -163,6 +201,8 @@ def initialize_expert_workspaces() -> dict:
             {
                 **asdict(spec),
                 "workspace": str(workspace.root.relative_to(ROOT)).replace("\\", "/"),
+                "data": str(workspace.data.relative_to(ROOT)).replace("\\", "/"),
+                "proxy": str(workspace.proxy.relative_to(ROOT)).replace("\\", "/"),
                 "descriptor": str(descriptor_path.relative_to(ROOT)).replace("\\", "/"),
                 "current_model": descriptor["current_model"],
                 "current_result": descriptor["current_result"],
