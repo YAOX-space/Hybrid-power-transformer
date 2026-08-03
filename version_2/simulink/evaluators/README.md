@@ -1,7 +1,8 @@
 # Evaluators
 
-Switch-level controller evaluation scripts.  These are the source of truth for
-voltage-survival and full-FRT pass/fail checks.
+- `eval_hpt_v2_control_comparison.m`: canonical strong-dq, trajectory, and SAC
+  switch-level comparison with voltage-survival and full-FRT diagnostic fields.
+- `eval_hpt_v2_sac_single_case.m`: single-case trace export used by paper plots.
 
-Run them from `version_2/simulink` with `run(fullfile(pwd,'evaluators','<script>.m'))`.
-
+Promotion decisions must come from these switch-level evaluators. Proxy scores
+and the removed raw-smoke evaluator are not promotion evidence.

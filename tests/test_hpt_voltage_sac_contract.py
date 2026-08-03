@@ -1,8 +1,6 @@
 import numpy as np
-import joblib
 import pytest
 
-from version_2.sac.build_hpt_switch_dataset import FEATURE_NAMES
 from version_2.sac.hpt_voltage_sac_env import (
     ACT_DIM_HPT,
     OBS_DIM_HPT,
@@ -13,13 +11,6 @@ from version_2.sac.hpt_voltage_sac_env import (
     execution_guard_teacher_action,
     teacher_action,
 )
-
-
-class _TinySafetyClassifier:
-    def predict_proba(self, x):
-        raw_reg_d = x[:, FEATURE_NAMES.index("raw_m_reg_d")]
-        safe_prob = np.where(raw_reg_d > 0.5, 0.10, 0.95)
-        return np.column_stack([1.0 - safe_prob, safe_prob])
 
 
 def test_hpt_sac_env_contract_is_24_obs_4_action():
@@ -131,6 +122,7 @@ def test_corrective_action_improves_voltage_error_on_sag():
 def test_table_teacher_prior_reports_switch_sweep_regulation_target():
     env = HPTVoltageSACEnv(
         [HPTVoltageScenario(topology="topology1", grid_pu=0.90)],
+        config=HPTVoltageEnvConfig(teacher_prior_weight=1.0),
         train_mode=False,
     )
     env.reset()
@@ -191,29 +183,3 @@ def test_fault_condition_classifier_covers_sag_swell_and_asymmetry():
     assert classify_hpt_operating_condition(1.10, 0.00, grid_pu=1.10) == "swell"
     assert classify_hpt_operating_condition(0.92, 0.08, grid_pu=0.90) == "asymmetric_sag"
     assert classify_hpt_operating_condition(1.08, 0.08, grid_pu=1.12) == "asymmetric_swell"
-
-
-def test_env_reports_safety_classifier_unsafe_action(tmp_path):
-    classifier_path = tmp_path / "classifier.joblib"
-    joblib.dump(
-        {
-            "schema": "hpt-safety-classifier-v1",
-            "classifier": _TinySafetyClassifier(),
-            "feature_names": FEATURE_NAMES,
-            "target_names": [],
-            "safe_probability_threshold": 0.75,
-        },
-        classifier_path,
-    )
-    env = HPTVoltageSACEnv(
-        [HPTVoltageScenario(topology="topology1", grid_pu=0.90)],
-        config=HPTVoltageEnvConfig(safety_classifier_path=str(classifier_path)),
-        train_mode=False,
-    )
-    env.reset()
-
-    _, _, _, _, info = env.step(np.asarray([0.8, 0.0, 0.0, 0.0], dtype=np.float32))
-
-    assert info["safety_safe_probability"] == 0.10
-    assert info["safety_threshold"] == 0.75
-    assert info["safety_unsafe"] is True

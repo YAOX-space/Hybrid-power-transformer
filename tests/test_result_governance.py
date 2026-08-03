@@ -1,58 +1,66 @@
-"""test_result_governance — ACTIVE result directories must not contain unversioned / frt-v1 result
-artifacts (audit round-4 G.8). Legacy artifacts live only under legacy_pre_audit/. This scans the
-real tree, so a future stray legacy MAT in an active dir fails the build."""
+"""Govern previous-generation frt-v2 result artifacts.
+
+The version-2 ``lab/results`` tree is a mixed artifact store containing actor
+weights, trajectories, calibration matrices, and evaluator outputs with
+different MAT schemas. It is governed by version-2 metadata, actor hashes, and
+promotion tests rather than by the legacy ``metrics_version`` field.
+"""
 from pathlib import Path
-import scipy.io as sio
+
 import numpy as np
 import pytest
+import scipy.io as sio
+
 
 ROOT = Path(__file__).resolve().parents[1]
-ACTIVE_RESULT_DIRS = [ROOT / 'src/hpt_frt/network/results', ROOT / 'lab/results']
+ACTIVE_RESULT_DIRS = [ROOT / "src/hpt_frt/network/results"]
 
 
 def _active_mats():
-    for d in ACTIVE_RESULT_DIRS:
-        if not d.exists():
+    for directory in ACTIVE_RESULT_DIRS:
+        if not directory.exists():
             continue
-        for p in d.rglob('*.mat'):
-            if 'legacy_pre_audit' in p.parts:
+        for path in directory.rglob("*.mat"):
+            if "legacy_pre_audit" in path.parts:
                 continue
-            yield p
+            yield path
 
 
-def _mv(p):
+def _metrics_version(path: Path):
     try:
-        S = sio.loadmat(str(p), squeeze_me=True, struct_as_record=False)
+        data = sio.loadmat(str(path), squeeze_me=True, struct_as_record=False)
     except Exception:
-        return '<unreadable>'
-    v = S.get('metrics_version', None)
-    if v is None:
+        return "<unreadable>"
+    value = data.get("metrics_version")
+    if value is None:
         return None
-    return str(np.ravel(v)[0]) if isinstance(v, np.ndarray) else str(v)
+    return str(np.ravel(value)[0]) if isinstance(value, np.ndarray) else str(value)
 
 
 def test_no_unversioned_or_frtv1_mat_in_active_dirs():
-    bad = [(str(p.relative_to(ROOT)), _mv(p)) for p in _active_mats() if _mv(p) != 'frt-v2']
-    assert not bad, 'active result dir contains non-frt-v2 MAT(s) — move to legacy_pre_audit/:\n' + \
-        '\n'.join(f'  {rel}: metrics_version={mv!r}' for rel, mv in bad)
+    bad = [
+        (str(path.relative_to(ROOT)), _metrics_version(path))
+        for path in _active_mats()
+        if _metrics_version(path) != "frt-v2"
+    ]
+    details = "\n".join(f"  {rel}: metrics_version={version!r}" for rel, version in bad)
+    assert not bad, f"active legacy result directory contains non-frt-v2 MAT files:\n{details}"
 
 
 def test_no_frt320_legacy_naming_in_active_dirs():
     bad = []
-    for d in ACTIVE_RESULT_DIRS:
-        if not d.exists():
+    for directory in ACTIVE_RESULT_DIRS:
+        if not directory.exists():
             continue
-        for p in d.rglob('frt320_*'):
-            if 'legacy_pre_audit' not in p.parts:
-                bad.append(str(p.relative_to(ROOT)))
-    assert not bad, 'legacy frt320_* result files in active dirs (must be under legacy_pre_audit):\n' + \
-        '\n'.join(f'  {x}' for x in bad)
+        for path in directory.rglob("frt320_*"):
+            if "legacy_pre_audit" not in path.parts:
+                bad.append(str(path.relative_to(ROOT)))
+    assert not bad, "legacy frt320 files must be under legacy_pre_audit:\n" + "\n".join(bad)
 
 
 def test_legacy_spotcheck_mats_are_isolated():
-    # the 20 switching spot-check MATs must be under legacy_pre_audit, not the active simulink_cases root
-    sim = ROOT / 'src/hpt_frt/network/results/simulink_cases'
+    sim = ROOT / "src/hpt_frt/network/results/simulink_cases"
     if not sim.exists():
-        pytest.skip('simulink_cases absent')
-    root_mats = [p.name for p in sim.glob('*.mat')]      # direct children only
-    assert root_mats == [], f'unversioned MATs still in active simulink_cases root: {root_mats}'
+        pytest.skip("simulink_cases absent")
+    root_mats = [path.name for path in sim.glob("*.mat")]
+    assert root_mats == [], f"unversioned MAT files remain in simulink_cases: {root_mats}"

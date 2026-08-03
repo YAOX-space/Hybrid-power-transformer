@@ -1,7 +1,12 @@
-# Sweeps
+# Maintained Sweeps
 
-Diagnostic and calibration sweeps for action response, conventional-boundary
-probing, and topology2 energy-sign debugging.
+- `sweep_hpt_v2_conventional_boundary.m`: balanced strong-dq boundary.
+- `sweep_hpt_v2_unbalanced_conventional_boundary.m`: unbalanced boundary.
+- `tune_hpt_v2_unbalanced_conventional_phase.m`: conventional phase tuning.
+- `sweep_hpt_v2_reg_energy_response.m`: joint regulation/energy diagnostics.
+- `sweep_hpt_v2_fault_fixed_reg_response.m`: fault fixed-regulation response.
+- `sweep_hpt_v2_topology2_fault_fixed_reg.m`: topology2 fault response.
+- `sweep_hpt_v2_topology2_energy_signs.m`: topology2 energy direction/sign.
 
-These scripts are research helpers, not the primary training pipeline.
-
+These scripts diagnose the plant or tune the baseline. They do not train or
+promote SAC actors.

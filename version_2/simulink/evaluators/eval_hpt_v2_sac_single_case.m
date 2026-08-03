@@ -7,8 +7,8 @@
 %   hpt_eval_case_name      e.g. "grid_10000V", "sag_0p90", "all"
 %   hpt_eval_fault_phase_pu optional [puA puB puC] for unbalanced faults
 %
-% The evaluator uses the same guard=0 raw SAC path as
-% eval_hpt_v2_sac_raw_switchlevel_smoke, but it runs only the requested case.
+% The evaluator uses the same raw SAC controller interface as the canonical
+% control-comparison evaluator, but it runs only the requested case.
 
 clearvars -except hpt_eval_topology hpt_eval_scenario_type hpt_eval_case_name hpt_eval_energy_enable hpt_eval_fault_phase_pu;
 close all;

@@ -1,12 +1,11 @@
-# Actors
+# Actor Storage Policy
 
-Active actor MAT files stay in the Simulink root because the MATLAB Function
-controller loads:
+This directory contains policy only; actor snapshots are no longer archived in
+the source tree.
 
-- `hpt_sac_actor_weights.mat`
-- `hpt_sac_actor_weights_dynamic.mat`
+- Active MATLAB weights: `version_2/simulink/hpt_sac_actor_weights*.mat`
+- Trained Python checkpoints: `data/models/`
+- Per-run exported weights: `lab/results/<run_id>/`
 
-Old snapshots are kept under `archive/` for forensics only.  New experiment
-snapshots should usually stay under their timestamped `lab/results/<run_id>/`
-folder instead of being copied here.
-
+The former `actors/archive/` directory was removed on 2026-08-03. Git history
+retains those diagnostic snapshots.

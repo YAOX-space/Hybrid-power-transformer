@@ -24,7 +24,7 @@ if SRC.exists() and str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from hpt_frt.device.train_common import pick_device
-from .build_hpt_action_trajectory import TrajectorySpec, make_trajectory
+from .datasets.build_hpt_action_trajectory import TrajectorySpec, make_trajectory
 from .experiment_metadata import write_experiment_metadata
 from .hpt_voltage_sac_env import (
     ACT_DIM_HPT,

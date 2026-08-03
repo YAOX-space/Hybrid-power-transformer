@@ -256,3 +256,27 @@
   - Full-family result: `14 / 19` voltage-survival pass and `14 / 19` beat
     conventional, matching the earlier case-level selector and improving over
     the seed actor's `13 / 19`.
+
+## 2026-08-03 - Family-SAC Workspace Cleanup
+
+- Canonical interface:
+  - Family orchestration is now exclusively
+    `version_2.sac.campaigns.run_hpt_family_specialist_matrix`.
+  - Switch-level promotion is exclusively based on
+    `evaluators/eval_hpt_v2_control_comparison.m`.
+  - The 24-D observation and 4-D action contracts are unchanged.
+- Moved capability:
+  - `version_2.sac.build_hpt_action_trajectory` moved to
+    `version_2.sac.datasets.build_hpt_action_trajectory`.
+  - All maintained imports were migrated; no compatibility wrapper remains.
+- Removed executable paths:
+  - fixed-action/per-case campaigns, overnight runners, CEM search, generic
+    offline baselines, learned reward correction, safety-classifier training,
+    old calibration sweep adapters, and old raw switch smoke tools;
+  - source-tree actor archives and redundant teacher collectors.
+- Evidence policy:
+  - Historical manifests and generated result directories remain for
+    provenance but are not supported launch commands.
+  - Earlier accepted-manifest claims do not override the current evaluator.
+  - The current r6 topology2 A-phase LVRT result is local voltage-survival
+    boundary evidence and is not full-FRT certification.

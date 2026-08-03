@@ -5965,3 +5965,17 @@
   for a complete remote raw-data backup.
 - Verification: six focused HPT SAC regression modules completed with
   `10 passed`.
+
+## 2026-08-03 - Active-family codebase cleanup
+
+- Removed obsolete executable methods and compatibility wrappers from
+  `version_2/sac`, plus redundant Simulink teacher collectors, raw smoke tools,
+  and source-tree actor archives.
+- Preserved all compact experiment manifests, paper evidence, accepted/rejected
+  result directories, and Git history so negative results remain auditable.
+- Migrated the active action-trajectory utility into the `datasets` package and
+  updated maintained imports.
+- Rewrote root, SAC, campaign, calibration, dataset, summary, and Simulink
+  inventories around the one-actor-per-family SAC workflow.
+- Marked the previous-generation `src/hpt_frt` and `lab/simulink` trees as
+  reproducibility-only rather than mixing them into the version-2 mainline.

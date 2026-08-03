@@ -18,7 +18,12 @@ import time
 from pathlib import Path
 from typing import Any
 
-from .build_hpt_action_trajectory import TrajectorySpec, make_trajectory, write_csv, write_mat
+from .datasets.build_hpt_action_trajectory import (
+    TrajectorySpec,
+    make_trajectory,
+    write_csv,
+    write_mat,
+)
 from .experiment_metadata import write_experiment_metadata
 
 

@@ -1,8 +1,8 @@
 ﻿"""Build fixed-action candidate CSVs for local switch-level sweeps.
 
-The output schema intentionally mirrors ``train_hpt_offline_full_action_baselines``
-case_results.csv enough for ``validate_hpt_offline_actions_switchlevel`` to run
-the candidates in Simulink fixed-action mode.
+The output uses the historical ``case_results.csv`` schema so existing result
+parsers can inspect the candidates. It is a data builder, not an actor
+promotion path.
 """
 from __future__ import annotations
 

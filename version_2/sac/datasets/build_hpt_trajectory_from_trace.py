@@ -16,7 +16,7 @@ from typing import Any
 
 import numpy as np
 
-from ..build_hpt_action_trajectory import write_csv, write_mat
+from .build_hpt_action_trajectory import write_csv, write_mat
 from ..experiment_metadata import write_experiment_metadata
 
 

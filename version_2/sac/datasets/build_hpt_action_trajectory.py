@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .experiment_metadata import write_experiment_metadata
+from ..experiment_metadata import write_experiment_metadata
 
 
 @dataclass(frozen=True)

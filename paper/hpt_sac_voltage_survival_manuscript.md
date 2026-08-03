@@ -280,7 +280,7 @@ Actor 的更新方向来自 critic 估计的软价值：
 
 ### 4.4 轨迹教师
 
-轨迹文件由 `build_hpt_action_trajectory.py` 生成，包含
+轨迹文件由 `datasets/build_hpt_action_trajectory.py` 生成，包含
 
 ```text
 hpt_traj_t        N x 1 seconds
@@ -595,10 +595,10 @@ E:/research_space/Hybrid-power-transformer
 ```text
 version_2/sac/hpt_voltage_sac_env.py
 version_2/sac/frt_envelope.py
-version_2/sac/build_hpt_action_trajectory.py
+version_2/sac/datasets/build_hpt_action_trajectory.py
 version_2/sac/run_hpt_trajectory_specialist_campaign.py
-version_2/sac/validate_hpt_accepted_specialists.py
-version_2/sac/campaigns/run_hpt_voltage_survival_boundary_matrix.py
+version_2/sac/campaigns/run_hpt_family_specialist_matrix.py
+version_2/sac/offline/train_hpt_voltage_sac.py
 version_2/simulink/evaluators/eval_hpt_v2_control_comparison.m
 version_2/simulink/collectors/collect_hpt_v2_trajectory_trace.m
 ```
@@ -648,36 +648,22 @@ full_frt_pass_count = 0
 
 ### 5.4 复现实验命令
 
-列出当前 pipeline：
+列出当前 family campaign 接口：
 
 ```powershell
-py -3 -m version_2.sac.run_hpt_sac_pipeline --list
+py -3 -m version_2.sac.campaigns.run_hpt_family_specialist_matrix --help
 ```
 
-重新验证 Stage-2 accepted specialist：
+使用同一个冻结 actor 重新验证 topology2 A-phase LVRT family：
 
 ```powershell
-py -3 -m version_2.sac.validate_hpt_accepted_specialists `
-  --manifest version_2/sac/experiments/accepted_specialists_20260722_stage2_voltage_survival.csv `
-  --run-id hpt_stage2_recheck_reproduce
-```
-
-运行 reduced-boundary exact 推进验证：
-
-```powershell
-py -3 -m version_2.sac.campaigns.run_hpt_voltage_survival_boundary_matrix `
-  --manifest version_2/sac/experiments/reduced_boundary_exact_push_20260725.csv `
-  --controller-mode current-sac `
-  --run-id hpt_reduced_boundary_exact_push_reproduce
-```
-
-运行 630 场景边界矩阵的 dry run：
-
-```powershell
-py -3 -m version_2.sac.campaigns.run_hpt_voltage_survival_boundary_matrix `
-  --manifest version_2/sac/experiments/voltage_survival_boundary_manifest_20260725.csv `
-  --controller-mode current-sac `
-  --dry-run
+py -3 -m version_2.sac.campaigns.run_hpt_family_specialist_matrix `
+  --run-id hpt_t2_a_lvrt_r6_recheck `
+  --topology topology2 --category LVRT --phase-key a `
+  --eval-only `
+  --eval-depths 0.20,0.50,0.575,0.65,0.70,0.75,0.80,0.825,0.85,0.875 `
+  --eval-durations-ms 80,120,160,200,240,300 `
+  --reuse-sac-model data/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip
 ```
 
 采集 full FRT calibration matrix 的 canonical 命令为：
