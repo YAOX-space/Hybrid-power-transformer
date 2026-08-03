@@ -19,8 +19,9 @@ current path contract.
 - `hpt_sac_actor_weights_dynamic.mat`: current candidate actor used by the
   evaluator.
 
-Experiment-specific actor snapshots must stay in `lab/results/<run_id>/` or
-`data/models/`, not in this source directory.
+Experiment-specific actor snapshots must stay in
+`version_2/experts/<expert_id>/models/`, and their run evidence in the matching
+`results/` directory, not in this source directory.
 
 ## Maintained Data And Evaluation
 

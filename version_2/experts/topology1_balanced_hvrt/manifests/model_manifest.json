@@ -1,0 +1,12 @@
+{
+  "schema": "hpt-v2-expert-model-manifest-v1",
+  "expert_id": "topology1_balanced_hvrt",
+  "checkpoint_role": "historical_representative",
+  "canonical_model": "version_2/experts/topology1_balanced_hvrt/models/hpt_t1_hvrt110_const249_current_iface_actor_20260722_bc0.zip",
+  "canonical_sidecar": "version_2/experts/topology1_balanced_hvrt/models/hpt_t1_hvrt110_const249_current_iface_actor_20260722_bc0.json",
+  "source_model": "data/models/hpt_t1_hvrt110_const249_current_iface_actor_20260722_bc0.zip",
+  "sha256": "619f5def6251dfeea95a733d72c50a3c1fe8652189b4bdbc662b618c6a27ce1d",
+  "controller": "hpt-voltage-sac-bc-warmstart",
+  "training_steps": null,
+  "evidence_scope": "Stage-6 switch-level center-case voltage-survival evidence"
+}

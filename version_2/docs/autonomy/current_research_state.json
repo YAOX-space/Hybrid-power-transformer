@@ -23,14 +23,15 @@
   },
   "promoted_controller": {
     "name": "topology2_a_phase_deep_lvrt_family_sac_r6",
-    "actor_path": "data/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+    "expert_id": "topology2_single_phase_lvrt",
+    "actor_path": "version_2/experts/topology2_single_phase_lvrt/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
     "actor_sha256": "44dadac630f30d72555ae5ed363301296ac6b1ed2cd6201bfb1043ae1299cde5",
-    "training_run": "lab/results/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803"
+    "training_run": "version_2/experts/topology2_single_phase_lvrt/results/training"
   },
   "evidence": {
     "targeted_family_matrix": {
-      "run_dir": "lab/results/hpt_family_specialist_t2_a_lvrt_joint_support_sac_r6_probe9_20260803",
-      "comparison_csv_path": "lab/results/hpt_family_specialist_t2_a_lvrt_joint_support_sac_r6_probe9_20260803/family_specialist_comparison_rows.csv",
+      "run_dir": "version_2/experts/topology2_single_phase_lvrt/results/targeted_matrix",
+      "comparison_csv_path": "version_2/experts/topology2_single_phase_lvrt/results/targeted_matrix/family_specialist_comparison_rows.csv",
       "comparison_csv_sha256": "d0a23a2a448621d4330a2f474190a2d87bbef0a5093a024c139e582713ff7fc8",
       "depths_pu": [0.5, 0.6, 0.625],
       "durations_ms": [160, 200, 240],
@@ -40,8 +41,8 @@
       "dq_fail_sac_pass": 4
     },
     "expanded_matrix": {
-      "run_dir": "lab/results/hpt_family_specialist_t2_a_lvrt_r6_square60_currentwindow_20260803_r1",
-      "comparison_csv_path": "lab/results/hpt_family_specialist_t2_a_lvrt_r6_square60_currentwindow_20260803_r1/family_specialist_comparison_rows.csv",
+      "run_dir": "version_2/experts/topology2_single_phase_lvrt/results/expanded_matrix",
+      "comparison_csv_path": "version_2/experts/topology2_single_phase_lvrt/results/expanded_matrix/family_specialist_comparison_rows.csv",
       "depths_pu": [0.2, 0.5, 0.575, 0.65, 0.7, 0.75, 0.8, 0.825, 0.85, 0.875],
       "durations_ms": [80, 120, 160, 200, 240, 300],
       "sac_pass": 46,
@@ -63,6 +64,8 @@
     "Use short support-constrained SAC chunks with immediate switch-level promotion checks before attempting another family."
   ],
   "canonical_paths": {
+    "expert_registry": "version_2/experts/registry.json",
+    "expert_workspace_resolver": "version_2/sac/expert_workspace.py",
     "family_campaign": "version_2/sac/campaigns/run_hpt_family_specialist_matrix.py",
     "proxy_environment": "version_2/sac/hpt_voltage_sac_env.py",
     "sac_trainer": "version_2/sac/offline/train_hpt_voltage_sac.py",

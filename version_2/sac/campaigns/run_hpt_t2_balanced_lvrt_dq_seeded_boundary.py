@@ -204,8 +204,15 @@ def latest_file(pattern: str, *, after: float, directory: Path) -> Path:
     return max(matches, key=lambda p: p.stat().st_mtime)
 
 
-def matlab_collect_dq_trace(case: BoundaryCase, run_dir: Path, *, fault_start_s: float) -> Path:
-    TRACE_DIR.mkdir(parents=True, exist_ok=True)
+def matlab_collect_dq_trace(
+    case: BoundaryCase,
+    run_dir: Path,
+    *,
+    fault_start_s: float,
+    trace_dir: Path | None = None,
+) -> Path:
+    trace_dir = Path(trace_dir) if trace_dir is not None else TRACE_DIR
+    trace_dir.mkdir(parents=True, exist_ok=True)
     label = f"dqseed_{case.label}"
     runner = run_dir / f"collect_{label}.m"
     model_params = {**COMMON_MODEL_PARAMS, **STRONG_DQ_PARAMS}
@@ -226,6 +233,7 @@ def matlab_collect_dq_trace(case: BoundaryCase, run_dir: Path, *, fault_start_s:
                 f"hpt_trace_model_params = {_matlab_struct(model_params)};",
                 f'hpt_trace_run_label = "{label}";',
                 "hpt_trace_sample_stride = 100;",
+                f"hpt_trace_output_dir = '{_matlab_string(trace_dir)}';",
                 f"run('{_matlab_string(SIMULINK / 'collectors' / 'collect_hpt_v2_trajectory_trace.m')}');",
             ]
         ),
@@ -240,7 +248,7 @@ def matlab_collect_dq_trace(case: BoundaryCase, run_dir: Path, *, fault_start_s:
     return latest_file(
         f"trajectory_trace_{case.topology}_{label}_*.csv",
         after=before,
-        directory=TRACE_DIR,
+        directory=trace_dir,
     )
 
 
@@ -316,8 +324,10 @@ def train_dq_seed_actor(
     seed: int,
     fault_start_s: float,
     artifact_tag: str,
+    models_dir: Path | None = None,
 ) -> Path:
-    model_out = MODELS / f"hpt_{case.label}_{artifact_tag}_dqseed_split_actor.zip"
+    models_dir = Path(models_dir) if models_dir is not None else MODELS
+    model_out = models_dir / f"hpt_{case.label}_{artifact_tag}_dqseed_split_actor.zip"
     run_id = f"{case.label}_dqseed_bc_{time.strftime('%Y%m%d_%H%M%S')}"
     cmd = [
         sys.executable,
@@ -402,8 +412,10 @@ def train_sac_finetune(
     lv_margin_weight: float = 0.0,
     lv_margin_pu: float = 0.02,
     behavior_anchor_interval_steps: int = 120,
+    models_dir: Path | None = None,
 ) -> Path:
-    model_out = MODELS / f"hpt_{case.label}_{artifact_tag}_dqseed_split_currentaware_sacft.zip"
+    models_dir = Path(models_dir) if models_dir is not None else MODELS
+    model_out = models_dir / f"hpt_{case.label}_{artifact_tag}_dqseed_split_currentaware_sacft.zip"
     run_id = f"{case.label}_currentaware_sacft_{time.strftime('%Y%m%d_%H%M%S')}"
     cmd = [
         sys.executable,
@@ -526,7 +538,10 @@ def matlab_evaluate_actor(
     tag: str,
     fault_start_s: float,
     actor_filter_tau: float,
+    compare_dir: Path | None = None,
 ) -> Path:
+    compare_dir = Path(compare_dir) if compare_dir is not None else COMPARE_DIR
+    compare_dir.mkdir(parents=True, exist_ok=True)
     label = f"{case.label}_{tag}"
     matlab_label = compact_label(label)
     runner = bounded_artifact_path(
@@ -559,6 +574,7 @@ def matlab_evaluate_actor(
                     f"{case.duration_s:.12g}, {mat_vector(phase_pu_vector(case))}}};"
                 ),
                 f'hpt_compare_run_label = "{matlab_label}";',
+                f"hpt_compare_output_dir = '{_matlab_string(compare_dir)}';",
                 f"run('{_matlab_string(SIMULINK / 'evaluators' / 'eval_hpt_v2_control_comparison.m')}');",
             ]
         ),
@@ -578,7 +594,7 @@ def matlab_evaluate_actor(
     return latest_file(
         f"control_comparison_{case.topology}_fault_all_{matlab_label}_*.csv",
         after=before,
-        directory=COMPARE_DIR,
+        directory=compare_dir,
     )
 
 

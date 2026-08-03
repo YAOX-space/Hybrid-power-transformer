@@ -6003,3 +6003,20 @@
   the promoted actor SHA-256 and all canonical paths; MATLAB Code Analyzer was
   exercised on the maintained switch-level evaluator and returned warnings but
   no execution-blocking analysis error.
+
+## 2026-08-03 - Twelve expert workspaces made canonical
+
+- Created `version_2/experts/registry.json` and twelve workspaces covering two
+  topologies, LVRT/HVRT, and balanced/single-phase/two-phase fault families.
+- Copied one representative checkpoint and compact center-case switch-level
+  evidence into every workspace. The model manifests preserve source paths and
+  SHA-256 hashes; they do not relabel historical BC/DAgger checkpoints as SAC.
+- Moved the active topology2 single-phase deep-LVRT r6 evidence pointers to
+  `version_2/experts/topology2_single_phase_lvrt`, including its training
+  diagnostics, targeted 3-by-3 matrix, and expanded 10-by-6 matrix.
+- Updated the family campaign, SAC trainer, Simulink trace collector, and
+  switch-level evaluator so new family runs write to their expert workspace.
+- Root `data/models` and `lab/results` are now legacy provenance stores rather
+  than canonical output destinations. The twelve representative checkpoints
+  are tracked through Git LFS; bulk run payloads remain ignored while compact
+  descriptors, result indexes, and hashes are versioned.

@@ -24,10 +24,8 @@ import numpy as np
 from version_2.sac.campaigns.run_hpt_t2_balanced_lvrt_dq_seeded_boundary import (
     ACT_DIM,
     FAMILY_TIME_NORM_S,
-    MODELS,
     OBS_DIM,
     ROOT,
-    RESULTS,
     BoundaryCase,
     build_anchor_from_trace,
     export_actor_for_simulink,
@@ -38,6 +36,7 @@ from version_2.sac.campaigns.run_hpt_t2_balanced_lvrt_dq_seeded_boundary import 
     run_logged,
     write_csv,
 )
+from version_2.sac.expert_workspace import expert_workspace
 
 
 def parse_float_list(raw: str) -> list[float]:
@@ -136,7 +135,12 @@ def collect_family_anchor(
     for case in train_cases:
         case_dir = run_dir / "anchors" / case.label
         case_dir.mkdir(parents=True, exist_ok=True)
-        trace_csv = matlab_collect_dq_trace(case, case_dir, fault_start_s=fault_start_s)
+        trace_csv = matlab_collect_dq_trace(
+            case,
+            case_dir,
+            fault_start_s=fault_start_s,
+            trace_dir=case_dir,
+        )
         anchor_npz = case_dir / f"{case.label}_dq_anchor.npz"
         anchor_json = case_dir / f"{case.label}_dq_anchor.json"
         anchor_summary = build_anchor_from_trace(
@@ -178,8 +182,9 @@ def train_family_seed_actor(
     bc_epochs: int,
     seed: int,
     fault_start_s: float,
+    models_dir: Path,
 ) -> Path:
-    model_out = MODELS / f"hpt_{family_label}_{run_dir.name}_family_seed_actor.zip"
+    model_out = models_dir / f"hpt_{family_label}_{run_dir.name}_family_seed_actor.zip"
     cmd = [
         sys.executable,
         "-m",
@@ -220,6 +225,8 @@ def train_family_seed_actor(
         "0",
         "--run-id",
         f"{run_dir.name}_{family_label}_seed",
+        "--results-root",
+        str(run_dir / "training"),
         "--model-out",
         str(model_out),
         "--reg-d-limit",
@@ -258,8 +265,9 @@ def train_family_sac_actor(
     vdc_bounds_weight: float,
     vdc_margin_weight: float,
     vdc_margin_pu: float,
+    models_dir: Path,
 ) -> Path:
-    model_out = MODELS / f"hpt_{family_label}_{run_dir.name}_family_sac_actor.zip"
+    model_out = models_dir / f"hpt_{family_label}_{run_dir.name}_family_sac_actor.zip"
     cmd = [
         sys.executable,
         "-m",
@@ -311,6 +319,8 @@ def train_family_sac_actor(
         "0",
         "--run-id",
         f"{run_dir.name}_{family_label}_sac",
+        "--results-root",
+        str(run_dir / "training"),
         "--model-out",
         str(model_out),
         "--reg-d-limit",
@@ -381,6 +391,7 @@ def evaluate_family_actor(
             tag=f"{export_tag}_{case.label}",
             fault_start_s=fault_start_s,
             actor_filter_tau=actor_filter_tau,
+            compare_dir=run_dir,
         )
         for row in read_comparison_rows(
             csv_path,
@@ -596,7 +607,13 @@ def main() -> None:
         durations_ms=eval_durations_ms,
     )
     run_id = args.run_id or f"hpt_family_specialist_{family_label}_{time.strftime('%Y%m%d_%H%M%S')}"
-    run_dir = RESULTS / run_id
+    workspace = expert_workspace(
+        args.topology,
+        args.category,
+        args.phase_key,
+        create=True,
+    )
+    run_dir = workspace.results / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     metadata = {
         "schema": "hpt-family-specialist-matrix-v1",
@@ -625,6 +642,8 @@ def main() -> None:
         "reuse_sac_model": str(args.reuse_sac_model or ""),
         "one_actor_per_family": True,
         "voltage_survival_current_gate": True,
+        "expert_id": workspace.spec.expert_id,
+        "expert_workspace": str(workspace.root),
     }
     (run_dir / "campaign_metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
@@ -686,6 +705,7 @@ def main() -> None:
             bc_epochs=args.bc_epochs,
             seed=args.seed,
             fault_start_s=args.fault_start_s,
+            models_dir=workspace.models,
         )
         seed_rows = evaluate_family_actor(
             cases=eval_cases,
@@ -720,6 +740,7 @@ def main() -> None:
                 vdc_bounds_weight=args.sac_vdc_bounds_weight,
                 vdc_margin_weight=args.sac_vdc_margin_weight,
                 vdc_margin_pu=args.sac_vdc_margin_pu,
+                models_dir=workspace.models,
             )
             sac_rows = evaluate_family_actor(
                 cases=eval_cases,

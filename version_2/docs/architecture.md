@@ -13,7 +13,11 @@ MATLAB/Simulink HPT validation.
 - Experiment metadata helpers live in `version_2/sac/experiment_metadata.py`.
 - Switch-level models and MATLAB scripts live under `version_2/simulink`.
 - MATLAB smoke and regression scripts live under `version_2/simulink/tests`.
-- Long-run results should be written under `lab/results`.
+- The twelve fault-family controller workspaces live under
+  `version_2/experts/<expert_id>`.
+- Family checkpoints and long-run results must be written to that expert's
+  `models/` and `results/` directories. Root `data/models` and `lab/results`
+  are legacy provenance stores only.
 
 ## Controller Contract
 

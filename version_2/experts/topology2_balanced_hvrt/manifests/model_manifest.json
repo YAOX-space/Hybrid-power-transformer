@@ -1,0 +1,12 @@
+{
+  "schema": "hpt-v2-expert-model-manifest-v1",
+  "expert_id": "topology2_balanced_hvrt",
+  "checkpoint_role": "historical_representative",
+  "canonical_model": "version_2/experts/topology2_balanced_hvrt/models/hpt_stage6_t2_balanced_hvrt110_chop760_sacft_micro_20260728_chunk01.zip",
+  "canonical_sidecar": "version_2/experts/topology2_balanced_hvrt/models/hpt_stage6_t2_balanced_hvrt110_chop760_sacft_micro_20260728_chunk01.json",
+  "source_model": "data/models/hpt_stage6_t2_balanced_hvrt110_chop760_sacft_micro_20260728_chunk01.zip",
+  "sha256": "c9bb09c27f47836ec48a34656bbf4afb131b3c59a14d75340f5887b6f6787364",
+  "controller": "hpt-voltage-sac",
+  "training_steps": 20,
+  "evidence_scope": "Stage-6 switch-level center-case voltage-survival evidence"
+}

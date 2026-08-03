@@ -39,8 +39,9 @@
 %                            The MAT file must contain:
 %                            hpt_traj_t        Nx1 time vector, seconds
 %                            hpt_traj_action   Nx4 action matrix
+%   hpt_compare_output_dir   optional explicit result directory
 
-clearvars -except hpt_compare_topology hpt_compare_scenario_type hpt_compare_case_name hpt_compare_modes hpt_compare_energy_enable hpt_compare_model_params hpt_compare_conventional_profile hpt_compare_conventional_params hpt_compare_faults hpt_compare_fault_start hpt_compare_fault_stop_margin hpt_compare_fault_settle_s hpt_compare_voltage_survival_current_gate hpt_compare_actor_filter_tau hpt_compare_run_label hpt_compare_fixed_action hpt_compare_trajectory_file;
+clearvars -except hpt_compare_topology hpt_compare_scenario_type hpt_compare_case_name hpt_compare_modes hpt_compare_energy_enable hpt_compare_model_params hpt_compare_conventional_profile hpt_compare_conventional_params hpt_compare_faults hpt_compare_fault_start hpt_compare_fault_stop_margin hpt_compare_fault_settle_s hpt_compare_voltage_survival_current_gate hpt_compare_actor_filter_tau hpt_compare_run_label hpt_compare_fixed_action hpt_compare_trajectory_file hpt_compare_output_dir;
 close all;
 
 if ~exist('hpt_compare_topology', 'var')
@@ -90,6 +91,9 @@ if ~exist('hpt_compare_fixed_action', 'var')
 end
 if ~exist('hpt_compare_trajectory_file', 'var')
     hpt_compare_trajectory_file = "";
+end
+if ~exist('hpt_compare_output_dir', 'var')
+    hpt_compare_output_dir = "";
 end
 hpt_compare_fixed_action = double(hpt_compare_fixed_action(:)');
 assert(numel(hpt_compare_fixed_action) == 4, ...
@@ -255,8 +259,12 @@ assert(~isempty(rowCells), 'No comparison cases matched topology=%s scenario=%s 
     hpt_compare_topology, hpt_compare_scenario_type, hpt_compare_case_name);
 
 rows = [rowCells{:}];
-outDir = fullfile(rootDir, '..', '..', 'lab', 'results', ...
-    'hpt_v2_control_comparison');
+if strlength(string(hpt_compare_output_dir)) > 0
+    outDir = char(hpt_compare_output_dir);
+else
+    outDir = fullfile(rootDir, '..', '..', 'lab', 'results', ...
+        'hpt_v2_control_comparison');
+end
 if exist(outDir, 'dir') ~= 7
     mkdir(outDir);
 end

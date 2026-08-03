@@ -1,0 +1,3 @@
+$ C:\Users\m1391\AppData\Local\Programs\Python\Python38\python.exe -m version_2.sac.export_hpt_sac_actor --model data\models\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip --out E:\research_space\Hybrid-power-transformer\version_2\simulink\hpt_sac_actor_weights_dynamic.mat
+
+exported HPT SAC actor data\models\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip -> E:\research_space\Hybrid-power-transformer\version_2\simulink\hpt_sac_actor_weights_dynamic.mat

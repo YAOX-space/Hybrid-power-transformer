@@ -1,0 +1,70 @@
+{
+  "run_id": "hpt_stage6_repair_t1_ab_lvrt090_const036_sacft_micro_20260728_chunk01_train",
+  "controller": "hpt-voltage-sac",
+  "observation_dim": 24,
+  "action_dim": 4,
+  "steps": 20,
+  "seed": 20260730,
+  "init_model": "data\\models\\hpt_stage6_repair_t1_ab_lvrt090_const036_actor_20260728_dagger1.zip",
+  "model_path": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_stage6_repair_t1_ab_lvrt090_const036_sacft_micro_20260728_chunk01.zip",
+  "curriculum": "topology1_ab_lvrt090_60ms",
+  "scenario_summary": {
+    "count": 1,
+    "topology": {
+      "topology1": 1
+    },
+    "category": {
+      "LVRT": 1
+    },
+    "fault_type": {
+      "2ph": 1
+    }
+  },
+  "proxy_calibration": {
+    "path": "E:\\research_space\\Hybrid-power-transformer\\version_2\\sac\\hpt_proxy_calibration.json",
+    "schema": "hpt_proxy_calibration_v1",
+    "source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_proxy_sweep\\hpt_v2_sac_proxy_sweep_20260715_182303.csv",
+    "energy_source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_energy_sweep\\hpt_v2_sac_energy_sweep_20260715_182415.csv",
+    "energy_bridge_mode": "calibrated_direct_energy_bridge_available",
+    "target_phase_rms": 207.0,
+    "topologies": [
+      "topology1",
+      "topology2"
+    ]
+  },
+  "metrics": {
+    "rollouts": 1,
+    "mean_return": -840388487040.0045,
+    "mean_final_v_pu": 1.0484485649829478,
+    "max_abs_final_v_err": 0.048448564982947806,
+    "mean_final_vdc_pu": 1.0684593908782627,
+    "min_vdc_pu": 1.0,
+    "min_episode_v_pu": 0.9256950616836548,
+    "max_episode_v_pu": 1.0568114519119263,
+    "condition_counts": {
+      "nominal": 1
+    }
+  },
+  "reward_trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_repair_t1_ab_lvrt090_const036_sacft_micro_20260728_chunk01_train\\sac_training_reward_trace.csv",
+  "reward_trace_episodes": 2,
+  "behavior_anchor": {
+    "enabled": true,
+    "epochs": 80,
+    "interval_steps": 10,
+    "episodes": 8,
+    "noise_std": 0.001,
+    "updates": 2,
+    "last_metrics": {
+      "final_loss": 1.019829186377219e-12,
+      "mean_loss_tail": 1.6644723815385786e-12,
+      "action_mse": [
+        5.6052130845878415e-14,
+        8.33111317021136e-14,
+        3.5878370858045266e-14,
+        1.7596429142344855e-13
+      ],
+      "samples": 880
+    }
+  },
+  "metadata_path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_repair_t1_ab_lvrt090_const036_sacft_micro_20260728_chunk01_train\\metadata.json"
+}

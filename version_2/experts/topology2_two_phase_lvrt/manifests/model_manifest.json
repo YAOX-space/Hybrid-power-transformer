@@ -1,0 +1,12 @@
+{
+  "schema": "hpt-v2-expert-model-manifest-v1",
+  "expert_id": "topology2_two_phase_lvrt",
+  "checkpoint_role": "historical_representative",
+  "canonical_model": "version_2/experts/topology2_two_phase_lvrt/models/hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04.zip",
+  "canonical_sidecar": "version_2/experts/topology2_two_phase_lvrt/models/hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04.json",
+  "source_model": "data/models/hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04.zip",
+  "sha256": "99a95d134ab92ac00b0665b04ad4471429739e4a944048c0b9ce5e93fca51771",
+  "controller": "hpt-voltage-sac",
+  "training_steps": 20,
+  "evidence_scope": "Stage-6 switch-level AB-phase center-case voltage-survival evidence"
+}

@@ -11,6 +11,9 @@ observation -> [m_reg_d, m_reg_q, m_energy_d, m_energy_q]
 The actor is trained with an averaged, switch-calibrated proxy and is accepted
 only after an unchanged checkpoint passes the Simulink switch-level matrix.
 
+Models and results are stored by family under `version_2/experts/`. See
+`version_2/experts/registry.json` for the twelve canonical workspaces.
+
 ## Canonical Entry Point
 
 ```powershell
@@ -40,6 +43,7 @@ The campaign performs the maintained sequence:
 - `validate_hpt_trajectory_switchlevel.py`: switch-level actor validation.
 - `frt_envelope.py`: shared voltage-survival envelope definitions.
 - `experiment_metadata.py`: reproducibility metadata.
+- `expert_workspace.py`: twelve-family taxonomy and canonical path resolver.
 - `campaigns/`: family orchestration and strong-dq tuning.
 - `datasets/`: family trace, support, and aggregate dataset builders.
 - `calibration/`: proxy calibration and proxy/Simulink alignment checks.
@@ -52,6 +56,10 @@ Proxy reward is never sufficient for promotion. A candidate must be exported
 and evaluated by `eval_hpt_v2_control_comparison.m`. The current claim boundary
 is switch-level voltage survival unless all full-FRT current criteria are also
 present and passing.
+
+The canonical family campaign resolves the expert from `--topology`,
+`--category`, and `--phase-key`, then writes the model and every generated
+trace into that expert workspace.
 
 ## Removed Methods
 

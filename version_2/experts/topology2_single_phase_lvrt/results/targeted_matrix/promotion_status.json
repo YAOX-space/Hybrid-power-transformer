@@ -1,0 +1,7 @@
+{
+  "schema": "hpt-family-promotion-status-v1",
+  "status": "accepted",
+  "reason": "8/9 switch-level pass; retained baseline",
+  "gate": "switch_level_voltage_survival_3x3",
+  "accepted_actor": "data/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip"
+}

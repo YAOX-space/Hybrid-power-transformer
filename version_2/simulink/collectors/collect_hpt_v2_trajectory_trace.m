@@ -15,8 +15,9 @@
 %   hpt_trace_model_params        optional struct of model-workspace overrides
 %   hpt_trace_run_label           optional result-folder token
 %   hpt_trace_sample_stride       default 100, i.e. 2 ms with Ts=20 us
+%   hpt_trace_output_dir          optional explicit result directory
 
-clearvars -except hpt_trace_topology hpt_trace_fault_pu hpt_trace_fault_phase_pu hpt_trace_fault_duration hpt_trace_fault_start hpt_trace_fault_stop_margin hpt_trace_trajectory_file hpt_trace_policy_mode hpt_trace_actor_select_mode hpt_trace_actor_filter_tau hpt_trace_model_params hpt_trace_run_label hpt_trace_sample_stride;
+clearvars -except hpt_trace_topology hpt_trace_fault_pu hpt_trace_fault_phase_pu hpt_trace_fault_duration hpt_trace_fault_start hpt_trace_fault_stop_margin hpt_trace_trajectory_file hpt_trace_policy_mode hpt_trace_actor_select_mode hpt_trace_actor_filter_tau hpt_trace_model_params hpt_trace_run_label hpt_trace_sample_stride hpt_trace_output_dir;
 close all;
 
 if ~exist('hpt_trace_topology', 'var')
@@ -61,6 +62,9 @@ if ~exist('hpt_trace_run_label', 'var')
 end
 if ~exist('hpt_trace_sample_stride', 'var')
     hpt_trace_sample_stride = 100;
+end
+if ~exist('hpt_trace_output_dir', 'var')
+    hpt_trace_output_dir = "";
 end
 
 hpt_trace_topology = string(hpt_trace_topology);
@@ -201,8 +205,12 @@ for kk = 1:numel(sampleIdx)
     rows(end+1, 1) = row; %#ok<SAGROW>
 end
 
-outDir = fullfile(rootDir, '..', '..', 'lab', 'results', ...
-    'hpt_v2_trajectory_traces');
+if strlength(string(hpt_trace_output_dir)) > 0
+    outDir = char(hpt_trace_output_dir);
+else
+    outDir = fullfile(rootDir, '..', '..', 'lab', 'results', ...
+        'hpt_v2_trajectory_traces');
+end
 if exist(outDir, 'dir') ~= 7
     mkdir(outDir);
 end

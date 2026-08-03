@@ -47,6 +47,7 @@ from version_2.sac.hpt_voltage_sac_env import (
 )
 from version_2.sac.export_hpt_sac_actor import export_hpt_actor
 from version_2.sac.experiment_metadata import write_experiment_metadata
+from version_2.sac.expert_workspace import expert_workspace
 from version_2.sac.summaries.summarize_sac_reward_traces import summarize_sac_reward_traces
 from hpt_frt.device.train_common import pick_device
 
@@ -1438,6 +1439,15 @@ def main() -> None:
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--run-id", default=None)
     parser.add_argument(
+        "--results-root",
+        type=Path,
+        default=None,
+        help=(
+            "Directory that receives the run folder. Family and single-case "
+            "runs default to their version_2 expert workspace."
+        ),
+    )
+    parser.add_argument(
         "--curriculum",
         choices=[
             "all",
@@ -1552,8 +1562,11 @@ def main() -> None:
     parser.add_argument(
         "--model-out",
         type=Path,
-        default=MODELS / "hpt_voltage_sac_best.zip",
-        help="SAC checkpoint path. Use a candidate path until switch-level validation passes.",
+        default=None,
+        help=(
+            "SAC checkpoint path. Family and single-case runs default to their "
+            "version_2 expert workspace."
+        ),
     )
     parser.add_argument(
         "--controller-heads",
@@ -1770,9 +1783,32 @@ def main() -> None:
         raise ValueError("--init-actor-only requires an existing --init-model")
 
     run_id = args.run_id or f"hpt_sac_{time.strftime('%Y%m%d_%H%M%S')}"
-    run_dir = RESULTS / run_id
+    workspace = None
+    if args.family_topology is not None:
+        workspace = expert_workspace(
+            args.family_topology,
+            args.family_category,
+            args.family_phase_key,
+            create=True,
+        )
+    elif args.single_topology is not None:
+        workspace = expert_workspace(
+            args.single_topology,
+            args.single_category,
+            args.single_phase_key,
+            create=True,
+        )
+    results_root = Path(args.results_root) if args.results_root is not None else (
+        workspace.results / "training" if workspace is not None else RESULTS
+    )
+    run_dir = results_root / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
-    MODELS.mkdir(parents=True, exist_ok=True)
+    if args.model_out is None:
+        args.model_out = (
+            workspace.models / f"{run_id}.zip"
+            if workspace is not None
+            else MODELS / "hpt_voltage_sac_best.zip"
+        )
     explicit_modes = sum(
         int(value is not None)
         for value in (args.single_topology, args.family_topology)

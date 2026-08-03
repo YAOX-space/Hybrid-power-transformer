@@ -1,0 +1,15 @@
+$ matlab -batch run('E:/research_space/Hybrid-power-transformer/lab/results/hpt_family_specialist_t2_a_lvrt_r6_square60_currentwindow_20260803_r1/eval_sac/eval_t2_a_lvrt_r6_square60_pu0650_d080ms_family_sac_t2_a_lvrt_r6_square60_pu0650_d080ms.m')
+
+[警告: The model name 'hpt_v2_topology2_paper' is shadowing another name in the MATLAB workspace or path. Type "which -all hpt_v2_topology2_paper" at the command line to find the
+other uses of this name. You should change the name of the model to avoid problems.] 
+[> 位置：build_hpt_v2_topology2_paper (第 19 行)
+位置: eval_hpt_v2_control_comparison (第 202 行)
+位置: run (第 112 行)
+位置: eval_t2_a_lvrt_r6_square60_pu0650_d080ms_family_sac_t2_a_lvrt_r6_square60_pu0650_d080ms (第 17 行)
+位置: run (第 112 行)] 
+Built hpt_v2_topology2_paper.slx for topology2 paper-style HPT skeleton.
+HPT control comparison complete.
+topology   type     case        mode                    grid/pu    LV_mean   LV_recov    VdcMin    max|a|     score pass     reason
+topology2  fault    lvrt_0650_080ms conventional_dq            0.65    202.194    206.439   733.540     0.950   115.560 false    reactive_wrong_sign
+topology2  fault    lvrt_0650_080ms sac_actor_always_raw       0.65    195.425    210.486   799.748     0.950   116.527 false    reactive_wrong_sign
+Saved CSV: E:\research_space\Hybrid-power-transformer\version_2\simulink\..\..\lab\results\hpt_v2_control_comparison\control_comparison_topology2_fault_all_t2_a_lvrt_r6_square60_pu0650_d080ms_family_sac_t2_a_lvrt_r6_e7c80a29320a_20260803_145734.csv

@@ -1,0 +1,2 @@
+version_2/experts/*/models/*.zip filter=lfs diff=lfs merge=lfs -text
+version_2/experts/*/results/**/*.log -diff

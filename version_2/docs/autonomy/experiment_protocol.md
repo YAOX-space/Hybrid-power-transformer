@@ -13,6 +13,9 @@ Record:
 - random seeds and software/toolbox versions when relevant.
 
 Use a dry-run, one-case smoke, or reduced matrix before a long campaign.
+Resolve the declared topology/category/phase family through
+`version_2.sac.expert_workspace`; write its checkpoint and outputs under that
+expert's `models/` and `results/` directories.
 
 ## During Running
 

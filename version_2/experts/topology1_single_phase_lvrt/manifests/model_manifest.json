@@ -1,0 +1,12 @@
+{
+  "schema": "hpt-v2-expert-model-manifest-v1",
+  "expert_id": "topology1_single_phase_lvrt",
+  "checkpoint_role": "historical_representative",
+  "canonical_model": "version_2/experts/topology1_single_phase_lvrt/models/hpt_trustregion_promotion_20260726_round1_05_topology1_a_lvrt090_60ms_unbalanced_chunk03.zip",
+  "canonical_sidecar": "version_2/experts/topology1_single_phase_lvrt/models/hpt_trustregion_promotion_20260726_round1_05_topology1_a_lvrt090_60ms_unbalanced_chunk03.json",
+  "source_model": "data/models/hpt_trustregion_promotion_20260726_round1_05_topology1_a_lvrt090_60ms_unbalanced_chunk03.zip",
+  "sha256": "0a86833edef36cd7da91a91b88bf19bbb2004683cd29386f29474516c584f1e7",
+  "controller": "hpt-voltage-sac",
+  "training_steps": 80,
+  "evidence_scope": "Stage-6 switch-level A-phase center-case voltage-survival evidence"
+}

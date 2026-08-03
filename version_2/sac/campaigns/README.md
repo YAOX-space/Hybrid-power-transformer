@@ -15,6 +15,10 @@ All `family_seed_before_sac` rows must share one seed checkpoint and all
 `family_sac_after_finetune` rows must share one SAC checkpoint. A matrix made
 from one actor per cell is not family-specialist evidence.
 
+The campaign writes to
+`version_2/experts/<expert_id>/{models,results,manifests}`. Root
+`data/models` and `lab/results` are legacy read-only provenance stores.
+
 ## Supporting Modules
 
 - `run_hpt_t2_balanced_lvrt_dq_seeded_boundary.py`: maintained shared helpers
@@ -24,4 +28,5 @@ from one actor per cell is not family-specialist evidence.
 - `summarize_hpt_boundary_run.py`: produces compact boundary summaries.
 
 Older stage, fixed-action, trust-region, reviewer-only, and overnight runners
-were removed on 2026-08-03. Their generated results remain under `lab/results/`.
+were removed on 2026-08-03. Their generated results remain under the legacy
+root `lab/results/` store and are not new-run destinations.

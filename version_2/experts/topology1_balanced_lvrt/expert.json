@@ -1,0 +1,19 @@
+{
+  "schema": "hpt-v2-expert-workspace-v1",
+  "expert_id": "topology1_balanced_lvrt",
+  "topology": "topology1",
+  "category": "LVRT",
+  "phase_family": "balanced",
+  "representative_phase_key": "abc",
+  "covered_phase_keys": [
+    "abc"
+  ],
+  "paths": {
+    "models": "models",
+    "results": "results",
+    "manifests": "manifests"
+  },
+  "current_model": "version_2/experts/topology1_balanced_lvrt/models/hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger2.zip",
+  "current_result": "version_2/experts/topology1_balanced_lvrt/results/center_case_switch_level.csv",
+  "promotion_status": "historical_center_case_pass"
+}

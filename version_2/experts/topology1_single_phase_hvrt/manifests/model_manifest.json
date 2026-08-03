@@ -1,0 +1,12 @@
+{
+  "schema": "hpt-v2-expert-model-manifest-v1",
+  "expert_id": "topology1_single_phase_hvrt",
+  "checkpoint_role": "historical_representative",
+  "canonical_model": "version_2/experts/topology1_single_phase_hvrt/models/hpt_stage6_t1_a_hvrt110_detectorfix_sacft_20260728_chunk03.zip",
+  "canonical_sidecar": "version_2/experts/topology1_single_phase_hvrt/models/hpt_stage6_t1_a_hvrt110_detectorfix_sacft_20260728_chunk03.json",
+  "source_model": "data/models/hpt_stage6_t1_a_hvrt110_detectorfix_sacft_20260728_chunk03.zip",
+  "sha256": "189a7baf5e8b624ce5e6d3e448d76661827d9bb3587a0ab4fc5adcbced963d02",
+  "controller": "hpt-voltage-sac",
+  "training_steps": 80,
+  "evidence_scope": "Stage-6 switch-level A-phase center-case voltage-survival evidence"
+}

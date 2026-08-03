@@ -1,0 +1,141 @@
+{
+  "schema": "hpt-family-specialist-matrix-v1",
+  "run_id": "hpt_family_specialist_t2_a_lvrt_joint_support_sac_r6_probe9_20260803",
+  "command": [
+    "C:\\Users\\m1391\\AppData\\Local\\Programs\\Python\\Python38\\python.exe",
+    "-m",
+    "version_2.sac.campaigns.run_hpt_family_specialist_matrix",
+    "--run-id",
+    "hpt_family_specialist_t2_a_lvrt_joint_support_sac_r6_probe9_20260803",
+    "--eval-only",
+    "--topology",
+    "topology2",
+    "--category",
+    "LVRT",
+    "--phase-key",
+    "a",
+    "--family-label",
+    "t2_a_lvrt_joint_support_r6",
+    "--eval-depths",
+    "0.5,0.6,0.625",
+    "--eval-durations-ms",
+    "160,200,240",
+    "--fault-start-s",
+    "0.080",
+    "--reuse-seed-model",
+    "data\\models\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803.zip",
+    "--reuse-sac-model",
+    "data\\models\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+    "--actor-filter-tau",
+    "0.001"
+  ],
+  "family_label": "t2_a_lvrt_joint_support_r6",
+  "topology": "topology2",
+  "category": "LVRT",
+  "phase_key": "a",
+  "train_depths": null,
+  "eval_depths": [
+    0.5,
+    0.6,
+    0.625
+  ],
+  "train_durations_ms": null,
+  "eval_durations_ms": [
+    160,
+    200,
+    240
+  ],
+  "train_cases": [],
+  "eval_cases": [
+    {
+      "fault_pu": 0.5,
+      "duration_s": 0.16,
+      "topology": "topology2",
+      "category": "LVRT",
+      "phase_key": "a",
+      "family_label": "t2_a_lvrt_joint_support_r6",
+      "label": "t2_a_lvrt_joint_support_r6_pu0500_d160ms"
+    },
+    {
+      "fault_pu": 0.5,
+      "duration_s": 0.2,
+      "topology": "topology2",
+      "category": "LVRT",
+      "phase_key": "a",
+      "family_label": "t2_a_lvrt_joint_support_r6",
+      "label": "t2_a_lvrt_joint_support_r6_pu0500_d200ms"
+    },
+    {
+      "fault_pu": 0.5,
+      "duration_s": 0.24,
+      "topology": "topology2",
+      "category": "LVRT",
+      "phase_key": "a",
+      "family_label": "t2_a_lvrt_joint_support_r6",
+      "label": "t2_a_lvrt_joint_support_r6_pu0500_d240ms"
+    },
+    {
+      "fault_pu": 0.6,
+      "duration_s": 0.16,
+      "topology": "topology2",
+      "category": "LVRT",
+      "phase_key": "a",
+      "family_label": "t2_a_lvrt_joint_support_r6",
+      "label": "t2_a_lvrt_joint_support_r6_pu0600_d160ms"
+    },
+    {
+      "fault_pu": 0.6,
+      "duration_s": 0.2,
+      "topology": "topology2",
+      "category": "LVRT",
+      "phase_key": "a",
+      "family_label": "t2_a_lvrt_joint_support_r6",
+      "label": "t2_a_lvrt_joint_support_r6_pu0600_d200ms"
+    },
+    {
+      "fault_pu": 0.6,
+      "duration_s": 0.24,
+      "topology": "topology2",
+      "category": "LVRT",
+      "phase_key": "a",
+      "family_label": "t2_a_lvrt_joint_support_r6",
+      "label": "t2_a_lvrt_joint_support_r6_pu0600_d240ms"
+    },
+    {
+      "fault_pu": 0.625,
+      "duration_s": 0.16,
+      "topology": "topology2",
+      "category": "LVRT",
+      "phase_key": "a",
+      "family_label": "t2_a_lvrt_joint_support_r6",
+      "label": "t2_a_lvrt_joint_support_r6_pu0625_d160ms"
+    },
+    {
+      "fault_pu": 0.625,
+      "duration_s": 0.2,
+      "topology": "topology2",
+      "category": "LVRT",
+      "phase_key": "a",
+      "family_label": "t2_a_lvrt_joint_support_r6",
+      "label": "t2_a_lvrt_joint_support_r6_pu0625_d200ms"
+    },
+    {
+      "fault_pu": 0.625,
+      "duration_s": 0.24,
+      "topology": "topology2",
+      "category": "LVRT",
+      "phase_key": "a",
+      "family_label": "t2_a_lvrt_joint_support_r6",
+      "label": "t2_a_lvrt_joint_support_r6_pu0625_d240ms"
+    }
+  ],
+  "bc_epochs": 160,
+  "sac_steps": 80,
+  "skip_sac": false,
+  "eval_only": true,
+  "reuse_seed_model": "data\\models\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803.zip",
+  "reuse_sac_model": "data\\models\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+  "one_actor_per_family": true,
+  "voltage_survival_current_gate": true,
+  "training_scope": "not_applicable_eval_only"
+}

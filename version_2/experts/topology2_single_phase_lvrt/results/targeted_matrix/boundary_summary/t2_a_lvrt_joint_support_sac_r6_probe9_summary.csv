@@ -1,0 +1,4 @@
+controller,rows,pass_count,grid_current_pass_count,vdc_pass_count,score_mean,score_min,score_max
+strong_dq,9,4,9,5,125.35039075413033,120.048843296451,136.78671432524
+family_seed_before_sac,9,4,9,9,118.61585030100534,115.958738812637,121.697540736703
+family_sac_after_finetune,9,8,9,9,118.58685186523888,116.781649469146,120.521970746059

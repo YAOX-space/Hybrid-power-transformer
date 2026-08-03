@@ -1,0 +1,68 @@
+{
+  "run_id": "hpt_stage4_t2_ab_hvrt110_repair_20260726_01_topology2_ab_hvrt110_60ms_stage4_chunk03_train",
+  "controller": "hpt-voltage-sac",
+  "observation_dim": 24,
+  "action_dim": 4,
+  "steps": 60,
+  "seed": 20260729,
+  "init_model": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_stage4_t2_ab_hvrt110_repair_20260726_01_topology2_ab_hvrt110_60ms_stage4_chunk02.zip",
+  "model_path": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_stage4_t2_ab_hvrt110_repair_20260726_01_topology2_ab_hvrt110_60ms_stage4_chunk03.zip",
+  "curriculum": "topology2_ab_hvrt105_60ms",
+  "scenario_summary": {
+    "count": 1,
+    "topology": {
+      "topology2": 1
+    },
+    "category": {
+      "HVRT": 1
+    },
+    "fault_type": {
+      "swell_2ph": 1
+    }
+  },
+  "proxy_calibration": {
+    "path": "E:\\research_space\\Hybrid-power-transformer\\version_2\\sac\\hpt_proxy_calibration.json",
+    "schema": "hpt_proxy_calibration_v1",
+    "source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_proxy_sweep\\hpt_v2_sac_proxy_sweep_20260715_182303.csv",
+    "energy_source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_energy_sweep\\hpt_v2_sac_energy_sweep_20260715_182415.csv",
+    "energy_bridge_mode": "calibrated_direct_energy_bridge_available",
+    "target_phase_rms": 207.0,
+    "topologies": [
+      "topology1",
+      "topology2"
+    ]
+  },
+  "metrics": {
+    "rollouts": 1,
+    "mean_return": -317446158066.2943,
+    "mean_final_v_pu": 0.9735968113985745,
+    "max_abs_final_v_err": 0.026403188601425542,
+    "mean_final_vdc_pu": 1.091811633596347,
+    "min_vdc_pu": 1.0,
+    "min_episode_v_pu": 0.9726970791816711,
+    "max_episode_v_pu": 1.0,
+    "condition_counts": {
+      "nominal": 1
+    }
+  },
+  "behavior_anchor": {
+    "enabled": true,
+    "epochs": 16,
+    "interval_steps": 30,
+    "episodes": 5,
+    "noise_std": 0.002,
+    "updates": 2,
+    "last_metrics": {
+      "final_loss": 0.002503754338249564,
+      "mean_loss_tail": 0.008152858361427207,
+      "action_mse": [
+        7.314653339562938e-05,
+        5.3472412275823444e-08,
+        1.889374516395037e-06,
+        8.696519948614423e-09
+      ],
+      "samples": 550
+    }
+  },
+  "metadata_path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage4_t2_ab_hvrt110_repair_20260726_01_topology2_ab_hvrt110_60ms_stage4_chunk03_train\\metadata.json"
+}

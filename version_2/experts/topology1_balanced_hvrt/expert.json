@@ -1,0 +1,19 @@
+{
+  "schema": "hpt-v2-expert-workspace-v1",
+  "expert_id": "topology1_balanced_hvrt",
+  "topology": "topology1",
+  "category": "HVRT",
+  "phase_family": "balanced",
+  "representative_phase_key": "abc",
+  "covered_phase_keys": [
+    "abc"
+  ],
+  "paths": {
+    "models": "models",
+    "results": "results",
+    "manifests": "manifests"
+  },
+  "current_model": "version_2/experts/topology1_balanced_hvrt/models/hpt_t1_hvrt110_const249_current_iface_actor_20260722_bc0.zip",
+  "current_result": "version_2/experts/topology1_balanced_hvrt/results/center_case_switch_level.csv",
+  "promotion_status": "historical_center_case_pass"
+}

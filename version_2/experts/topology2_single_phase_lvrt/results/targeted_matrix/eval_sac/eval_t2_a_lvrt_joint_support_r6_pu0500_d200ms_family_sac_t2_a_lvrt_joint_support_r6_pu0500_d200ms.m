@@ -1,0 +1,17 @@
+cd('E:/research_space/Hybrid-power-transformer');
+addpath(genpath('E:/research_space/Hybrid-power-transformer/version_2/simulink'));
+hpt_compare_topology = "topology2";
+hpt_compare_scenario_type = "fault";
+hpt_compare_case_name = "all";
+hpt_compare_modes = ["conventional_dq", "sac_actor_always_raw"];
+hpt_compare_energy_enable = 1.0;
+hpt_compare_voltage_survival_current_gate = true;
+hpt_compare_actor_filter_tau = 0.001;
+hpt_compare_fault_start = 0.08;
+hpt_compare_fault_stop_margin = 0.125;
+hpt_compare_conventional_profile = "model_default";
+hpt_compare_model_params = struct('hpt_m_reg_max', 0.59999999999999998, 'hpt_sac_reg_max', 0.59999999999999998, 'hpt_sac_reg_q_gain', -1, 'hpt_inj_phase_offset', -1.05, 'hpt_energy_i_kp', 0.25, 'hpt_energy_i_ki', 45, 'hpt_energy_vff_gain', 0.20000000000000001, 'hpt_energy_control_sign', -1, 'hpt_energy_bridge_polarity', -1, 'hpt_sac_fault_time_norm_s', 0.12, 'hpt_sac_recovery_time_norm_s', 0.12);
+hpt_compare_conventional_params = struct('hpt_vreg_kp', 5.5999999999999996, 'hpt_vreg_ki', 0.34999999999999998, 'hpt_vdc_kp', 0, 'hpt_vdc_ki', 0, 'hpt_conventional_energy_scale', 0, 'hpt_conventional_recovery_reg_gain', 2.3999999999999999, 'hpt_conventional_recovery_reg_max', 0.44);
+hpt_compare_faults = {'lvrt_0500_200ms', 0.5, 0.2, [0.5 1 1]};
+hpt_compare_run_label = "t2_a_lvrt_joint_support_r6_pu0500_d200ms_family_sac_t2_a_lvrt_joint_support_r6_pu0500_d200ms";
+run('E:/research_space/Hybrid-power-transformer/version_2/simulink/evaluators/eval_hpt_v2_control_comparison.m');

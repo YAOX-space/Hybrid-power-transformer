@@ -1,0 +1,8 @@
+{
+  "schema": "hpt-v2-expert-result-index-v1",
+  "expert_id": "topology2_balanced_lvrt",
+  "center_case_result": "version_2/experts/topology2_balanced_lvrt/results/center_case_switch_level.csv",
+  "source_result_csv": "lab/results/hpt_stage6_recheck_current12_repaired_sac_20260728/accepted_specialist_validation.csv",
+  "copied_run_directories": [],
+  "current_result": "version_2/experts/topology2_balanced_lvrt/results/center_case_switch_level.csv"
+}

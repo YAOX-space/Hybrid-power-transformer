@@ -1,0 +1,21 @@
+{
+  "schema": "hpt-v2-expert-workspace-v1",
+  "expert_id": "topology2_two_phase_lvrt",
+  "topology": "topology2",
+  "category": "LVRT",
+  "phase_family": "two_phase",
+  "representative_phase_key": "ab",
+  "covered_phase_keys": [
+    "ab",
+    "bc",
+    "ca"
+  ],
+  "paths": {
+    "models": "models",
+    "results": "results",
+    "manifests": "manifests"
+  },
+  "current_model": "version_2/experts/topology2_two_phase_lvrt/models/hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04.zip",
+  "current_result": "version_2/experts/topology2_two_phase_lvrt/results/center_case_switch_level.csv",
+  "promotion_status": "historical_center_case_pass"
+}

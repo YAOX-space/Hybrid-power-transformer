@@ -1,6 +1,7 @@
 # ── Data (large files, generated) ──────────────────────────────────────────────
 data/
 version_2/data/
+version_2/experts/*/results/*/
 .venv/
 lab/results/
 tmp/

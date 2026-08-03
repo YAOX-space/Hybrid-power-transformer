@@ -114,8 +114,10 @@ experiment.
   ablations.
 - Require run id, command, config, Git state, model hash, actor hash,
   calibration or dataset hash, logs, summary, and next action.
-- Keep bulk outputs under `lab/results/`; commit compact manifests, reports,
-  tables, and figures that support claims.
+- Resolve one of the twelve fault-family workspaces through
+  `version_2.sac.expert_workspace`. Keep its checkpoints and bulk outputs under
+  `version_2/experts/<expert_id>/{models,results}`; commit compact manifests,
+  reports, tables, and figures that support claims.
 - A proxy improvement is a hypothesis until the unchanged actor passes the
   switch-level model.
 - Re-run stale evidence after changes to observations, actions, fault source,

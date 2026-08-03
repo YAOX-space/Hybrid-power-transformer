@@ -1,0 +1,12 @@
+{
+  "schema": "hpt-v2-expert-model-manifest-v1",
+  "expert_id": "topology2_single_phase_hvrt",
+  "checkpoint_role": "historical_representative",
+  "canonical_model": "version_2/experts/topology2_single_phase_hvrt/models/hpt_exact_t2_a_hvrt105_60ms_strongpos_actor_daggertraj_20260725_dagger1.zip",
+  "canonical_sidecar": "version_2/experts/topology2_single_phase_hvrt/models/hpt_exact_t2_a_hvrt105_60ms_strongpos_actor_daggertraj_20260725_dagger1.json",
+  "source_model": "data/models/hpt_exact_t2_a_hvrt105_60ms_strongpos_actor_daggertraj_20260725_dagger1.zip",
+  "sha256": "5659b67e4b8509934ccb27946b6330bbf1914bc02437d91ccdf8845acb1ce25a",
+  "controller": "hpt-voltage-sac-bc-warmstart",
+  "training_steps": null,
+  "evidence_scope": "Stage-6 switch-level A-phase center-case voltage-survival evidence"
+}

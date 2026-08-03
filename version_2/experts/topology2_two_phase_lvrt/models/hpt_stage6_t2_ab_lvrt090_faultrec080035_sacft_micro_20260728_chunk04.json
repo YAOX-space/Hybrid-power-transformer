@@ -1,0 +1,82 @@
+{
+  "run_id": "hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04_train",
+  "controller": "hpt-voltage-sac",
+  "observation_dim": 24,
+  "action_dim": 4,
+  "steps": 20,
+  "seed": 20260730,
+  "init_model": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk03.zip",
+  "model_path": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04.zip",
+  "curriculum": "topology2_ab_lvrt090_60ms",
+  "scenario_summary": {
+    "count": 1,
+    "topology": {
+      "topology2": 1
+    },
+    "category": {
+      "LVRT": 1
+    },
+    "fault_type": {
+      "2ph": 1
+    }
+  },
+  "proxy_calibration": {
+    "path": "E:\\research_space\\Hybrid-power-transformer\\version_2\\sac\\hpt_proxy_calibration.json",
+    "schema": "hpt_proxy_calibration_v1",
+    "source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_proxy_sweep\\hpt_v2_sac_proxy_sweep_20260715_182303.csv",
+    "energy_source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_energy_sweep\\hpt_v2_sac_energy_sweep_20260715_182415.csv",
+    "energy_bridge_mode": "calibrated_direct_energy_bridge_available",
+    "target_phase_rms": 207.0,
+    "topologies": [
+      "topology1",
+      "topology2"
+    ]
+  },
+  "metrics": {
+    "rollouts": 1,
+    "mean_return": -1501021931742.3796,
+    "mean_final_v_pu": 0.8439341128734074,
+    "max_abs_final_v_err": 0.15606588712659264,
+    "mean_final_vdc_pu": 0.3107946817463827,
+    "min_vdc_pu": 0.26785004138946533,
+    "min_episode_v_pu": 0.7990368604660034,
+    "max_episode_v_pu": 1.0860488414764404,
+    "condition_counts": {
+      "nominal": 1
+    }
+  },
+  "reward_trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04_train\\sac_training_reward_trace.csv",
+  "reward_trace_episodes": 2,
+  "behavior_anchor": {
+    "enabled": true,
+    "epochs": 80,
+    "interval_steps": 10,
+    "episodes": 8,
+    "noise_std": 0.001,
+    "updates": 2,
+    "last_metrics": {
+      "final_loss": 1.0091091157127252e-10,
+      "mean_loss_tail": 9.136040326389663e-11,
+      "action_mse": [
+        1.4383128368877784e-11,
+        1.4908881692133474e-13,
+        5.5636302043280544e-14,
+        3.794136500204909e-13
+      ],
+      "samples": 880
+    }
+  },
+  "metadata_path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04_train\\metadata.json",
+  "reward_summary": {
+    "schema": "hpt-sac-reward-trace-summary-v1",
+    "run_dir": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04_train",
+    "reward_trace_files": [
+      "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04_train\\sac_training_reward_trace.csv"
+    ],
+    "combined_reward_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04_train\\sac_training_reward_trace_combined.csv",
+    "reward_trace_rows": 2,
+    "protected_chunks_csv": "",
+    "protected_chunks_rows": 0,
+    "convergence_figure": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04_train\\sac_reward_and_switch_score_convergence.png"
+  }
+}

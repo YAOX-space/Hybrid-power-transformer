@@ -1,0 +1,21 @@
+{
+  "schema": "hpt-v2-expert-workspace-v1",
+  "expert_id": "topology2_single_phase_hvrt",
+  "topology": "topology2",
+  "category": "HVRT",
+  "phase_family": "single_phase",
+  "representative_phase_key": "a",
+  "covered_phase_keys": [
+    "a",
+    "b",
+    "c"
+  ],
+  "paths": {
+    "models": "models",
+    "results": "results",
+    "manifests": "manifests"
+  },
+  "current_model": "version_2/experts/topology2_single_phase_hvrt/models/hpt_exact_t2_a_hvrt105_60ms_strongpos_actor_daggertraj_20260725_dagger1.zip",
+  "current_result": "version_2/experts/topology2_single_phase_hvrt/results/center_case_switch_level.csv",
+  "promotion_status": "historical_center_case_pass"
+}

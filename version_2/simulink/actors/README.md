@@ -1,11 +1,11 @@
 # Actor Storage Policy
 
-This directory contains policy only; actor snapshots are no longer archived in
-the source tree.
+This directory contains deployment policy only; expert checkpoints are stored
+with their fault-family workspace.
 
 - Active MATLAB weights: `version_2/simulink/hpt_sac_actor_weights*.mat`
-- Trained Python checkpoints: `data/models/`
-- Per-run exported weights: `lab/results/<run_id>/`
+- Trained Python checkpoints: `version_2/experts/<expert_id>/models/`
+- Per-run exported weights: `version_2/experts/<expert_id>/results/<run_id>/`
 
 The former `actors/archive/` directory was removed on 2026-08-03. Git history
 retains those diagnostic snapshots.

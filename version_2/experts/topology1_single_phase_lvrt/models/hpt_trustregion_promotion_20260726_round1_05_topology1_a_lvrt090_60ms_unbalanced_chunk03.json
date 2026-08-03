@@ -1,0 +1,68 @@
+{
+  "run_id": "hpt_trustregion_promotion_20260726_round1_05_topology1_a_lvrt090_60ms_unbalanced_chunk03_train",
+  "controller": "hpt-voltage-sac",
+  "observation_dim": 24,
+  "action_dim": 4,
+  "steps": 80,
+  "seed": 20260729,
+  "init_model": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_trustregion_promotion_20260726_round1_05_topology1_a_lvrt090_60ms_unbalanced_chunk01.zip",
+  "model_path": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_trustregion_promotion_20260726_round1_05_topology1_a_lvrt090_60ms_unbalanced_chunk03.zip",
+  "curriculum": "topology1_a_lvrt090_60ms",
+  "scenario_summary": {
+    "count": 1,
+    "topology": {
+      "topology1": 1
+    },
+    "category": {
+      "LVRT": 1
+    },
+    "fault_type": {
+      "1ph_g": 1
+    }
+  },
+  "proxy_calibration": {
+    "path": "E:\\research_space\\Hybrid-power-transformer\\version_2\\sac\\hpt_proxy_calibration.json",
+    "schema": "hpt_proxy_calibration_v1",
+    "source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_proxy_sweep\\hpt_v2_sac_proxy_sweep_20260715_182303.csv",
+    "energy_source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_energy_sweep\\hpt_v2_sac_energy_sweep_20260715_182415.csv",
+    "energy_bridge_mode": "calibrated_direct_energy_bridge_available",
+    "target_phase_rms": 207.0,
+    "topologies": [
+      "topology1",
+      "topology2"
+    ]
+  },
+  "metrics": {
+    "rollouts": 1,
+    "mean_return": -377010985831.0451,
+    "mean_final_v_pu": 0.838152904785726,
+    "max_abs_final_v_err": 0.16184709521427398,
+    "mean_final_vdc_pu": 1.0937692687483112,
+    "min_vdc_pu": 1.0,
+    "min_episode_v_pu": 0.7222114205360413,
+    "max_episode_v_pu": 1.0,
+    "condition_counts": {
+      "nominal": 1
+    }
+  },
+  "behavior_anchor": {
+    "enabled": true,
+    "epochs": 10,
+    "interval_steps": 40,
+    "episodes": 3,
+    "noise_std": 0.004,
+    "updates": 2,
+    "last_metrics": {
+      "final_loss": 0.0007948564598336816,
+      "mean_loss_tail": 0.0021984429913572967,
+      "action_mse": [
+        2.5605912014725618e-05,
+        4.444774731382495e-06,
+        4.68721793822624e-07,
+        4.2457787685634685e-07
+      ],
+      "samples": 330
+    }
+  },
+  "metadata_path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_trustregion_promotion_20260726_round1_05_topology1_a_lvrt090_60ms_unbalanced_chunk03_train\\metadata.json"
+}

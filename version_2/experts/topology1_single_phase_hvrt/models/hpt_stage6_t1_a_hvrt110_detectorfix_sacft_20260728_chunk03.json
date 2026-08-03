@@ -1,0 +1,70 @@
+{
+  "run_id": "hpt_stage6_t1_a_hvrt110_detectorfix_sacft_20260728_chunk03_train",
+  "controller": "hpt-voltage-sac",
+  "observation_dim": 24,
+  "action_dim": 4,
+  "steps": 80,
+  "seed": 20260731,
+  "init_model": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_stage6_t1_a_hvrt110_detectorfix_sacft_20260728_chunk02.zip",
+  "model_path": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_stage6_t1_a_hvrt110_detectorfix_sacft_20260728_chunk03.zip",
+  "curriculum": "topology1_hvrt110_60ms",
+  "scenario_summary": {
+    "count": 1,
+    "topology": {
+      "topology1": 1
+    },
+    "category": {
+      "HVRT": 1
+    },
+    "fault_type": {
+      "swell_3ph": 1
+    }
+  },
+  "proxy_calibration": {
+    "path": "E:\\research_space\\Hybrid-power-transformer\\version_2\\sac\\hpt_proxy_calibration.json",
+    "schema": "hpt_proxy_calibration_v1",
+    "source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_proxy_sweep\\hpt_v2_sac_proxy_sweep_20260715_182303.csv",
+    "energy_source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_energy_sweep\\hpt_v2_sac_energy_sweep_20260715_182415.csv",
+    "energy_bridge_mode": "calibrated_direct_energy_bridge_available",
+    "target_phase_rms": 207.0,
+    "topologies": [
+      "topology1",
+      "topology2"
+    ]
+  },
+  "metrics": {
+    "rollouts": 1,
+    "mean_return": -612394224094.5884,
+    "mean_final_v_pu": 1.014605006742487,
+    "max_abs_final_v_err": 0.014605006742486992,
+    "mean_final_vdc_pu": 1.0757776996619102,
+    "min_vdc_pu": 1.0,
+    "min_episode_v_pu": 0.9869190454483032,
+    "max_episode_v_pu": 1.0468716621398926,
+    "condition_counts": {
+      "nominal": 1
+    }
+  },
+  "reward_trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_t1_a_hvrt110_detectorfix_sacft_20260728_chunk03_train\\sac_training_reward_trace.csv",
+  "reward_trace_episodes": 2,
+  "behavior_anchor": {
+    "enabled": true,
+    "epochs": 16,
+    "interval_steps": 40,
+    "episodes": 4,
+    "noise_std": 0.003,
+    "updates": 2,
+    "last_metrics": {
+      "final_loss": 0.00014226512575987726,
+      "mean_loss_tail": 0.00030152363547131245,
+      "action_mse": [
+        1.785343897608982e-06,
+        1.433673162409832e-07,
+        4.027288014185615e-08,
+        2.8020149756002866e-08
+      ],
+      "samples": 440
+    }
+  },
+  "metadata_path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_stage6_t1_a_hvrt110_detectorfix_sacft_20260728_chunk03_train\\metadata.json"
+}

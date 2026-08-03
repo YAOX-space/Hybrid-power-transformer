@@ -1,0 +1,119 @@
+{
+  "run_id": "hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger2",
+  "controller": "hpt-voltage-sac-bc-warmstart",
+  "observation_dim": 24,
+  "action_dim": 4,
+  "curriculum": "steady_step4",
+  "scenario_summary": {
+    "count": 6,
+    "topology": {
+      "topology1": 3,
+      "topology2": 3
+    },
+    "category": {
+      "steady": 6
+    },
+    "fault_type": {
+      "steady": 6
+    }
+  },
+  "init_model": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger1.zip",
+  "model_path": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger2.zip",
+  "config": {
+    "run_id": "hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger2",
+    "curriculum": "steady_step4",
+    "teacher_source": "table",
+    "seed": 20260715,
+    "episodes_per_scenario": 0,
+    "noise_std": 0.08,
+    "feedback_gain_topology1": 1.2,
+    "feedback_gain_topology2": 0.0,
+    "feedforward_scale_topology1": 1.0,
+    "feedforward_scale_topology2": 1.0,
+    "step4_correction_csv": null,
+    "step4_correction_repeat": 512,
+    "switch_trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology1_actor_dagger2_trace_20260720_052931.csv",
+    "switch_trace_repeat": 96,
+    "switch_trace_scenario_types": "fault",
+    "switch_trace_topologies": "topology1",
+    "switch_trace_condition_classes": "all",
+    "switch_trace_case_contains": "lvrt_060ms_0p900pu",
+    "switch_trace_window_zones": "all",
+    "switch_trace_fixed_target": null,
+    "switch_trace_energy_vdc_feedback_gain": 0.1,
+    "switch_trace_energy_vdc_ref_pu": 1.0,
+    "switch_trace_q_gate_lv_min_pu": 0.0,
+    "switch_trace_q_gate_time_min_s": 0.0,
+    "switch_trace_q_gate_vdc_min_pu": 0.0,
+    "switch_trace_q_gate_vdc_max_pu": Infinity,
+    "switch_trace_q_gate_mode": "binary",
+    "switch_trace_q_gate_lv_full_pu": Infinity,
+    "switch_trace_q_gate_time_full_s": Infinity,
+    "switch_trace_fault_window_repeat_mult": 12,
+    "switch_trace_recovery_window_repeat_mult": 12,
+    "switch_trace_pre_window_repeat_mult": 8,
+    "switch_trace_target_profile": "csv_file",
+    "switch_trace_profile_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t1_l090_pre24_b60_down35_clk_dg3\\initial_trajectory.csv",
+    "switch_trace_profile_dt": 0.002,
+    "switch_trace_profile_stop_time": 0.24,
+    "switch_trace_profile_base_action": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "switch_trace_profile_start_action": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "switch_trace_profile_action": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "switch_trace_profile_step_time": 0.04,
+    "switch_trace_profile_ramp_start": 0.035,
+    "switch_trace_profile_ramp_end": 0.045,
+    "switch_trace_profile_down_start": null,
+    "switch_trace_profile_down_end": null,
+    "switch_trace_topology2_phase_equivalent": false,
+    "switch_trace_phase_shift_rad": 0.55,
+    "raw_smoke_correction_csv": null,
+    "raw_smoke_correction_repeat": 512,
+    "raw_smoke_correction_scenario_types": "all",
+    "energy_teacher_trace_csv": null,
+    "energy_teacher_trace_repeat": 16,
+    "energy_teacher_trace_scenario_types": "all",
+    "energy_teacher_min_time": 0.0,
+    "bc_obs_noise_std": 0.0015,
+    "bc_obs_noise_repeat": 1,
+    "zero_energy_targets": false,
+    "action_weights": "14,1,0.5,0.5",
+    "epochs": 60,
+    "batch_size": 256,
+    "lr": 0.0002,
+    "reg_limit": 0.8,
+    "energy_limit": 0.95,
+    "teacher_prior_weight": 30.0,
+    "init_model": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger1.zip",
+    "model_out": "E:\\research_space\\Hybrid-power-transformer\\data\\models\\hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger2.zip"
+  },
+  "metrics": {
+    "final_loss": 4.76973618788179e-05,
+    "mean_loss_tail": 5.3209913494356444e-05,
+    "action_mse": [
+      7.228368303913157e-07,
+      5.9211697767125315e-09,
+      4.4421614830980616e-08,
+      3.980821894344899e-09
+    ],
+    "samples": 269376,
+    "switch_trace_augmented_samples": 134688,
+    "raw_smoke_correction_samples": 0,
+    "energy_teacher_trace_samples": 0,
+    "obs_noise_augmented_samples": 134688
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "family_sac_after_finetune": {
+    "rows": 9,
+    "voltage_survival_pass_count": 8,
+    "envelope_pass_count": 9,
+    "recovery_pass_count": 9,
+    "vdc_pass_count": 8,
+    "gbt_vdc_survive_pass_count": 9,
+    "grid_current_pass_count": 9,
+    "score_mean": 118.58685186523888,
+    "score_min": 116.781649469146,
+    "score_max": 120.521970746059,
+    "grid_current_peak_max_pu": 1.31390921201246,
+    "envelope_violation_max_pu": 0.0,
+    "pass_while_dq_fails_count": 4,
+    "score_beats_dq_count": 9,
+    "pass_while_seed_fails_count": 4,
+    "score_beats_seed_count": 3
+  },
+  "family_seed_before_sac": {
+    "rows": 9,
+    "voltage_survival_pass_count": 4,
+    "envelope_pass_count": 9,
+    "recovery_pass_count": 9,
+    "vdc_pass_count": 4,
+    "gbt_vdc_survive_pass_count": 9,
+    "grid_current_pass_count": 9,
+    "score_mean": 118.61585030100531,
+    "score_min": 115.958738812637,
+    "score_max": 121.697540736703,
+    "grid_current_peak_max_pu": 1.3134327507319,
+    "envelope_violation_max_pu": 0.0,
+    "pass_while_dq_fails_count": 3,
+    "score_beats_dq_count": 9
+  },
+  "strong_dq": {
+    "rows": 9,
+    "voltage_survival_pass_count": 4,
+    "envelope_pass_count": 9,
+    "recovery_pass_count": 9,
+    "vdc_pass_count": 4,
+    "gbt_vdc_survive_pass_count": 5,
+    "grid_current_pass_count": 9,
+    "score_mean": 125.35039075413033,
+    "score_min": 120.048843296451,
+    "score_max": 136.78671432524,
+    "grid_current_peak_max_pu": 1.40212821258834,
+    "envelope_violation_max_pu": 0.0
+  }
+}

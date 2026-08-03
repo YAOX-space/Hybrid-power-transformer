@@ -1,0 +1,12 @@
+{
+  "schema": "hpt-v2-expert-model-manifest-v1",
+  "expert_id": "topology2_single_phase_lvrt",
+  "checkpoint_role": "current_promoted_family_actor",
+  "canonical_model": "version_2/experts/topology2_single_phase_lvrt/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+  "canonical_sidecar": "version_2/experts/topology2_single_phase_lvrt/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.json",
+  "source_model": "data/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+  "sha256": "44dadac630f30d72555ae5ed363301296ac6b1ed2cd6201bfb1043ae1299cde5",
+  "controller": "hpt-voltage-sac",
+  "training_steps": 6000,
+  "evidence_scope": "Switch-level topology2 A-phase deep-LVRT family; local voltage-survival boundary expansion only"
+}

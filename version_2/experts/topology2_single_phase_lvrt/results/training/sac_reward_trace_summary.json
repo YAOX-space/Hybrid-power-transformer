@@ -1,0 +1,12 @@
+{
+  "schema": "hpt-sac-reward-trace-summary-v1",
+  "run_dir": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803",
+  "reward_trace_files": [
+    "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803\\sac_training_reward_trace.csv"
+  ],
+  "combined_reward_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803\\sac_training_reward_trace_combined.csv",
+  "reward_trace_rows": 32,
+  "protected_chunks_csv": "",
+  "protected_chunks_rows": 0,
+  "convergence_figure": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803\\sac_reward_and_switch_score_convergence.png"
+}

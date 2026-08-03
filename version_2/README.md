@@ -4,6 +4,8 @@
 
 - `sac/`: family SAC environment, training, calibration, datasets, campaigns,
   and summaries.
+- `experts/`: twelve canonical fault-family workspaces containing controller
+  checkpoints, results, and promotion manifests.
 - `simulink/`: two switch-level plants, collectors, evaluators, sweeps, and
   regression tests.
 - `docs/autonomy/`: Git, experiment, debugging, migration, and paper policies.
