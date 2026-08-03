@@ -5979,3 +5979,27 @@
   inventories around the one-actor-per-family SAC workflow.
 - Marked the previous-generation `src/hpt_frt` and `lab/simulink` trees as
   reproducibility-only rather than mixing them into the version-2 mainline.
+
+## 2026-08-03 - HPT research skill upgraded for MCP and evidence governance
+
+- Revised `.codex/skills/hpt-research-agent/SKILL.md` around the maintained
+  one-actor-per-family SAC workflow and the current r6 promotion boundary.
+- Added `version_2/docs/autonomy/current_research_state.json` as the
+  machine-readable promoted-state pointer. It records the accepted r6 actor,
+  targeted `8/9` versus `4/9` family evidence, expanded `46/60` versus `48/60`
+  evidence, known proxy trajectory-ranking limitation, and canonical paths.
+- Enhanced `collect_project_snapshot.py` to validate promoted actor hashes,
+  canonical paths, recent result folders, and current research-log headings.
+- Added a MATLAB/Simulink tool-routing policy based on the official MathWorks
+  MATLAB MCP Server and Agentic Toolkits. Official MCP detection confirmed
+  MATLAB, Simulink, Simscape, and Simscape Electrical R2025a in this session.
+- Added an evidence passport and seven-rung claim ladder adapted for HPT. The
+  protocol explicitly separates proxy diagnostics, switch-level single-case,
+  family, boundary, robustness, and full-FRT claims.
+- Tightened experiment rules around untouched proxy holdout trajectories,
+  reward/convergence recording, exact-checkpoint promotion, strong-dq
+  comparison, negative-result retention, and full-FRT missing-signal handling.
+- Validation: the Codex skill validator passed; the enhanced snapshot verified
+  the promoted actor SHA-256 and all canonical paths; MATLAB Code Analyzer was
+  exercised on the maintained switch-level evaluator and returned warnings but
+  no execution-blocking analysis error.

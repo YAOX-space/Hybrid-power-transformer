@@ -1,0 +1,74 @@
+{
+  "schema": "hpt-v2-current-research-state-v1",
+  "updated_at": "2026-08-03",
+  "claim_scope": {
+    "promoted": "Switch-level voltage-survival boundary expansion for one topology2 A-phase deep-LVRT fault family.",
+    "not_promoted": [
+      "Global superiority over strong dq on the expanded 10-by-6 matrix",
+      "Transfer to the other eleven fault families",
+      "Full FRT or grid-code certification"
+    ]
+  },
+  "controller_contract": {
+    "observation_dim": 24,
+    "action_dim": 4,
+    "actions": [
+      "m_reg_d",
+      "m_reg_q",
+      "m_energy_d",
+      "m_energy_q"
+    ],
+    "one_checkpoint_per_family": true,
+    "per_case_actor_or_runtime_selector": false
+  },
+  "promoted_controller": {
+    "name": "topology2_a_phase_deep_lvrt_family_sac_r6",
+    "actor_path": "data/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+    "actor_sha256": "44dadac630f30d72555ae5ed363301296ac6b1ed2cd6201bfb1043ae1299cde5",
+    "training_run": "lab/results/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803"
+  },
+  "evidence": {
+    "targeted_family_matrix": {
+      "run_dir": "lab/results/hpt_family_specialist_t2_a_lvrt_joint_support_sac_r6_probe9_20260803",
+      "comparison_csv_path": "lab/results/hpt_family_specialist_t2_a_lvrt_joint_support_sac_r6_probe9_20260803/family_specialist_comparison_rows.csv",
+      "comparison_csv_sha256": "d0a23a2a448621d4330a2f474190a2d87bbef0a5093a024c139e582713ff7fc8",
+      "depths_pu": [0.5, 0.6, 0.625],
+      "durations_ms": [160, 200, 240],
+      "sac_pass": 8,
+      "case_count": 9,
+      "strong_dq_pass": 4,
+      "dq_fail_sac_pass": 4
+    },
+    "expanded_matrix": {
+      "run_dir": "lab/results/hpt_family_specialist_t2_a_lvrt_r6_square60_currentwindow_20260803_r1",
+      "comparison_csv_path": "lab/results/hpt_family_specialist_t2_a_lvrt_r6_square60_currentwindow_20260803_r1/family_specialist_comparison_rows.csv",
+      "depths_pu": [0.2, 0.5, 0.575, 0.65, 0.7, 0.75, 0.8, 0.825, 0.85, 0.875],
+      "durations_ms": [80, 120, 160, 200, 240, 300],
+      "sac_pass": 46,
+      "case_count": 60,
+      "strong_dq_pass": 48,
+      "dq_fail_sac_pass": 3,
+      "sac_lower_score": 45,
+      "comparison_csv_sha256": "b227804bbe3897b7964edb2914438188bf5d8cb1ab2aa9edd110b81669adb482"
+    }
+  },
+  "known_blockers": [
+    "Fixed-action proxy calibration does not reliably rank policy trajectories near the active DC-link floor.",
+    "Continuation candidates r7-r9 improved proxy return but reduced switch-level pass count.",
+    "The current actor provides local boundary expansion but not greater total expanded-matrix pass area than strong dq."
+  ],
+  "next_research_gate": [
+    "Collect local switch-level trajectory transitions around the promoted r6 policy and the active DC-link boundary.",
+    "Revalidate trajectory-rollout proxy ranking on untouched holdout trajectories.",
+    "Use short support-constrained SAC chunks with immediate switch-level promotion checks before attempting another family."
+  ],
+  "canonical_paths": {
+    "family_campaign": "version_2/sac/campaigns/run_hpt_family_specialist_matrix.py",
+    "proxy_environment": "version_2/sac/hpt_voltage_sac_env.py",
+    "sac_trainer": "version_2/sac/offline/train_hpt_voltage_sac.py",
+    "switch_validator": "version_2/simulink/evaluators/eval_hpt_v2_control_comparison.m",
+    "topology1_model": "version_2/simulink/topoloty1/hpt_v2_1to1_switchlevel.slx",
+    "topology2_model": "version_2/simulink/topology2/hpt_v2_topology2_paper.slx",
+    "research_log": "version_2/docs/autonomy/logs/research_log.md"
+  }
+}

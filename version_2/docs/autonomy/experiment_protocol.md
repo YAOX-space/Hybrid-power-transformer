@@ -1,22 +1,48 @@
 # Experiment Protocol
 
-Every experiment needs:
+## Before Running
 
-- run id;
-- hypothesis;
-- baseline;
-- exact command;
-- expected output directory;
-- config snapshot;
-- Git metadata;
-- stdout/stderr log;
-- result summary;
-- next action.
+Record:
 
-Decision labels:
+- falsifiable hypothesis and competing explanation;
+- controller, topology, fault family, and scenario split;
+- strong baseline and its tuning provenance;
+- evidence claim rung and success gate;
+- exact command, config, expected runtime, and result directory;
+- Git state and hashes of model, evaluator, actor, data, and calibration;
+- random seeds and software/toolbox versions when relevant.
 
-- `promote` - passed switch-level gate and improves or clarifies baseline;
-- `diagnostic` - useful failure or partial result;
-- `rerun` - environment or transient failure invalidated the run;
-- `debug` - contract or model failure blocks evidence;
-- `retire` - superseded by a stronger validated result.
+Use a dry-run, one-case smoke, or reduced matrix before a long campaign.
+
+## During Running
+
+- Capture stdout/stderr and structured training diagnostics.
+- Preserve unscaled reward and every reward component.
+- Preserve failed runs and partial artifacts.
+- Do not modify an actor, model, evaluator, or gate during the same declared
+  run. Start a new run id after a behavioral change.
+
+## After Running
+
+1. Validate artifact completeness and hashes.
+2. Compare with strong dq, initialization, ablations, and previous promoted
+   actor using the same validator.
+3. Report per-cell metrics, not only averages.
+4. Separate proxy results from switch-level results.
+5. Assign `promote`, `diagnostic`, `rerun`, `debug`, or `retire`.
+6. Record one evidence-driven next action.
+
+## Metric Sets
+
+Voltage-survival evidence requires the declared timestep voltage envelope,
+fault/recovery gates, DC-link bounds, command bounds, and the active
+current-window diagnostics. Report which checks are gates and which remain
+diagnostic.
+
+Full-FRT evidence additionally requires every declared grid-current limit,
+reactive-current support, recovery, DC-link, device, asymmetry, and grid-code
+criterion. Missing signals or unevaluated criteria are failures of evidence,
+not passes.
+
+Read `evidence_claim_protocol.md` for the evidence passport and promotion
+claim ladder.
