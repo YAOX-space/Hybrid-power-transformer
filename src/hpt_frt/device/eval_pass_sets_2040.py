@@ -208,6 +208,32 @@ def write_pair_csv(path: Path, pair_rows: list[dict]):
         w.writerows(pair_rows)
 
 
+def write_traditional_only_union_csv(
+    path: Path,
+    traditional_only_ids: list[int],
+    sac_rows: dict[int, dict],
+    baseline_pass_by_id: dict[int, list[str]],
+    scenario_meta: dict[int, dict],
+):
+    fields = [
+        "scenario_id", "baselines_passed", "category", "fault_type", "scr", "target_V_pu",
+        "duration_bin_s", "xr_ratio", "sac_failed_criteria", "sac_not_eval_criteria", "sac_vdc_min",
+    ]
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        for sid in traditional_only_ids:
+            sr = sac_rows[sid]
+            w.writerow({
+                "scenario_id": sid,
+                "baselines_passed": "+".join(baseline_pass_by_id.get(sid, [])),
+                **scenario_meta[sid],
+                "sac_failed_criteria": sr["failed_criteria"],
+                "sac_not_eval_criteria": sr["not_eval_criteria"],
+                "sac_vdc_min": sr["vdc_min"],
+            })
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scenarios", type=Path, default=EXPANDED)
@@ -250,10 +276,13 @@ def main():
     pass_sets = {}
     baseline_names = [n for n in controllers if n != "pure_sac_current"]
     union_pass = set()
+    baseline_pass_by_id = defaultdict(list)
     for b in baseline_names:
         b_rows = {r["scenario_id"]: r for r in all_rows[b]}
         b_pass = {sid for sid, r in b_rows.items() if r["proxy_pass"]}
         union_pass |= b_pass
+        for sid in b_pass:
+            baseline_pass_by_id[sid].append(b)
         pass_sets[b] = bucket_summary(sac_pass, b_pass, scenario_meta)
         for sid in sorted(scenario_meta):
             sp = sid in sac_pass
@@ -304,10 +333,18 @@ def main():
     }
     base.with_suffix(".json").write_text(json.dumps(out, indent=2), encoding="utf-8")
     write_pair_csv(base.with_suffix(".csv"), pair_rows)
+    write_traditional_only_union_csv(
+        base.with_name(base.name + "_traditional_only_union").with_suffix(".csv"),
+        pass_sets["traditional_union"]["traditional_only_pass_ids"],
+        sac_rows,
+        baseline_pass_by_id,
+        scenario_meta,
+    )
 
     print(json.dumps({
         "json": str(base.with_suffix(".json")),
         "csv": str(base.with_suffix(".csv")),
+        "traditional_only_union_csv": str(base.with_name(base.name + "_traditional_only_union").with_suffix(".csv")),
         "summaries": {k: {"pass": v["proxy_pass_count"], "n": v["n"], "pct": v["proxy_pass_pct"]}
                       for k, v in summaries.items()},
         "pass_sets": {k: {kk: vv for kk, vv in v.items() if kk.endswith("_count")}

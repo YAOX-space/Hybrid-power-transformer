@@ -33,8 +33,9 @@ def test_evaluate_scenario_returns_frt_v2_contract_with_missing_current_i2():
     # the averaged ODE has no combined current and no I2 -> those mandatory criteria are NOT_EVALUATED
     assert r['limit']['status'] == FV2.NOT_EVALUATED
     assert r['survive']['status'] == FV2.NOT_EVALUATED
-    # therefore the scenario cannot be CERTIFIED -> frt_pass is None (never True, never int())
-    assert r['frt_pass'] is None
+    # therefore the scenario cannot be CERTIFIED as a pass. A measurable FAIL still takes precedence
+    # over missing current/I2 and yields False; otherwise incompleteness yields None.
+    assert r['frt_pass'] in (False, None)
     assert r['connect']['status'] in (FV2.PASS, FV2.FAIL)   # connect always measurable
     # reactive may be NOT_EVALUATED when the (support-raised) residual leaves no sustained demand
     assert r['reactive']['status'] in (FV2.PASS, FV2.FAIL, FV2.NOT_EVALUATED)

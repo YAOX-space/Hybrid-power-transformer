@@ -1,0 +1,67 @@
+{
+  "schema": "hpt-t2-a-deep-lvrt-r6-paper-evidence-v1",
+  "case": "topology2 A-phase LVRT 0.50 pu / 200 ms",
+  "fault_start_s": 0.08,
+  "fault_clear_s": 0.28,
+  "source_files": {
+    "boundary_cells": {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_joint_support_sac_r6_probe9_20260803\\boundary_summary\\t2_a_lvrt_joint_support_sac_r6_probe9_combined_cells.csv",
+      "sha256": "cb68405f2abdbc9303a14c7e5a1af4c7b4855d5f3dd8c351c2f9597335bbb03b"
+    },
+    "evaluator_rows": {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_joint_support_sac_r6_probe9_20260803\\family_specialist_comparison_rows.csv",
+      "sha256": "d0a23a2a448621d4330a2f474190a2d87bbef0a5093a024c139e582713ff7fc8"
+    },
+    "reward_trace": {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803\\sac_training_reward_trace.csv",
+      "sha256": "d53a6c7460e56e1ed5fab87e3cc34ad906077210d48d5675d85bab65b09ba1ff"
+    },
+    "diagnostics_trace": {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803\\sac_training_diagnostics_trace.csv",
+      "sha256": "dacc80b613b6803466e445218aa44328f3baca472e14b944c1aa8126d3cdd2ba"
+    },
+    "strong_dq_trace": {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_r6_boundary_pu0500_d200ms_strong_dq_20260803_091954.csv",
+      "sha256": "6d89d12e76cc874771aa500186d190185cf6e3821ffb132b3e51406e72dc42c2"
+    },
+    "family_sac_r6_trace": {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_r6_boundary_pu0500_d200ms_family_sac_20260803_092010.csv",
+      "sha256": "daf152cbe0155694d407bb942268f00ea8668a50d75ade8993965b1ff5c21e86"
+    }
+  },
+  "outputs": [
+    "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\fig11_t2_a_deep_lvrt_family_boundary_r6.png",
+    "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\fig11_t2_a_deep_lvrt_family_boundary_r6.pdf",
+    "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\fig12_t2_a_deep_lvrt_family_sac_convergence_r6.png",
+    "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\fig12_t2_a_deep_lvrt_family_sac_convergence_r6.pdf",
+    "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\fig13_t2_a_deep_lvrt_r6_control_trace.png",
+    "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\fig13_t2_a_deep_lvrt_r6_control_trace.pdf"
+  ],
+  "boundary_metrics": {
+    "strong_dq": 4,
+    "family_seed_before_sac": 4,
+    "family_sac_after_finetune": 8
+  },
+  "training_metrics": {
+    "complete_episodes": 28,
+    "partial_episodes_excluded": 4,
+    "support_loss_first_100_mean": 0.003464027007576032,
+    "support_loss_last_100_mean": 0.001822132697561707,
+    "return_per_step_first_8_mean": -2049.141150765232,
+    "return_per_step_last_8_mean": -2069.7945431135404
+  },
+  "trace_metrics": {
+    "dq_sampled_2ms_vdc_min_v": 552.068250200903,
+    "sac_sampled_2ms_vdc_min_v": 670.193956046658,
+    "dq_evaluator_20us_vdc_min_v": 548.907231882469,
+    "sac_evaluator_20us_vdc_min_v": 665.647991316168,
+    "dq_voltage_survival_pass": 0,
+    "sac_voltage_survival_pass": 1
+  },
+  "notes": [
+    "Boundary labels identify the actual r5 and r6 SAC checkpoints; r5 is not described as an untrained seed.",
+    "Partial end-of-run episodes are excluded from return comparisons and returns are normalized by episode length.",
+    "Control trajectories are raw switch-level Simulink exports at 2-ms stride; pass/fail annotations use 20-us evaluator metrics.",
+    "The selected case is strong-dq fail and family-SAC-r6 pass under the active voltage-survival gate."
+  ]
+}

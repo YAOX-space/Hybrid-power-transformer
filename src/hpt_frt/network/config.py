@@ -76,7 +76,7 @@ def vdc_eq(iq, se_d, se_q, v_local):
 # ── online gate (section 五) ─────────────────────────────────────────────────────
 GATE_V2N_THR   = 0.05                 # negative-seq threshold: sym vs asym
 GATE_LV_THR    = 0.90                 # V2p below → LVRT region
-GATE_HV_THR    = 1.10                 # V2p above → HVRT region
+GATE_HV_THR    = 1.060                # V2p above → HVRT region
 # hysteresis (chattering mitigation, for analysis): widen the V2n band + require dwell
 GATE_V2N_HYST  = 0.02                 # ±band around GATE_V2N_THR
 GATE_DWELL     = 2                    # min consecutive snapshots before a gate switch commits

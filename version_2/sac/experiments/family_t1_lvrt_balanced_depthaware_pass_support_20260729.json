@@ -1,0 +1,7 @@
+{
+  "source": "version_2\\sac\\experiments\\family_t1_lvrt_balanced_pass_support_20260728.csv",
+  "out": "version_2\\sac\\experiments\\family_t1_lvrt_balanced_depthaware_pass_support_20260729.csv",
+  "source_rows": 13,
+  "out_rows": 25,
+  "duplicated_shallow_rows": 12
+}

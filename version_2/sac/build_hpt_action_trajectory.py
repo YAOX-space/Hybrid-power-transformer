@@ -8,8 +8,8 @@ The generated MAT file is consumed by ``HPTSACController`` when
 
 This is the bridge from fixed-action experiments to true time-varying
 trajectory control.  The first research gate is intentionally simple:
-constant, step, ramp, and two-stage trajectories around already validated
-fixed-action setpoints.
+constant, step, ramp, two-stage, and fault/recovery trajectories around
+already validated fixed-action setpoints.
 """
 from __future__ import annotations
 
@@ -103,6 +103,24 @@ def make_trajectory(spec: TrajectorySpec) -> tuple[np.ndarray, np.ndarray]:
         down = 1.0 - np.clip((t - spec.ramp_end) / max(spec.stop_time - spec.ramp_end, spec.dt), 0.0, 1.0)
         frac = np.minimum(up, down)
         action = base[None, :] + frac[:, None] * (target - base)[None, :]
+    elif preset == "fault_recovery":
+        # Topology2 often needs a high regulating command during the fault,
+        # then a lower recovery command after fault clearing.  This preset
+        # makes that teacher shape explicit and reproducible:
+        #   base -> start_action from ramp_start to step_time,
+        #   hold start_action until ramp_end,
+        #   start_action -> action from ramp_end to down_start,
+        #   hold action afterwards.
+        if spec.step_time <= spec.ramp_start:
+            raise ValueError("fault_recovery requires step_time > ramp_start")
+        if spec.down_start is None:
+            raise ValueError("fault_recovery requires down_start as recovery-ramp end")
+        if spec.down_start <= spec.ramp_end:
+            raise ValueError("fault_recovery requires down_start > ramp_end")
+        up = np.clip((t - spec.ramp_start) / (spec.step_time - spec.ramp_start), 0.0, 1.0)
+        rec = np.clip((t - spec.ramp_end) / (spec.down_start - spec.ramp_end), 0.0, 1.0)
+        action = base[None, :] + up[:, None] * (start - base)[None, :]
+        action = action + rec[:, None] * (target - start)[None, :]
     else:
         raise ValueError(f"Unknown trajectory preset: {spec.preset}")
 
@@ -143,7 +161,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--preset",
         default="constant",
-        choices=["zero", "constant", "step", "ramp", "two_stage", "two_stage_window", "fault_window"],
+        choices=[
+            "zero",
+            "constant",
+            "step",
+            "ramp",
+            "two_stage",
+            "two_stage_window",
+            "fault_window",
+            "fault_recovery",
+        ],
     )
     parser.add_argument("--dt", type=float, default=2e-3)
     parser.add_argument("--stop-time", type=float, default=0.24)

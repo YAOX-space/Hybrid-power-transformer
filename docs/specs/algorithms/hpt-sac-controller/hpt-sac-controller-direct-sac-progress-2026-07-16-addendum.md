@@ -1,4 +1,4 @@
-# HPT Direct SAC Progress Addendum - 2026-07-16
+﻿# HPT Direct SAC Progress Addendum - 2026-07-16
 
 ## Completed
 
@@ -8,7 +8,7 @@
    - `--energy-teacher-trace-scenario-types {all,steady,fault}`
    - `--energy-teacher-min-time`
 
-2. Extended `version_2/simulink/collect_hpt_v2_sac_energy_teacher_traces.m`.
+2. Extended `version_2/simulink/collectors/collect_hpt_v2_sac_energy_teacher_traces.m`.
    - The conventional `VoltageRegulator` is now recorded as a teacher.
    - The trace now includes equivalent `target_action_01/02 = m_reg_d/m_reg_q`.
    - The trace still includes `target_action_03/04 = i_energy_d/q_ref_pu`.
@@ -97,7 +97,7 @@ router only after individual actors pass switch-level validation.
 
 New tooling added:
 
-- `version_2/simulink/eval_hpt_v2_sac_single_case.m`
+- `version_2/simulink/evaluators/eval_hpt_v2_sac_single_case.m`
   - Runs exactly one raw guard=0 switch-level case.
   - Supports topology/scenario/case filters.
   - Supports `hpt_eval_energy_enable`, so regulating-bridge SAC can be tested
@@ -258,7 +258,7 @@ Reference basis:
 
 Code changes:
 
-- `version_2/simulink/eval_hpt_v2_sac_single_case.m`
+- `version_2/simulink/evaluators/eval_hpt_v2_sac_single_case.m`
   - Fault cases now include GB/T anchor scenarios:
     `0.2/0.5/0.75/0.85/0.9 pu` LVRT and
     `1.1/1.2/1.25/1.3 pu` HVRT.
@@ -292,3 +292,4 @@ Verification:
   - new result: fail with
     `gbt_voltage_envelope;gbt_recover;gbt_vdc_survive;not_evaluated_no_grid_reactive_current`
   - This is expected under the stricter standard-based criterion.
+

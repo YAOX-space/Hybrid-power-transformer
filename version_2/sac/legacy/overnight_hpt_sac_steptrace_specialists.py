@@ -226,7 +226,7 @@ def run_smoke(run_dir: Path, iteration: int) -> tuple[Path | None, int]:
         [
             "matlab",
             "-batch",
-            "cd('E:/research_space/Hybrid-power-transformer/version_2/simulink'); eval_hpt_v2_sac_raw_switchlevel_smoke;",
+            "cd('E:/research_space/Hybrid-power-transformer/version_2/simulink'); run(fullfile(pwd,'evaluators','eval_hpt_v2_sac_raw_switchlevel_smoke.m'));",
         ],
         run_dir / "logs" / f"iter{iteration:03d}_raw_smoke.log",
         timeout_s=1800,

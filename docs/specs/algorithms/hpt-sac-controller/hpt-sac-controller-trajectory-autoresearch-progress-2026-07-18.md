@@ -1,4 +1,4 @@
-# HPT Direct SAC Trajectory Autoresearch Progress - 2026-07-18
+﻿# HPT Direct SAC Trajectory Autoresearch Progress - 2026-07-18
 
 ## Objective
 
@@ -25,7 +25,7 @@ control:
 - Added trajectory tools:
   - `version_2/sac/build_hpt_action_trajectory.py`
   - `version_2/sac/validate_hpt_trajectory_switchlevel.py`
-  - `version_2/simulink/collect_hpt_v2_trajectory_trace.m`
+  - `version_2/simulink/collectors/collect_hpt_v2_trajectory_trace.m`
 - Updated SAC interface regression to cover `policy_mode = -2`.
 
 ## Switch-Level Results
@@ -238,3 +238,4 @@ survival window while still using the regulating bridge to recover LV voltage.
 8. Promote only if the actor passes voltage survival and beats conventional
    on score.  Full GBT reactive-current/current-limit checks remain the next
    certification phase.
+

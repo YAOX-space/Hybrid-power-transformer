@@ -64,14 +64,19 @@ def main(total_steps=300_000, n_envs=8, eval_freq=25_000, legacy=False, seed=42,
     run_started = time.time()
     out = (ROOT.parents[2] / 'lab' / 'results') / ('legacy_pre_audit' if legacy else '')
     out.mkdir(parents=True, exist_ok=True)
-    scen = load_frt_scenarios(ROOT.parents[2] / 'lab' / 'frt_scenarios.csv')
+    scen_path = Path(os.environ.get('HPT_SCENARIO_CSV', ROOT.parents[2] / 'lab' / 'frt_scenarios.csv'))
+    scen_label = scen_path.stem
+    scen = load_frt_scenarios(scen_path)
     train_scn, val_scn = split_scenarios(scen, val_frac=0.2, seed=split_seed)   # FROZEN held-out split
     rc = make_run_context(run_id=run_id, policy_seed=seed, env_cls=env_cls,
-                          scenario_split=f'all-320 residual FROZEN held-out split (val_frac=0.2, split_seed={split_seed})',
+                          scenario_split=(f'{scen_label} residual FROZEN held-out split '
+                                          f'(val_frac=0.2, split_seed={split_seed})'),
                           train_scn=train_scn, val_scn=val_scn, n_envs=n_envs, total_steps=total_steps,
                           source_log=os.environ.get('HPT_RUN_LOG'))
     md = run_metadata(env_cls, seed=seed, legacy=legacy, run_id=run_id,
-                      scenario_split=f'held-out family split: {len(train_scn)} train / {len(val_scn)} val (#7)')
+                      scenario_split=(f'{scen_label} held-out family split: '
+                                      f'{len(train_scn)} train / {len(val_scn)} val (#7)'),
+                      scenario_file=str(scen_path))
     print(f'=== residual-SAC: {len(train_scn)} train / {len(val_scn)} val ({env_cls.__name__}) run={run_id} ===', flush=True)
     vec = DummyVecEnv([(lambda s=s: env_cls(train_scn, seed=s))
                        for s in env_seeds(seed, n_envs)])     # deterministic per-env seeds (#6)

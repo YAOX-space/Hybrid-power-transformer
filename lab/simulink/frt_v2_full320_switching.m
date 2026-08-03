@@ -7,7 +7,15 @@ function frt_v2_full320_switching(mi, i0, i1)
 %   mi: 14 = deployed residual SAC ; 7 = dq fixed-law baseline.   i0,i1: scenario index range (1..320).
 here=fileparts(mfilename('fullpath')); cd(here); p=pu_params(); M='hpt_frt_full';
 if nargin<2, i0=1; end, if nargin<3, i1=320; end
-W=load(fullfile('..','sac_actor_weights.mat')); run_id=char(W.run_id);
+wfile = 'sac_actor_weights.mat';
+if mi==12 || mi==15
+    wfile='sac_sym_weights.mat';
+elseif mi==14 || (mi>=322 && mi<=372) || (mi>=209 && mi<=321) || (mi>=20 && mi<=208)
+    wfile='sac_residual_weights.mat';
+elseif mi==17
+    wfile='sac_resexpert_weights.mat';
+end
+W=load(fullfile('..',wfile)); run_id=char(W.run_id);
 fp = jsondecode(fileread('../results/p3_scenario_faultparams.json'));
 T  = readtable('../frt_scenarios.csv');
 resfile = sprintf('../results/p3_full320_sw_mi%d.mat', mi);
@@ -33,10 +41,13 @@ for n=1:numel(ids)
     curbuild=bkey;
   end
   tf=0.08; dur=min(m.fault_dur,0.5); cat=m.category;
+  row_ix=find(T.scenario_id==sid,1);
+  post_window=max(0.35, double(T.T_sim(row_ix)) - (double(T.t_fault(row_ix)) + dur));
   set_param([M '/mode'],'Value',num2str(mi));
+  set_param([M '/fclass'],'Value',num2str(fclass_code(cat, m.fault_type)));
   set_param([M '/fdur'],'Value',num2str(dur)); set_param([M '/t_fault'],'Value',num2str(tf));
   set_param([M '/iq_ref'],'Value','0'); set_param([M '/mse_d'],'Value','0'); set_param([M '/mse_q'],'Value','0');
-  set_param(M,'StopTime',num2str(tf+dur+0.35));
+  set_param(M,'StopTime',num2str(tf+dur+post_window));
   if isH
     is1=strcmp(m.fault_type,'swell_1ph');
     set_param([M '/Grid'],'VariationEntity','Amplitude','VariationType','Table of time-amplitude pairs', ...
@@ -82,3 +93,13 @@ ad=[zeros(q,1);a(1:end-q)]; bd=[zeros(q,1);b(1:end-q)];
 V1=sqrt((0.5*(a-bd)).^2+(0.5*(b+ad)).^2)/Vnom; V2=sqrt((0.5*(a+bd)).^2+(0.5*(b-ad)).^2)/Vnom;
 end
 function s=oo(b), if b, s='on'; else, s='off'; end, end
+
+function fc=fclass_code(cat, ft)
+if strcmp(cat,'HVRT')
+  if strcmp(ft,'swell_1ph'), fc=6; else, fc=5; end
+elseif strcmp(ft,'sym3ph')
+  fc=1;
+else
+  fc=2;
+end
+end

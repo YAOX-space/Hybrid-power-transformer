@@ -1,0 +1,3 @@
+case_id,topology,fault_family,fault_phase_key,stale_reason,retest_required_after
+topology1_a_lvrt090_60ms_unbalanced,topology1,LVRT,a,grid positive/negative sequence observation is now startup-normalized and fault-state thresholds changed,2026-07-21 gridnorm observation migration
+topology1_ab_lvrt090_60ms_unbalanced,topology1,LVRT,ab,grid positive/negative sequence observation is now startup-normalized and fault-state thresholds changed,2026-07-21 gridnorm observation migration

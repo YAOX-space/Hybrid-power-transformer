@@ -1,0 +1,13 @@
+topology,fault_family,phase_mode,cases,conventional_pass,sac_pass,sac_beats_conventional,traditional_fail_sac_pass,traditional_pass_sac_fail,sac_fail
+topology1,HVRT,a,12,12,12,3,0,0,0
+topology1,HVRT,ab,12,12,12,1,0,0,0
+topology1,HVRT,balanced,12,0,12,12,12,0,0
+topology1,LVRT,a,12,12,9,0,0,3,3
+topology1,LVRT,ab,12,12,12,0,0,0,0
+topology1,LVRT,balanced,12,0,2,2,2,0,10
+topology2,HVRT,a,12,0,2,2,2,0,10
+topology2,HVRT,ab,12,0,2,2,2,0,10
+topology2,HVRT,balanced,12,0,4,4,4,0,8
+topology2,LVRT,a,12,0,8,8,8,0,4
+topology2,LVRT,ab,12,0,10,10,10,0,2
+topology2,LVRT,balanced,12,0,5,5,5,0,7

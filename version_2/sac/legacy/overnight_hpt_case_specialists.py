@@ -162,7 +162,7 @@ def eval_topology1_grid9000(run_dir: Path, label: str) -> tuple[Score | None, in
         "hpt_eval_scenario_type='steady'; "
         "hpt_eval_case_name='grid_9000V'; "
         "hpt_eval_energy_enable=1.0; "
-        "eval_hpt_v2_sac_single_case;"
+        "run(fullfile(pwd,'evaluators','eval_hpt_v2_sac_single_case.m'));"
     )
     rc = run_cmd(["matlab", "-batch", code], run_dir / "logs" / f"{label}_eval.log", 1800)
     if rc != 0:

@@ -33,3 +33,10 @@ Thumbs.db
 .idea/
 .vscode/
 .codex/
+
+# Local extraction and LaTeX build artifacts
+lab/tmp_*/
+lab/tmp_*.txt
+references/**/extracted_text/
+tex/*.aux
+tex/*.log

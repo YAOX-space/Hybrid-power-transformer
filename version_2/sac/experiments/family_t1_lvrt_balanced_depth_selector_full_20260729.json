@@ -1,0 +1,20 @@
+{
+  "schema": "hpt-family-depth-selector-manifest-v1",
+  "source_manifest": "version_2\\sac\\experiments\\family_t1_lvrt_balanced_matrix_20260728.csv",
+  "out_manifest": "version_2\\sac\\experiments\\family_t1_lvrt_balanced_depth_selector_full_20260729.csv",
+  "rule": "use supportdataset SAC when fault_pu <= 0.875 and duration_s >= 0.080; otherwise seed actor",
+  "seed_model": "data/models/hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger2.zip",
+  "deep_model": "data/models/hpt_t1_lvrt_bal_family_sac_supportdataset_pilot_20260729.zip",
+  "case_count": 19,
+  "deep_branch_count": 7,
+  "seed_branch_count": 12,
+  "deep_cases": [
+    "t1fam_lvrt_bal_selector_train_0850_080ms",
+    "t1fam_lvrt_bal_selector_val_0875_100ms",
+    "t1fam_lvrt_bal_selector_val_0875_120ms",
+    "t1fam_lvrt_bal_selector_hold_0825_120ms",
+    "t1fam_lvrt_bal_selector_hold_0825_160ms",
+    "t1fam_lvrt_bal_selector_hold_0875_120ms",
+    "t1fam_lvrt_bal_selector_hold_0875_160ms"
+  ]
+}

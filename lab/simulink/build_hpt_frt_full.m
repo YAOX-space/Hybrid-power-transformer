@@ -1,17 +1,17 @@
 function build_hpt_frt_full(stage, gridmode)
-% build_hpt_frt_full.m  — reproducible, from-scratch FULL HPT switching model for
+% build_hpt_frt_full.m  - reproducible, from-scratch FULL HPT switching model for
 % standard grid FRT (GB/T), built up in stages and validated at each step.
 %
 %   stage 1 : MV weak grid + MV fault + main transformer (D-Yg) + LV load   (backbone)
-%   stage 2 : + shunt 取能 VSC via Tsh + shared DC bus + conditional chopper + dq control
-%   stage 3 : + series 调控 VSC via Tse (winding2 in series in LV line)
+%   stage 2 : + shunt energy VSC via Tsh + shared DC bus + conditional chopper + dq control
+%   stage 3 : + series regulating VSC via Tse (winding2 in series in LV line)
 %   stage 4 : dual control mode  (Mode10 SAC 4-D action / Mode4 dq dual-loop PI)
 %
 % Real two voltage levels (10 kV MV / 400 V LV).  Specialized Power Systems.
 % Reuses the debugged shunt control (PLL + dq current loop + reactive priority +
 % Vdc outer loop + anti-windup) from build_frt_statcom.m.
 if nargin<1, stage=1; end
-if nargin<2, gridmode='fault'; end   % 'fault'=LVRT (3φ source + fault) ; 'swell'=HVRT (programmable source + series Z)
+if nargin<2, gridmode='fault'; end   % 'fault'=LVRT (3-phase source + fault); 'swell'=HVRT (programmable source + series Z)
 M='hpt_frt_full';
 if bdIsLoaded(M), close_system(M,0); end
 new_system(M); load_system(M);
@@ -21,7 +21,7 @@ f0=50; Ts=20e-6;
 Vmv=10e3; Vlv=400; Srated=400e3;
 p = pu_params();   % SINGLE SOURCE of base values (mirror of src/hpt_frt/common/pu.py); embedded HLC
                    % literals are interpolated from p so there is no second copy of 173.2/326.6.
-% ⚠️ P3 (CHANGE_REPORT): the HLC `Imax` historically = I_pe_rms (173.2) and conflates the pu->amp
+% P3 (CHANGE_REPORT): the HLC `Imax` historically = I_pe_rms (173.2) and conflates the pu->amp
 % SCALE with the converter current LIMIT, while the Simscape dq currents are PEAK amplitudes. The
 % physically-correct command path uses a PEAK scale (p.I_sys_peak) so iq=0.3 system-pu -> 244.9 A
 % peak (=PE full), with a SEPARATE converter limit p.I_conv_max_pu*p.I_sys_peak. Switching to that
@@ -38,14 +38,14 @@ set_param([M '/powergui'],'SimulationMode','Discrete','SampleTime',num2str(Ts));
 
 % ---- MV grid ----
 if strcmp(gridmode,'swell')
-    % HVRT: ideal Programmable Voltage Source (amplitude table → swell) + external series Z (weak grid)
+    % HVRT: ideal Programmable Voltage Source (amplitude table to swell) + external series Z (weak grid)
     add_block('powerlib/Electrical Sources/Three-Phase Programmable Voltage Source',[M '/Grid'],'Position',pos(60,120,70,90));
     set_param([M '/Grid'],'PositiveSequence',['[' num2str(Vmv*1.125) ' 0 ' num2str(f0) ']'], ...
         'VariationEntity','None');   % amplitude table set per-scenario by the harness
     add_block('powerlib/Elements/Three-Phase Series RLC Branch',[M '/Zg'],'Position',pos(160,120,50,70));
     set_param([M '/Zg'],'BranchType','RL','Resistance',num2str(Rg),'Inductance',num2str(Lg));
 else
-    % LVRT: 3φ source with internal impedance; fault block creates the sag
+    % LVRT: 3-phase source with internal impedance; fault block creates the sag
     add_block('powerlib/Electrical Sources/Three-Phase Source',[M '/Grid'],'Position',pos(120,120,60,90));
     % EMF boosted ~12.5% so pre-fault LV ~ 1.0 pu despite weak-grid droop (calibrate per SCR)
     set_param([M '/Grid'],'Voltage',num2str(Vmv*1.125),'Frequency',num2str(f0),'PhaseAngle','0', ...
@@ -251,7 +251,7 @@ end
 
 % ---- high-level controller: mode 4 dq-traditional / 10 SAC-setpoint / 11 SAC-CLOSED-LOOP ----
 function s = hlc_code()
-p = pu_params();   % subfunctions don't inherit the caller's workspace — re-read the single source
+p = pu_params();   % subfunctions don't inherit the caller's workspace - re-read the single source
 L = {
 '% ===== INTERNAL HLC integer (mi) -> CANONICAL Mode (0-6) map (see CONTROL_MODES.md / controller_modes.m) ====='
 '%   mi==7  -> Mode 1  Tuned fixed-law controller (strongest fixed law)'
@@ -282,7 +282,7 @@ L = {
 '%   mi==364..368 -> Mode 6C forced in-fault target-0.20 feasibility sweep (experiment)'
 '%   mi==369..372 -> Mode 6C forced in-fault target-0.20 fine reactive/Vdc sweep (experiment)'
 '%   mi==4 dq-legacy / mi==5 Song-style / mi==6 Jia-style / mi==13 SAC-MPC hybrid / mi==10 fixed-setpoint'
-'%        = DEPRECATED historical (no canonical 0-6 id; must not appear in papers) — see CONTROL_MODES.md §2.'
+'%        = DEPRECATED historical (no canonical 0-6 id; must not appear in papers) - see CONTROL_MODES.md section 2.'
 '% Internal integers and frt320_m{N}_* filenames kept UNCHANGED for reproducibility; canonical naming in CONTROL_MODES.md.'
 'function [iq_ref, mse_d, mse_q, obs_log] = hlc(mode, Vlv, sac_iq, sac_msed, sac_mseq, Vdc, t, fclass, tf, fdur)'
 '%#codegen'
@@ -307,11 +307,11 @@ sprintf('Imax=%.6g; Vnom=%.6g; Iact=%.6g;', p.I_pe_rms, p.VLN_peak, p.I_action_p
 '    V2a=0.5*(Valpha+Vbd); V2b=0.5*(Vbeta-Vad);'
 '    V2p=sqrt(V1a*V1a+V1b*V1b)/Vnom; V2n=sqrt(V2a*V2a+V2b*V2b)/Vnom;'
 '    af=0.005; vpf=vpf+af*(V2p-vpf); vnf=vnf+af*(V2n-vnf); V2p=vpf; V2n=vnf;'   % match ODE TAU_V2 smoothing -> kill ripple-driven chatter
-'    if V2p>1.08; hvrt_seen=1; hvrt_last=t; end'
+'    if V2p>1.06; hvrt_seen=1; hvrt_last=t; end'
 '    recent_hvrt=0; if hvrt_seen>0.5 && hvrt_last>=0 && (t-hvrt_last)<=0.45 && abs(V2p-1)>0.025; recent_hvrt=1; end'
 '    fc_label=fclass; fc=fclass;'
 '    if mi==11 || mi==12 || mi==13 || mi==14 || mi==17 || (mi>=20 && mi<=208)'   % DE-PRIVILEGED online fault class from measured (V2p,V2n)
-'        if recent_hvrt>0.5 || V2p>1.08; fc=5; elseif V2n>0.05; fc=2; else; fc=1; end'   % mi==15 = ORACLE keeps true fclass (ablation)
+'        if recent_hvrt>0.5 || V2p>1.06; fc=5; elseif V2n>0.05; fc=2; else; fc=1; end'   % mi==15 = ORACLE keeps true fclass (ablation)
 '    end'
 '    piq=0; pmb=0;'   % mode-14 MPC prior (recomputed every 20us from filtered V2p + measured Vdc)
 '    if V2p<0.9'
@@ -332,12 +332,12 @@ sprintf('Imax=%.6g; Vnom=%.6g; Iact=%.6g;', p.I_pe_rms, p.VLN_peak, p.I_action_p
 '    kstep=kstep+int32(1); if kstep>int32(100); kstep=int32(1); end'   % decimate net update to 2ms (training DT); hold between
 '    if kstep==int32(1)'
 '    iqp=la(2); vdev=0.9-V2p;'
-'    if V2p<0.9; idr=1.5*(0.9-V2p); if idr>0.3; idr=0.3; end; elseif V2p>1.08; idr=-1.5*(V2p-1.08); if idr<-0.3; idr=-0.3; end; else; idr=0; end'
+'    if V2p<0.9; idr=1.5*(0.9-V2p); if idr>0.3; idr=0.3; end; elseif V2p>1.06; idr=-1.5*(V2p-1.06); if idr<-0.3; idr=-0.3; end; else; idr=0; end'
 '    iqerr=idr-iqp;'
 '    % DE-PRIVILEGED online detector (audit #3): in_fault + elapsed from MEASURED (V2p,V2n) only,'
 '    % NEVER the true tf/fdur (those input ports are now vestigial). Latches onset, resets on recovery.'
-'    faulted = (V2p<0.9) || (V2p>1.08) || (V2n>0.05) || (recent_hvrt>0.5);'
-'    if faulted; if onset<0; onset=t; end; if V2p>1.08 || recent_hvrt>0.5; esign=1; elseif V2p<0.9; esign=-1; end; else; onset=-1; if V2p>0.97 && V2p<1.03; esign=0; hvrt_seen=0; hvrt_last=-1; end; end'
+'    faulted = (V2p<0.9) || (V2p>1.06) || (V2n>0.05) || (recent_hvrt>0.5);'
+'    if faulted; if onset<0; onset=t; end; if V2p>1.06 || recent_hvrt>0.5; esign=1; elseif V2p<0.9; esign=-1; end; else; onset=-1; if V2p>0.97 && V2p<1.03; esign=0; hvrt_seen=0; hvrt_last=-1; end; end'
 '    infault=double(faulted); elapsed=0; if faulted; elapsed=max(0,t-onset); end'
 '    probs=zeros(6,1);'
 '    if infault>0.5; ci=round(fc)+1; if ci<1; ci=1; elseif ci>6; ci=6; end; probs(ci)=0.92; probs(1)=probs(1)+0.08; else; probs(1)=1; end'
@@ -356,7 +356,7 @@ sprintf('Imax=%.6g; Vnom=%.6g; Iact=%.6g;', p.I_pe_rms, p.VLN_peak, p.I_action_p
 '        elseif oc==2; W=coder.load(''sac_asym_weights.mat'');'
 '        else; W=coder.load(''sac_sym_weights.mat''); end'
 '    else'   % real-time gated 4-expert routing by (V2p, V2n)
-'        if recent_hvrt>0.5 || V2p>1.08'
+'        if recent_hvrt>0.5 || V2p>1.06'
 '            if V2n>0.05; W=coder.load(''sac_hvrt_asym_weights.mat''); else; W=coder.load(''sac_hvrt_sym_weights.mat''); end'
 '        elseif V2n>0.05; W=coder.load(''sac_asym_weights.mat'');'
 '        else; W=coder.load(''sac_sym_weights.mat''); end'
@@ -1017,7 +1017,7 @@ end
 % ---- shunt controller: PLL + dq current loop + reactive priority + Vdc outer loop ----
 % (ported & validated from build_frt_statcom.m)
 function s = ctrl_shunt_code()
-p = pu_params();   % subfunctions don't inherit the caller's workspace — re-read the single source
+p = pu_params();   % subfunctions don't inherit the caller's workspace - re-read the single source
 L = {
 'function [g, gchop, dq] = ctrl(t, Vabc, Ish, Vdc, Vdc_ref, iq_ref, t_fault)'
 '%#codegen'
@@ -1027,7 +1027,7 @@ L = {
 'end'
 'if Vdc > 620; en = 1; end'
 'dt = t - tprev; if dt<0; dt=0; end; if dt>1e-3; dt=1e-3; end; tprev=t;'
-sprintf('w0 = 2*pi*50; Lsh = 3e-3; Imax = %.6g;', p.I_pe_peak)   % audit#3: inner-loop envelope = PHYSICAL converter PEAK (244.95A), NOT I_pe_rms — the HLC commands on the peak/action base, so the rms base here throttled reactive 4.7x
+sprintf('w0 = 2*pi*50; Lsh = 3e-3; Imax = %.6g;', p.I_pe_peak)   % audit#3: inner-loop envelope = PHYSICAL converter PEAK (244.95A), NOT I_pe_rms - the HLC commands on the peak/action base, so the rms base here throttled reactive 4.7x
 'Va=Vabc(1); Vb=Vabc(2); Vc=Vabc(3);'
 'Valpha=(2/3)*(Va-0.5*Vb-0.5*Vc); Vbeta=(2/3)*(sqrt(3)/2)*(Vb-Vc);'
 'Vd =  cos(th)*Valpha + sin(th)*Vbeta;'

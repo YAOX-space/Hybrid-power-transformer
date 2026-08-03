@@ -7,6 +7,11 @@ Primary claim to prove: an RL controller can improve HPT FRT performance over
 traditional dq/PI-style control while preserving current, DC-link, and
 recovery constraints in switch-level Simulink validation.
 
+Current active scope: prove switch-level voltage-survival specialist SAC first,
+then boundary cases where SAC beats the strongest conventional dq baseline.
+Full FRT certification is a later phase after the voltage-survival matrix is
+stable.
+
 Research questions:
 
 1. Does RL beat the strongest available conventional baseline under known

@@ -6,23 +6,24 @@ extends the observation from the early steady-regulation 16-D vector to a
 fault-transition-aware 24-D vector:
 
     obs = [
-        v_lv_rms_pu, v_pos_pu, v_neg_pu, vdc_pu, vdc_err_pu, v_err_pu,
+        v_lv_rms_pu, grid_v_pos_pu, grid_v_neg_pu, vdc_pu, vdc_err_pu, v_err_pu,
         energy_id_pu, energy_iq_pu,
-        last_m_reg_d, last_m_reg_q, last_i_energy_d_ref, last_i_energy_q_ref,
+        last_m_reg_d, last_m_reg_q, last_m_energy_d, last_m_energy_q,
         sag_flag, swell_flag, topology1_flag, topology2_flag,
         fault_active_est, recovery_active_est, t_fault_est_pu, t_recovery_est_pu,
-        v_fault_min_pu, v_fault_max_pu, dv_pos_dt_pu, d_vdc_dt_pu,
+        grid_fault_min_pu, grid_fault_max_pu, d_grid_pos_dt_pu, d_vdc_dt_pu,
     ]
 
-    act = [m_reg_d, m_reg_q, i_energy_d_ref_pu, i_energy_q_ref_pu]
+    act = [m_reg_d, m_reg_q, m_energy_d, m_energy_q]
 
 The fault detector and scenario coverage are intentionally borrowed from the
 older ``src/hpt_frt/device`` FRT SAC design: online measured-voltage detection,
 LVRT/HVRT depth sweeps, asymmetric negative-sequence cases, and recovery
 segments.  The dynamics remain a fast averaged proxy; the switch-level Simulink
-models are still the source of record.  The energy action is intentionally a
-normalized dq current-reference command; the Simulink switch-level controller
-turns it into TPFBVSC PWM modulation through a physical current loop.
+models are still the source of record.  The energy action is the normalized
+energy-bridge dq modulation/current command used by the version-2 full-action
+interface; switch-level validation keeps command and measured response fields
+separate.
 """
 from __future__ import annotations
 
@@ -37,6 +38,8 @@ import gymnasium as gym
 import joblib
 import numpy as np
 from gymnasium import spaces
+
+from .frt_envelope import DEFAULT_SOLVER_TOL_PU, sample_voltage_envelope
 
 
 OBS_DIM_HPT = 24
@@ -70,6 +73,7 @@ class HPTVoltageScenario:
     topology: str
     grid_pu: float
     neg_seq_pu: float = 0.0
+    fault_phase_key: str = "abc"
     duration_s: float = 0.20
     load_pu: float = 1.0
     category: str = "steady"
@@ -95,8 +99,8 @@ class HPTVoltageEnvConfig:
     energy_limit: float = 0.95
     reg_d_limit: float = 0.80
     reg_q_limit: float = 0.40
-    energy_d_limit: float = 0.40
-    energy_q_limit: float = 0.20
+    energy_d_limit: float = 0.95
+    energy_q_limit: float = 0.95
     v_tau: float = 0.012
     vdc_tau: float = 0.018
     use_switch_calibration: bool = True
@@ -139,8 +143,24 @@ class HPTVoltageEnvConfig:
     grid_current_reward_weight: float = 50.0
     grid_wrong_sign_reward_weight: float = 8.0
     voltage_wrong_sign_reward_weight: float = 80.0
+    vdc_soft_reward_weight: float = 55.0
+    vdc_bounds_reward_weight: float = 0.0
+    vdc_margin_reward_weight: float = 0.0
+    vdc_margin_pu: float = 0.05
+    grid_current_margin_reward_weight: float = 0.0
+    grid_current_margin_pu: float = 0.05
+    lv_margin_reward_weight: float = 0.0
+    lv_margin_pu: float = 0.02
+    proxy_vdc_reward_downshift_pu: float = 0.0
+    proxy_grid_current_reward_upshift_pu: float = 0.0
+    envelope_reward_weight: float = 260.0
+    envelope_terminal: bool = False
+    envelope_tolerance_pu: float = DEFAULT_SOLVER_TOL_PU
+    fault_settle_s: float = 0.0
     calibrated_survival_reward_weight: float = 140.0
     calibration_ood_reward_weight: float = 220.0
+    calibration_ood_violation_reward_cap: float = 4.0
+    reward_scale: float = 1.0
     action_projection_enable: bool = False
     safety_classifier_path: str = ""
     safety_penalty_weight: float = 8.0
@@ -409,11 +429,24 @@ def _neg_seq_for_fault(fault_type: str, target: float) -> float:
     depth = abs(1.0 - target)
     if fault_type in {"1ph_g", "swell_1ph"}:
         return min(0.18, 0.33 * depth)
-    if fault_type == "2ph":
+    if fault_type in {"2ph", "swell_2ph"}:
         return min(0.14, 0.25 * depth)
     if fault_type == "2ph_g":
         return min(0.16, 0.28 * depth)
     return 0.0
+
+
+def _phase_key_for_fault_type(fault_type: str) -> str:
+    ft = str(fault_type).lower()
+    if ft in {"1ph_g", "swell_1ph", "a_phase", "a_lvrt", "a_hvrt"}:
+        return "a"
+    if ft in {"2ph", "2ph_g", "ab_phase", "ab_lvrt", "ab_hvrt"}:
+        return "ab"
+    if ft in {"bc_phase", "bc_lvrt", "bc_hvrt"}:
+        return "bc"
+    if ft in {"ca_phase", "ca_lvrt", "ca_hvrt"}:
+        return "ca"
+    return "abc"
 
 
 def _finite_or_none(value: float | None) -> float | None:
@@ -488,6 +521,7 @@ def default_hpt_voltage_scenarios() -> list[HPTVoltageScenario]:
                                 topology=topology,
                                 grid_pu=target,
                                 neg_seq_pu=_neg_seq_for_fault(fault_type, target),
+                                fault_phase_key=_phase_key_for_fault_type(fault_type),
                                 duration_s=0.08 + duration + 0.16,
                                 load_pu=load_pu,
                                 category="LVRT",
@@ -507,6 +541,7 @@ def default_hpt_voltage_scenarios() -> list[HPTVoltageScenario]:
                                 topology=topology,
                                 grid_pu=target,
                                 neg_seq_pu=_neg_seq_for_fault(fault_type, target),
+                                fault_phase_key=_phase_key_for_fault_type(fault_type),
                                 duration_s=0.08 + duration + 0.16,
                                 load_pu=load_pu,
                                 category="HVRT",
@@ -567,10 +602,13 @@ class HPTOnlineFaultDetector:
             self.v_fault_max = max(self.v_fault_max, float(v_pos))
             return
 
-        if self.fault_active:
+        if self.fault_active and normal_band:
             self.fault_active = False
             self.recovery_active = True
             self.clear_t = float(t)
+            return
+
+        if self.fault_active:
             return
 
         if self.recovery_active and normal_band and (t - self.clear_t) >= cfg.recovery_hold_s:
@@ -580,8 +618,8 @@ class HPTOnlineFaultDetector:
 
     def features(self, t: float) -> tuple[float, float, float, float, float, float, float, float]:
         cfg = self.cfg
-        t_fault = (t - self.onset_t) if self.fault_active else 0.0
         t_recovery = (t - self.clear_t) if self.recovery_active else 0.0
+        t_fault = (t - self.onset_t) if self.fault_active else 0.0
         return (
             float(self.fault_active),
             float(self.recovery_active),
@@ -654,6 +692,12 @@ class HPTVoltageSACEnv(gym.Env):
         self.grid_iq_shortfall_pu = 0.0
         self.grid_reactive_wrong_sign = False
         self.grid_current_peak_pu = 0.0
+        self.envelope_violation_max_pu = 0.0
+        self.envelope_violation_duration_s = 0.0
+        self.fault_band_violation_max_pu = 0.0
+        self.fault_band_violation_duration_s = 0.0
+        self.recovery_violation_max_pu = 0.0
+        self.recovery_violation_duration_s = 0.0
         self._calibrated_metric_cache.clear()
         self._detector.reset()
 
@@ -735,12 +779,39 @@ class HPTVoltageSACEnv(gym.Env):
             return float(cal.get("vdc_reg_abs_cost", self.config.reg_dc_cost))
         return self.config.reg_dc_cost
 
+    def _filtered_fault_rows(self, table_name: str) -> list[dict]:
+        """Return switch-calibration rows for the active fault category/duration."""
+
+        cal = self._topology_calibration()
+        if not cal:
+            return []
+        rows = list(cal.get(table_name, []))
+        if not rows or self._sc.category == "steady":
+            return rows
+        category = str(self._sc.category).upper()
+        rows = [
+            row
+            for row in rows
+            if str(row.get("category", category)).upper() == category
+            and self._row_matches_fault_duration(row)
+        ]
+        if any("fault_phase_key" in row for row in rows):
+            phase = str(getattr(self._sc, "fault_phase_key", "abc") or "abc").lower()
+            phase_rows = [
+                row
+                for row in rows
+                if str(row.get("fault_phase_key", "abc")).lower() == phase
+            ]
+            if phase_rows:
+                return phase_rows
+        return rows
+
     def _calibrated_lv_target(self, grid_pu: float, reg_d: float, reg_q: float = 0.0) -> float | None:
         cal = self._topology_calibration()
         table: list[dict] = []
         if cal:
             if self._sc.category != "steady":
-                reg_table = cal.get("fault_reg_response_table", [])
+                reg_table = self._filtered_fault_rows("fault_reg_response_table")
                 reg_d_key = _axis_key(reg_table, "cmd_m_reg_d", "reg_d_mean")
                 reg_q_key = _axis_key(reg_table, "cmd_m_reg_q", "reg_q_mean")
                 value = _interp_grid_axes_table(
@@ -752,7 +823,7 @@ class HPTVoltageSACEnv(gym.Env):
                 )
                 if value is not None:
                     return value
-                table = cal.get("fault_response_table", [])
+                table = self._filtered_fault_rows("fault_response_table")
             if not table:
                 table = cal.get("response_table", [])
         return _interp_response_table(table, grid_pu, reg_d, "lv_pu_mean")
@@ -762,7 +833,7 @@ class HPTVoltageSACEnv(gym.Env):
         table: list[dict] = []
         if cal:
             if self._sc.category != "steady":
-                reg_table = cal.get("fault_reg_response_table", [])
+                reg_table = self._filtered_fault_rows("fault_reg_response_table")
                 reg_d_key = _axis_key(reg_table, "cmd_m_reg_d", "reg_d_mean")
                 reg_q_key = _axis_key(reg_table, "cmd_m_reg_q", "reg_q_mean")
                 value = _interp_grid_axes_table(
@@ -774,7 +845,7 @@ class HPTVoltageSACEnv(gym.Env):
                 )
                 if value is not None:
                     return value
-                table = cal.get("fault_response_table", [])
+                table = self._filtered_fault_rows("fault_response_table")
             if not table:
                 table = cal.get("response_table", [])
         return _interp_response_table(table, grid_pu, reg_d, "vdc_pu_mean")
@@ -783,6 +854,7 @@ class HPTVoltageSACEnv(gym.Env):
         self,
         grid_pu: float,
         reg_d: float,
+        reg_q: float,
         energy_d: float,
         energy_q: float,
         value_key: str,
@@ -790,16 +862,17 @@ class HPTVoltageSACEnv(gym.Env):
         cal = self._topology_calibration()
         if not cal or self._sc.category == "steady":
             return None
-        table = cal.get("fault_joint_response_table", [])
+        table = self._filtered_fault_rows("fault_joint_response_table")
         return _interp_grid_axes_table(
             table,
             grid_pu,
             [
                 _axis_key(table, "cmd_m_reg_d", "reg_d_mean"),
+                _axis_key(table, "cmd_m_reg_q", "reg_q_mean"),
                 _axis_key(table, "cmd_m_energy_d", "energy_d_mean"),
                 _axis_key(table, "cmd_m_energy_q", "energy_q_mean"),
             ],
-            [reg_d, energy_d, energy_q],
+            [reg_d, reg_q, energy_d, energy_q],
             value_key,
         )
 
@@ -814,27 +887,16 @@ class HPTVoltageSACEnv(gym.Env):
         table = []
         if cal:
             if self._sc.category != "steady":
-                table = cal.get("fault_energy_response_table", [])
+                table = self._filtered_fault_rows("fault_energy_response_table")
             if not table:
                 table = cal.get("energy_response_table", [])
         return _interp_energy_response(table, grid_pu, energy_d, energy_q, value_key)
 
     def _duration_filtered_conventional_rows(self) -> list[dict]:
-        cal = self._topology_calibration()
-        rows = list(cal.get("fault_conventional_response_table", []))
+        rows = self._filtered_fault_rows("fault_conventional_response_table")
         if not rows or self._sc.category == "steady":
             return []
-        category = str(self._sc.category).upper()
-        duration = self._fault_duration()
-        out: list[dict] = []
-        for row in rows:
-            if str(row.get("category", "")).upper() != category:
-                continue
-            if _has_numeric_key(row, "fault_duration_s"):
-                if abs(float(row["fault_duration_s"]) - duration) > 1e-6:
-                    continue
-            out.append(row)
-        return out
+        return rows
 
     def _conventional_teacher_action(self, grid_pu: float) -> np.ndarray | None:
         rows = self._duration_filtered_conventional_rows()
@@ -946,6 +1008,7 @@ class HPTVoltageSACEnv(gym.Env):
         self,
         grid_pu: float,
         reg_d: float,
+        reg_q: float,
         energy_d: float,
         energy_q: float,
         value_key: str,
@@ -955,9 +1018,8 @@ class HPTVoltageSACEnv(gym.Env):
         cal = self._topology_calibration()
         rows = [
             row
-            for row in cal.get("fault_joint_response_table", [])
+            for row in self._filtered_fault_rows("fault_joint_response_table")
             if str(row.get("category", "")).upper() == str(self._sc.category).upper()
-            and self._row_matches_fault_duration(row)
             and self._row_is_voltage_survival_failure(row)
             and _has_numeric_key(row, value_key)
         ]
@@ -972,9 +1034,11 @@ class HPTVoltageSACEnv(gym.Env):
 
         grid_span = span("grid_pu", 0.03)
         reg_d_key = _axis_key(rows, "cmd_m_reg_d", "reg_d_mean")
+        reg_q_key = _axis_key(rows, "cmd_m_reg_q", "reg_q_mean")
         energy_d_key = _axis_key(rows, "cmd_m_energy_d", "energy_d_mean")
         energy_q_key = _axis_key(rows, "cmd_m_energy_q", "energy_q_mean")
         reg_d_span = span(reg_d_key, 0.10)
+        reg_q_span = span(reg_q_key, 0.05)
         energy_d_span = span(energy_d_key, 0.06)
         energy_q_span = span(energy_q_key, 0.04)
 
@@ -985,6 +1049,7 @@ class HPTVoltageSACEnv(gym.Env):
                 [
                     (float(grid_pu) - _row_numeric(row, "grid_pu", "fault_pu")) / grid_span,
                     (float(reg_d) - _row_numeric(row, reg_d_key, "reg_d_mean")) / reg_d_span,
+                    (float(reg_q) - _row_numeric(row, reg_q_key, "reg_q_mean")) / reg_q_span,
                     (float(energy_d) - _row_numeric(row, energy_d_key, "energy_d_mean")) / energy_d_span,
                     (float(energy_q) - _row_numeric(row, energy_q_key, "energy_q_mean")) / energy_q_span,
                 ],
@@ -1035,7 +1100,7 @@ class HPTVoltageSACEnv(gym.Env):
         def from_baseline() -> float | None:
             return _finite_or_none(
                 _interp_grid_axes_table(
-                    cal.get("fault_baseline_table", []),
+                    self._filtered_fault_rows("fault_baseline_table"),
                     grid_pu,
                     [],
                     [],
@@ -1052,7 +1117,7 @@ class HPTVoltageSACEnv(gym.Env):
             return _finite_or_none(float(row[value_key]))
 
         def from_reg() -> float | None:
-            table = cal.get("fault_reg_response_table", [])
+            table = self._filtered_fault_rows("fault_reg_response_table")
             value = _interp_grid_axes_table(
                 table,
                 grid_pu,
@@ -1068,7 +1133,7 @@ class HPTVoltageSACEnv(gym.Env):
                 return value
             return _finite_or_none(
                 _interp_response_table(
-                    cal.get("fault_response_table", []),
+                    self._filtered_fault_rows("fault_response_table"),
                     grid_pu,
                     reg_d,
                     value_key,
@@ -1078,7 +1143,7 @@ class HPTVoltageSACEnv(gym.Env):
         def from_energy() -> float | None:
             return _finite_or_none(
                 _interp_energy_response(
-                    cal.get("fault_energy_response_table", []),
+                    self._filtered_fault_rows("fault_energy_response_table"),
                     grid_pu,
                     energy_d,
                     energy_q,
@@ -1087,7 +1152,7 @@ class HPTVoltageSACEnv(gym.Env):
             )
 
         def from_joint() -> float | None:
-            table = cal.get("fault_joint_response_table", [])
+            table = self._filtered_fault_rows("fault_joint_response_table")
             if value_key in {
                 "lv_pu_mean",
                 "lv_recovery_pu_mean",
@@ -1102,25 +1167,47 @@ class HPTVoltageSACEnv(gym.Env):
                 failed_row = self._nearest_failed_joint_fault_row(
                     grid_pu,
                     reg_d,
+                    reg_q,
                     energy_d,
                     energy_q,
                     value_key,
                 )
                 if failed_row is not None:
                     return _finite_or_none(float(failed_row[value_key]))
-            return _finite_or_none(
+            interpolated = _finite_or_none(
                 _interp_grid_axes_table(
                     table,
                     grid_pu,
                     [
                         _axis_key(table, "cmd_m_reg_d", "reg_d_mean"),
+                        _axis_key(table, "cmd_m_reg_q", "reg_q_mean"),
                         _axis_key(table, "cmd_m_energy_d", "energy_d_mean"),
                         _axis_key(table, "cmd_m_energy_q", "energy_q_mean"),
                     ],
-                    [reg_d, energy_d, energy_q],
+                    [reg_d, reg_q, energy_d, energy_q],
                     value_key,
                 )
             )
+            if interpolated is not None:
+                return interpolated
+            # Sparse joint-action matrices can leave holes inside the per-axis
+            # min/max box.  Returning None makes those holes look artificially
+            # cheap to SAC because no calibrated constraint cost is applied.
+            # Use the nearest known failed response as a conservative fallback;
+            # the support-distance penalty still discourages leaving sampled
+            # joint-action neighborhoods.
+            failed_row = self._nearest_failed_joint_fault_row(
+                grid_pu,
+                reg_d,
+                reg_q,
+                energy_d,
+                energy_q,
+                value_key,
+                max_distance=float("inf"),
+            )
+            if failed_row is not None:
+                return _finite_or_none(float(failed_row[value_key]))
+            return None
 
         if mode == "baseline":
             value = from_baseline()
@@ -1178,15 +1265,17 @@ class HPTVoltageSACEnv(gym.Env):
             return 0.0
 
         ranges: dict[str, list[float]] = {}
+        joint_rows: list[dict] = []
         for table_name in (
             "fault_reg_response_table",
             "fault_energy_response_table",
             "fault_joint_response_table",
             "fault_conventional_response_table",
         ):
-            for row in cal.get(table_name, []):
-                if "category" in row and str(row.get("category", "")).upper() != str(self._sc.category).upper():
-                    continue
+            table_rows = self._filtered_fault_rows(table_name)
+            if table_name in {"fault_joint_response_table", "fault_conventional_response_table"}:
+                joint_rows.extend(table_rows)
+            for row in table_rows:
                 for key in (
                     "cmd_m_reg_d",
                     "cmd_m_reg_q",
@@ -1206,7 +1295,10 @@ class HPTVoltageSACEnv(gym.Env):
                 return 0.0
             lo = min(vals)
             hi = max(vals)
-            span = max(hi - lo, 1e-6)
+            raw_span = hi - lo
+            if raw_span <= 1e-6 and abs(value - lo) <= 1e-3:
+                return 0.0
+            span = max(raw_span, 1e-6)
             if value < lo - _INTERP_EPS:
                 return (lo - value) / span
             if value > hi + _INTERP_EPS:
@@ -1219,7 +1311,36 @@ class HPTVoltageSACEnv(gym.Env):
             excess("cmd_m_energy_d" if ranges.get("cmd_m_energy_d") else "energy_d_mean", float(energy_d)),
             excess("cmd_m_energy_q" if ranges.get("cmd_m_energy_q") else "energy_q_mean", float(energy_q)),
         ]
-        return float(np.linalg.norm(np.asarray(terms, dtype=float)))
+        box_violation = float(np.linalg.norm(np.asarray(terms, dtype=float)))
+
+        # Axis-aligned ranges are insufficient for sparse full-action data: a
+        # cross-combination may lie inside every axis range while being far
+        # from every action that was actually run in Simulink.  Measure the
+        # distance to the sampled 4-D joint-action cloud as well.
+        action_keys = (
+            ("cmd_m_reg_d", "reg_d_mean"),
+            ("cmd_m_reg_q", "reg_q_mean"),
+            ("cmd_m_energy_d", "energy_d_mean"),
+            ("cmd_m_energy_q", "energy_q_mean"),
+        )
+        samples: list[list[float]] = []
+        for row in joint_rows:
+            values = [_row_numeric(row, primary, fallback) for primary, fallback in action_keys]
+            if np.all(np.isfinite(values)):
+                samples.append(values)
+        if not samples:
+            return box_violation
+
+        sample_array = np.asarray(samples, dtype=float)
+        query = np.asarray([reg_d, reg_q, energy_d, energy_q], dtype=float)
+        spans = np.maximum(
+            np.ptp(sample_array, axis=0),
+            np.asarray([0.08, 0.05, 0.08, 0.10], dtype=float),
+        )
+        nearest_distance = float(np.min(np.linalg.norm((sample_array - query) / spans, axis=1)))
+        joint_radius = 0.35
+        joint_violation = max(0.0, nearest_distance - joint_radius)
+        return max(box_violation, joint_violation)
 
     def _grid_iq_reference(self, vpos_pu: float) -> float:
         limit = float(self.config.grid_reactive_iq_limit_pu)
@@ -1322,6 +1443,7 @@ class HPTVoltageSACEnv(gym.Env):
 
     def _obs(self) -> np.ndarray:
         cfg = self.config
+        grid_now, neg_now = self._grid_profile(self.t)
         v_err = 1.0 - self.v_lv
         vdc_err = 1.0 - self.vdc
         topology1_flag = 1.0 if self._topology_name() == "topology1" else 0.0
@@ -1329,16 +1451,16 @@ class HPTVoltageSACEnv(gym.Env):
         obs = np.array(
             [
                 self.v_lv,
-                self.v_pos,
-                self.v_neg,
+                grid_now,
+                neg_now,
                 self.vdc,
                 vdc_err,
                 v_err,
                 self.energy_id,
                 self.energy_iq,
                 *self._last_action,
-                float(self.v_pos < cfg.sag_entry),
-                float(self.v_pos > cfg.swell_entry),
+                float(grid_now < cfg.sag_entry),
+                float(grid_now > cfg.swell_entry),
                 topology1_flag,
                 topology2_flag,
                 *self._detector.features(self.t),
@@ -1405,9 +1527,10 @@ class HPTVoltageSACEnv(gym.Env):
     def _project_action(self, action: np.ndarray) -> np.ndarray:
         projected = np.asarray(action, dtype=np.float32).copy()
         cfg = self.config
-        if (self.v_pos < cfg.sag_entry or self.v_lv < 0.98) and projected[0] < 0.0:
+        grid_now, _ = self._grid_profile(self.t)
+        if (grid_now < cfg.sag_entry or self.v_lv < 0.98) and projected[0] < 0.0:
             projected[0] = 0.0
-        elif self.v_pos > cfg.swell_entry and projected[0] > 0.0:
+        elif grid_now > cfg.swell_entry and projected[0] > 0.0:
             projected[0] = 0.0
 
         if self.vdc < 0.95:
@@ -1500,6 +1623,10 @@ class HPTVoltageSACEnv(gym.Env):
             if calibrated_fault_case
             else 0.0
         )
+        support_violation_for_reward = min(
+            float(support_violation),
+            float(cfg.calibration_ood_violation_reward_cap),
+        )
         calibrated_lv = None
         lv_mode_exact = False
         if calibrated_fault_case:
@@ -1519,12 +1646,12 @@ class HPTVoltageSACEnv(gym.Env):
             calibrated_lv = base_lv + reg_effect + q_effect
         if not lv_mode_exact:
             joint_lv = self._calibrated_joint_target(
-                lookup_grid, m_reg_d, m_energy_d, m_energy_q, "lv_pu_mean"
+                lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "lv_pu_mean"
             )
             joint_lv_zero = self._calibrated_joint_target(
-                lookup_grid, m_reg_d, 0.0, 0.0, "lv_pu_mean"
+                lookup_grid, m_reg_d, m_reg_q, 0.0, 0.0, "lv_pu_mean"
             )
-            if joint_lv is not None and abs(m_reg_q) <= 1e-6:
+            if joint_lv is not None:
                 calibrated_lv = joint_lv
             elif joint_lv is not None and joint_lv_zero is not None:
                 calibrated_lv += joint_lv - joint_lv_zero
@@ -1599,17 +1726,17 @@ class HPTVoltageSACEnv(gym.Env):
             energy_vdc_delta = 0.0
         else:
             joint_vdc = self._calibrated_joint_target(
-                lookup_grid, m_reg_d, m_energy_d, m_energy_q, "vdc_pu_mean"
+                lookup_grid, m_reg_d, m_reg_q, m_energy_d, m_energy_q, "vdc_pu_mean"
             )
             joint_vdc_zero = self._calibrated_joint_target(
-                lookup_grid, m_reg_d, 0.0, 0.0, "vdc_pu_mean"
+                lookup_grid, m_reg_d, m_reg_q, 0.0, 0.0, "vdc_pu_mean"
             )
-            if joint_vdc is not None and abs(m_reg_q) <= 1e-6:
-                energy_direct_scale = 0.0
-                energy_vdc_delta = joint_vdc - calibrated_vdc
-            elif joint_vdc is not None and joint_vdc_zero is not None:
+            if joint_vdc is not None and joint_vdc_zero is not None:
                 energy_direct_scale = 0.0
                 energy_vdc_delta = joint_vdc - joint_vdc_zero
+            elif joint_vdc is not None:
+                energy_direct_scale = 0.0
+                energy_vdc_delta = joint_vdc - calibrated_vdc
             else:
                 energy_vdc = self._calibrated_energy_target(lookup_grid, m_energy_d, m_energy_q, "vdc_pu_mean")
                 energy_vdc_zero = self._calibrated_energy_target(lookup_grid, 0.0, 0.0, "vdc_pu_mean")
@@ -1661,10 +1788,90 @@ class HPTVoltageSACEnv(gym.Env):
         detector_grid, detector_neg = self._grid_profile(self.t)
         self._detector.update(self.t, detector_grid, detector_neg, self.vdc, cfg.dt)
 
+        if self._sc.category != "steady":
+            envelope = sample_voltage_envelope(
+                t_s=self.t,
+                lv_pu=self.v_lv,
+                fault_pu=float(self._sc.grid_pu),
+                fault_start_s=float(self._sc.fault_start_s),
+                fault_clear_s=fault_end,
+                stop_time_s=float(self._sc.duration_s),
+                tolerance_pu=float(cfg.envelope_tolerance_pu),
+                fault_settle_s=float(cfg.fault_settle_s),
+            )
+            envelope_violation = float(envelope["envelope_violation_max_pu"])
+            fault_band_violation = float(envelope["fault_band_violation_max_pu"])
+            recovery_violation = float(envelope["recovery_violation_max_pu"])
+            if calibrated_fault_case:
+                calibrated_envelope_violation = self._calibrated_fault_metric(
+                    lookup_grid,
+                    m_reg_d,
+                    m_reg_q,
+                    m_energy_d,
+                    m_energy_q,
+                    "envelope_violation_max_pu",
+                )
+                calibrated_fault_band_violation = self._calibrated_fault_metric(
+                    lookup_grid,
+                    m_reg_d,
+                    m_reg_q,
+                    m_energy_d,
+                    m_energy_q,
+                    "fault_lv_band_violation_max_pu",
+                )
+                calibrated_recovery_violation = self._calibrated_fault_metric(
+                    lookup_grid,
+                    m_reg_d,
+                    m_reg_q,
+                    m_energy_d,
+                    m_energy_q,
+                    "recovery_violation_max_pu",
+                )
+                if calibrated_envelope_violation is not None:
+                    envelope_violation = max(envelope_violation, float(calibrated_envelope_violation))
+                if calibrated_fault_band_violation is not None:
+                    fault_band_violation = max(
+                        fault_band_violation,
+                        float(calibrated_fault_band_violation),
+                    )
+                if calibrated_recovery_violation is not None:
+                    recovery_violation = max(recovery_violation, float(calibrated_recovery_violation))
+            self.envelope_violation_max_pu = max(
+                self.envelope_violation_max_pu,
+                envelope_violation,
+            )
+            self.fault_band_violation_max_pu = max(
+                self.fault_band_violation_max_pu,
+                fault_band_violation,
+            )
+            self.recovery_violation_max_pu = max(
+                self.recovery_violation_max_pu,
+                recovery_violation,
+            )
+            if envelope_violation > cfg.envelope_tolerance_pu:
+                self.envelope_violation_duration_s += cfg.dt
+            if fault_band_violation > cfg.envelope_tolerance_pu:
+                self.fault_band_violation_duration_s += cfg.dt
+            if recovery_violation > cfg.envelope_tolerance_pu:
+                self.recovery_violation_duration_s += cfg.dt
+        else:
+            envelope = {
+                "envelope_violation_max_pu": 0.0,
+                "fault_band_violation_max_pu": 0.0,
+                "recovery_violation_max_pu": 0.0,
+                "timestep_envelope_pass": True,
+                "category": "steady",
+            }
+            envelope_violation = 0.0
+            fault_band_violation = 0.0
+            recovery_violation = 0.0
+
         voltage_err = self.v_lv - 1.0
         unbalance = self.v_neg
         vdc_low_limit = 0.95 if self._calibration else 0.82
         vdc_soft = max(0.0, vdc_low_limit - self.vdc) + max(0.0, self.vdc - 1.12)
+        vdc_bounds_state_violation = max(0.0, 650.0 / cfg.vdc_ref - self.vdc) ** 2
+        vdc_bounds_state_violation += max(0.0, self.vdc - 1000.0 / cfg.vdc_ref) ** 2
         reg_mag = float(np.hypot(m_reg_d, m_reg_q))
         energy_mag = float(np.hypot(m_energy_d, m_energy_q))
         energy_weight = 0.60 if self._calibration else 0.08
@@ -1685,8 +1892,8 @@ class HPTVoltageSACEnv(gym.Env):
         )
         safety_gap = max(0.0, safety_threshold - safe_probability)
         wrong_sign = float(
-            (self.v_pos < cfg.sag_entry and m_reg_d < -1e-4)
-            or (self.v_pos > cfg.swell_entry and m_reg_d > 1e-4)
+            (grid_now < cfg.sag_entry and m_reg_d < -1e-4)
+            or (grid_now > cfg.swell_entry and m_reg_d > 1e-4)
         )
         topology2_dynamic = float(self._topology_name() == "topology2" and fault_or_recovery > 0.5)
         topology2_reg_excess = max(0.0, abs(m_reg_d) - cfg.topology2_dynamic_soft_reg_limit)
@@ -1706,8 +1913,12 @@ class HPTVoltageSACEnv(gym.Env):
         reactive_assessed = bool(reactive_window_ready and reactive_demand)
         reactive_shortfall = float(grid_metrics["shortfall"]) if reactive_assessed else 0.0
         reactive_wrong_sign = float(bool(grid_metrics["wrong_sign"]) and reactive_assessed)
+        grid_current_peak_for_reward = (
+            float(grid_metrics["current_peak"])
+            + float(cfg.proxy_grid_current_reward_upshift_pu)
+        )
         grid_current_violation = max(
-            0.0, float(grid_metrics["current_peak"]) - cfg.grid_current_limit_pu
+            0.0, grid_current_peak_for_reward - cfg.grid_current_limit_pu
         )
         lv_fault_for_bounds = self.v_lv
         lv_recovery_for_bounds = (
@@ -1735,6 +1946,18 @@ class HPTVoltageSACEnv(gym.Env):
             if calibrated_vdc_max is not None
             else self.vdc
         )
+        vdc_min_for_bounds = vdc_min_for_bounds - float(cfg.proxy_vdc_reward_downshift_pu)
+        vdc_max_for_bounds = vdc_max_for_bounds - float(cfg.proxy_vdc_reward_downshift_pu)
+        vdc_bounds_metric_violation = max(
+            0.0, 650.0 / cfg.vdc_ref - vdc_min_for_bounds
+        ) ** 2
+        vdc_bounds_metric_violation += max(
+            0.0, vdc_max_for_bounds - 1000.0 / cfg.vdc_ref
+        ) ** 2
+        vdc_bounds_violation = max(
+            float(vdc_bounds_state_violation),
+            float(vdc_bounds_metric_violation),
+        )
         calibrated_survival_violation = 0.0
         if calibrated_fault_case:
             calibrated_survival_violation += max(0.0, 176.0 / cfg.v_ref_phase_rms - lv_fault_for_bounds) ** 2
@@ -1745,17 +1968,71 @@ class HPTVoltageSACEnv(gym.Env):
             calibrated_survival_violation += max(0.0, lv_peak_for_bounds - 235.0 / cfg.v_ref_phase_rms) ** 2
             calibrated_survival_violation += max(0.0, 650.0 / cfg.vdc_ref - vdc_min_for_bounds) ** 2
             calibrated_survival_violation += max(0.0, vdc_max_for_bounds - 1000.0 / cfg.vdc_ref) ** 2
+        vdc_margin_violation = 0.0
+        if cfg.vdc_margin_pu > 0.0:
+            vdc_low_gate = 650.0 / cfg.vdc_ref
+            vdc_high_gate = 1000.0 / cfg.vdc_ref
+            vdc_margin_violation += max(
+                0.0, vdc_low_gate + cfg.vdc_margin_pu - vdc_min_for_bounds
+            ) ** 2
+            vdc_margin_violation += max(
+                0.0, vdc_max_for_bounds - (vdc_high_gate - cfg.vdc_margin_pu)
+            ) ** 2
+        grid_current_margin_violation = 0.0
+        if cfg.grid_current_margin_pu > 0.0:
+            current_margin_limit = max(
+                0.0, cfg.grid_current_limit_pu - cfg.grid_current_margin_pu
+            )
+            grid_current_margin_violation = max(
+                0.0, grid_current_peak_for_reward - current_margin_limit
+            ) ** 2
+        lv_margin_violation = 0.0
+        if calibrated_fault_case and cfg.lv_margin_pu > 0.0:
+            lv_fault_low = 176.0 / cfg.v_ref_phase_rms
+            lv_fault_high = 238.0 / cfg.v_ref_phase_rms
+            lv_recovery_low = 180.0 / cfg.v_ref_phase_rms
+            lv_recovery_high = 235.0 / cfg.v_ref_phase_rms
+            margin = float(cfg.lv_margin_pu)
+            lv_margin_violation += max(
+                0.0, lv_fault_low + margin - lv_fault_for_bounds
+            ) ** 2
+            lv_margin_violation += max(
+                0.0, lv_fault_for_bounds - (lv_fault_high - margin)
+            ) ** 2
+            lv_margin_violation += max(
+                0.0, lv_recovery_low + margin - lv_recovery_for_bounds
+            ) ** 2
+            lv_margin_violation += max(
+                0.0, lv_recovery_for_bounds - (lv_recovery_high - margin)
+            ) ** 2
+            lv_margin_violation += max(
+                0.0, lv_recovery_low + margin - lv_min_for_bounds
+            ) ** 2
+            lv_margin_violation += max(
+                0.0, lv_peak_for_bounds - (lv_recovery_high - margin)
+            ) ** 2
         reward = (
             -(90.0 + 35.0 * fault_or_recovery) * voltage_err * voltage_err
             -45.0 * unbalance * unbalance
-            -55.0 * vdc_soft * vdc_soft
+            -cfg.vdc_soft_reward_weight * vdc_soft * vdc_soft
+            -cfg.vdc_bounds_reward_weight * vdc_bounds_violation
+            -cfg.vdc_margin_reward_weight * vdc_margin_violation
             -cfg.voltage_wrong_sign_reward_weight * wrong_sign
+            -cfg.envelope_reward_weight * (
+                envelope_violation * envelope_violation
+                + fault_band_violation * fault_band_violation
+                + recovery_violation * recovery_violation
+            )
+            -cfg.lv_margin_reward_weight * lv_margin_violation
             -topology2_dynamic_stress
             -cfg.calibrated_survival_reward_weight * calibrated_survival_violation
-            -cfg.calibration_ood_reward_weight * support_violation * support_violation
+            -cfg.calibration_ood_reward_weight
+            * support_violation_for_reward
+            * support_violation_for_reward
             -cfg.grid_reactive_reward_weight * reactive_shortfall
             -cfg.grid_wrong_sign_reward_weight * reactive_wrong_sign
             -cfg.grid_current_reward_weight * grid_current_violation
+            -cfg.grid_current_margin_reward_weight * grid_current_margin_violation
             -0.20 * reg_mag * reg_mag
             -energy_weight * energy_mag * energy_mag
             -cfg.action_slew_weight * slew * slew
@@ -1768,6 +2045,9 @@ class HPTVoltageSACEnv(gym.Env):
         if self._detector.recovery_active and 0.97 <= self.v_lv <= 1.03:
             reward += 0.5
 
+        reward_unscaled = float(reward)
+        reward = float(cfg.reward_scale) * reward_unscaled
+
         self._last_action = action.copy()
         if calibrated_fault_case:
             terminated = False
@@ -1777,7 +2057,43 @@ class HPTVoltageSACEnv(gym.Env):
             )
         if cfg.safety_unsafe_terminal and safety_unsafe:
             terminated = True
+        if (
+            cfg.envelope_terminal
+            and self._sc.category != "steady"
+            and (
+                self.envelope_violation_max_pu > cfg.envelope_tolerance_pu
+                or self.fault_band_violation_max_pu > cfg.envelope_tolerance_pu
+                or self.recovery_violation_max_pu > cfg.envelope_tolerance_pu
+            )
+        ):
+            terminated = True
         truncated = bool(self.t >= float(self._sc.duration_s))
+        action_max_abs = float(np.max(np.abs(action)))
+        raw_action_max_abs = float(np.max(np.abs(raw_action)))
+        action_limit_violation = max(0.0, action_max_abs - 0.9501)
+        raw_action_delta = raw_action - action
+        projection_delta_norm = float(np.linalg.norm(raw_action_delta))
+        cost_tracking = float(voltage_err * voltage_err)
+        cost_unbalance = float(unbalance * unbalance)
+        cost_vdc_soft = float(vdc_soft * vdc_soft)
+        cost_vdc_bounds = float(vdc_bounds_violation)
+        cost_vdc_margin = float(vdc_margin_violation)
+        cost_envelope = float(
+            envelope_violation * envelope_violation
+            + fault_band_violation * fault_band_violation
+            + recovery_violation * recovery_violation
+        )
+        cost_lv_margin = float(lv_margin_violation)
+        cost_fault_band = float(fault_band_violation * fault_band_violation)
+        cost_recovery = float(recovery_violation * recovery_violation)
+        cost_support = float(support_violation * support_violation)
+        cost_support_for_reward = float(
+            support_violation_for_reward * support_violation_for_reward
+        )
+        cost_safety = float(safety_gap * safety_gap)
+        cost_reg_action = float(reg_mag * reg_mag)
+        cost_energy_action = float(energy_mag * energy_mag)
+        cost_slew = float(slew * slew)
         info = {
             "topology": self._sc.topology,
             "category": self._sc.category,
@@ -1795,6 +2111,7 @@ class HPTVoltageSACEnv(gym.Env):
             "safety_safe_probability": safe_probability,
             "safety_threshold": safety_threshold,
             "safety_unsafe": safety_unsafe,
+            "safety_gap": safety_gap,
             "teacher_m_reg_d": float(teacher_prior[0]),
             "teacher_m_reg_q": float(teacher_prior[1]),
             "teacher_m_energy_d": float(teacher_prior[2]),
@@ -1810,8 +2127,57 @@ class HPTVoltageSACEnv(gym.Env):
             "grid_current_peak_pu": float(grid_metrics["current_peak"]),
             "grid_current_limit_pu": cfg.grid_current_limit_pu,
             "grid_current_limit_violation": grid_current_violation,
+            "grid_current_margin_violation": grid_current_margin_violation,
+            "envelope_violation_pu": envelope_violation,
+            "envelope_violation_max_pu": self.envelope_violation_max_pu,
+            "envelope_violation_duration_s": self.envelope_violation_duration_s,
+            "fault_band_violation_pu": fault_band_violation,
+            "fault_band_violation_max_pu": self.fault_band_violation_max_pu,
+            "fault_band_violation_duration_s": self.fault_band_violation_duration_s,
+            "recovery_violation_pu": recovery_violation,
+            "recovery_violation_max_pu": self.recovery_violation_max_pu,
+            "recovery_violation_duration_s": self.recovery_violation_duration_s,
+            "timestep_envelope_pass": bool(envelope["timestep_envelope_pass"]),
             "calibration_support_violation": support_violation,
+            "calibration_support_violation_for_reward": support_violation_for_reward,
             "calibrated_survival_violation": calibrated_survival_violation,
+            "cost_tracking": cost_tracking,
+            "cost_unbalance": cost_unbalance,
+            "cost_vdc_soft": cost_vdc_soft,
+            "cost_vdc_bounds": cost_vdc_bounds,
+            "cost_vdc_margin": cost_vdc_margin,
+            "cost_wrong_sign": wrong_sign,
+            "cost_envelope": cost_envelope,
+            "cost_lv_margin": cost_lv_margin,
+            "cost_fault_band": cost_fault_band,
+            "cost_recovery": cost_recovery,
+            "cost_topology2_dynamic": topology2_dynamic_stress,
+            "cost_calibrated_survival": calibrated_survival_violation,
+            "cost_support": cost_support,
+            "cost_support_for_reward": cost_support_for_reward,
+            "cost_reactive_shortfall": reactive_shortfall,
+            "cost_reactive_wrong_sign": reactive_wrong_sign,
+            "cost_grid_current": grid_current_violation,
+            "cost_grid_current_margin": grid_current_margin_violation,
+            "cost_reg_action": cost_reg_action,
+            "cost_energy_action": cost_energy_action,
+            "cost_slew": cost_slew,
+            "cost_safety": cost_safety,
+            "cost_teacher_gap": teacher_gap,
+            "cost_action_limit": action_limit_violation,
+            "reward_unscaled": reward_unscaled,
+            "reward_scale": float(cfg.reward_scale),
+            "action_max_abs": action_max_abs,
+            "raw_action_max_abs": raw_action_max_abs,
+            "projection_delta_norm": projection_delta_norm,
+            "raw_m_reg_d": float(raw_action[0]),
+            "raw_m_reg_q": float(raw_action[1]),
+            "raw_m_energy_d": float(raw_action[2]),
+            "raw_m_energy_q": float(raw_action[3]),
+            "effective_m_reg_d": float(action[0]),
+            "effective_m_reg_q": float(action[1]),
+            "effective_m_energy_d": float(action[2]),
+            "effective_m_energy_q": float(action[3]),
             "calibrated_lv_recovery_pu": float(calibrated_lv_recovery)
             if calibrated_lv_recovery is not None
             else float("nan"),

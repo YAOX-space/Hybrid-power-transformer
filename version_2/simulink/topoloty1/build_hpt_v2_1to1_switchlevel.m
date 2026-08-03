@@ -16,6 +16,7 @@ function build_hpt_v2_1to1_switchlevel()
 
 M = 'hpt_v2_1to1_switchlevel';
 if bdIsLoaded(M)
+    set_param(M, 'Dirty', 'off');
     close_system(M, 0);
 end
 new_system(M);
@@ -54,6 +55,8 @@ assignin(mw, 'hpt_m_reg', 0.10);
 assignin(mw, 'hpt_ctrl_Ts', Ts);
 assignin(mw, 'hpt_grid_f0', f0);
 assignin(mw, 'hpt_vdc_ref', 800.0);
+assignin(mw, 'hpt_rchop', Rchop);
+assignin(mw, 'hpt_chopper_threshold', 850.0);
 assignin(mw, 'hpt_vdc_kp', 0.10);
 assignin(mw, 'hpt_vdc_ki', 0.20);
 assignin(mw, 'hpt_energy_id_max', 20.0);
@@ -77,21 +80,42 @@ assignin(mw, 'hpt_sac_enable', 0.0);
 assignin(mw, 'hpt_sac_energy_enable', 0.0);
 assignin(mw, 'hpt_sac_policy_mode', 0.0);
 assignin(mw, 'hpt_sac_actor_select_mode', 0.0);
+assignin(mw, 'hpt_sac_actor_filter_tau', 0.001);
+assignin(mw, 'hpt_sac_gridnorm_startup_s', 0.030);
+assignin(mw, 'hpt_sac_fault_time_norm_s', 0.50);
+assignin(mw, 'hpt_sac_recovery_time_norm_s', 0.50);
+assignin(mw, 'hpt_sac_phase_override_enable', 0.0);
+assignin(mw, 'hpt_sac_phase_fault_start_s', 0.0);
+assignin(mw, 'hpt_sac_phase_fault_clear_s', 0.0);
+assignin(mw, 'hpt_sac_phase_recovery_end_s', 0.0);
 assignin(mw, 'hpt_sac_vref_phase', 230.0);
+assignin(mw, 'hpt_sac_grid_vref_phase', Vmv / sqrt(3));
 assignin(mw, 'hpt_sac_vdc_ref', 800.0);
 assignin(mw, 'hpt_sac_reg_max', 0.80);
 assignin(mw, 'hpt_sac_energy_max', 0.95);
 assignin(mw, 'hpt_sac_i_base_peak', sqrt(2) * Srated / (sqrt(3) * Vlv));
 assignin(mw, 'hpt_sac_reg_polarity', 1.0);
 assignin(mw, 'hpt_sac_reg_d_gain', 1.00);
-assignin(mw, 'hpt_sac_reg_q_gain', 0.0);
+assignin(mw, 'hpt_sac_reg_q_gain', 1.0);
 assignin(mw, 'hpt_sac_dynamic_reg_limit', 0.80);
 assignin(mw, 'hpt_sac_topology_id', 1.0);
 assignin(mw, 'hpt_sac_fixed_reg_d', 0.0);
 assignin(mw, 'hpt_sac_fixed_reg_q', 0.0);
 assignin(mw, 'hpt_sac_fixed_energy_d', 0.0);
 assignin(mw, 'hpt_sac_fixed_energy_q', 0.0);
+assignin(mw, 'hpt_conventional_reg_scale', 1.0);
+assignin(mw, 'hpt_conventional_energy_scale', 1.0);
+assignin(mw, 'hpt_conventional_reg_scale_sag', 1.0);
+assignin(mw, 'hpt_conventional_reg_scale_swell', 1.0);
+assignin(mw, 'hpt_conventional_energy_scale_sag', 1.0);
+assignin(mw, 'hpt_conventional_energy_scale_swell', 1.0);
+assignin(mw, 'hpt_conventional_recovery_reg_gain', 0.0);
+assignin(mw, 'hpt_conventional_recovery_reg_max', 0.0);
+assignin(mw, 'hpt_conventional_recovery_hold_s', 0.0);
 assignin(mw, 'hpt_sac_guard_enable', 0.0);
+hpt_traj_t_default = (0:0.002:0.25)';
+assignin(mw, 'hpt_traj_t', hpt_traj_t_default);
+assignin(mw, 'hpt_traj_action', zeros(numel(hpt_traj_t_default), 4));
 
 add_block('powerlib/powergui', [M '/powergui'], 'Position', P(20, 20, 70, 40));
 set_param([M '/powergui'], 'SimulationMode', 'Discrete', 'SampleTime', num2str(Ts));
@@ -191,7 +215,7 @@ add_block('powerlib/Power Electronics/IGBT', [M '/Chop'], ...
     'Position', P(1325, 465, 40, 55));
 add_block('powerlib/Elements/Series RLC Branch', [M '/Rchop'], ...
     'Position', P(1325, 550, 45, 55));
-set_param([M '/Rchop'], 'BranchType', 'R', 'Resistance', num2str(Rchop));
+set_param([M '/Rchop'], 'BranchType', 'R', 'Resistance', 'hpt_rchop');
 
 % Ground references for the single-phase winding groups.
 add_block('powerlib/Elements/Ground', [M '/W1_neutral_ground'], ...
@@ -205,7 +229,7 @@ add_block('powerlib/Elements/Ground', [M '/W4_neutral_ground'], ...
 
 % DC-link overvoltage chopper gate.
 add_block('simulink/Sources/Constant', [M '/Chop_gate'], ...
-    'Position', P(1215, 575, 60, 25), 'Value', '850');
+    'Position', P(1215, 575, 60, 25), 'Value', 'hpt_chopper_threshold');
 add_block('simulink/Logic and Bit Operations/Relational Operator', [M '/Chop_cmp'], ...
     'Position', P(1290, 545, 40, 35));
 set_param([M '/Chop_cmp'], 'Operator', '>');
@@ -333,6 +357,7 @@ add_line(M, 'MeasMV/2', 'Igrid_abc/1', 'autorouting', 'on');
 add_line(M, 'MeasLV/1', 'Vlv_abc/1', 'autorouting', 'on');
 add_line(M, 'MeasLV/1', 'VoltageRegulator/1', 'autorouting', 'on');
 add_line(M, 'MeasLV/1', 'HPTSACController/1', 'autorouting', 'on');
+add_line(M, 'MeasMV/1', 'HPTSACController/5', 'autorouting', 'on');
 add_line(M, 'VoltageRegulator/1', 'RegCommandSelect/3', 'autorouting', 'on');
 add_line(M, 'HPTSACController/1', 'RegCommandSelect/1', 'autorouting', 'on');
 add_line(M, 'SAC_enable/1', 'RegCommandSelect/2', 'autorouting', 'on');

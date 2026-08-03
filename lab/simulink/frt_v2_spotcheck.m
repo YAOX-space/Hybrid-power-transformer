@@ -16,7 +16,14 @@ outdir = '../results/frt_v2_spotcheck'; if ~exist(outdir,'dir'); mkdir(outdir); 
 % Default deployment = the residual champion (mi=14, MPC prior + residual). The provenance MAT MUST
 % match the weights mi=14 actually loads (sac_residual_weights.mat) — else provenance is inconsistent.
 if nargin<2 || isempty(MI); MI = 14; end
-wfile = 'sac_residual_weights.mat'; if MI==11; wfile='sac_actor_weights.mat'; elseif MI==17; wfile='sac_resexpert_weights.mat'; end
+wfile = 'sac_residual_weights.mat';
+if MI==11
+    wfile='sac_actor_weights.mat';
+elseif MI==12 || MI==15
+    wfile='sac_sym_weights.mat';
+elseif MI==17
+    wfile='sac_resexpert_weights.mat';
+end
 W = load(fullfile('..',wfile)); run_id = char(W.run_id);
 
 % case list: label, fault_type, Rfault(ohm) or swell mult, dur, postwin, SCR, expected category

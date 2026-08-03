@@ -1,0 +1,2 @@
+case_id,topology,fault_family,fault_phase_key,fault_pu,fault_phase_pu,duration_s,fault_start_s,fault_stop_margin_s,fault_settle_s,chopper_threshold,rchop_scale,actor_filter_tau,phase_override,model_path,promotion_level,notes
+t1_ab_hvrt110_margin_phaseaware_tau0,topology1,HVRT,ab_phase,1.100,"1.10 1.10 1.00",0.060,0.035,0.125,0.020,850.0,1.0,0.0,true,data/models/hpt_stage6_t1_ab_hvrt110_margin_actor_phaseaware_20260728_bc0.zip,diagnostic_phaseaware_tau0_recheck,Stage6 topology1 AB-HVRT margin actor phase-aware tau0 diagnostic.

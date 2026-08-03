@@ -16,9 +16,15 @@ scenarios are never counted as certified passes.
 from __future__ import annotations
 import numpy as np
 from hpt_frt.common import frt_v2 as FV2
-from .frt_env import TSCALE, effective_fault_dur
+from .frt_env import TSCALE, effective_fault_dur, fault_sequence
 
 CRITERIA = ('connect', 'reactive', 'limit', 'recover', 'survive')
+EVENT_REACTIVE_TOL = 0.04
+
+
+def _crit(status, worst, t_worst, reason):
+    return dict(status=status, passed=(status == FV2.PASS), worst=float(worst),
+                t_worst=float(t_worst), reason=reason)
 
 
 def run_episode(model, env):
@@ -63,6 +69,7 @@ def evaluate_scenario(model, env_cls, scenario):
         return {'kind': 'unevaluable', 'error': str(e)}
     tr_eval = dict(tr)
     tr_eval['t'] = t_eval
+    _apply_simulink_visible_ode_overrides(res, tr_eval, scenario, t_fault, dur)
     res['response'] = _response_of(tr_eval, t_fault, residual)   # SEPARATE 5 ms metric (never in frt_pass)
     # Vdc-only survival SELECTION signal (audit 2026-06-27): the full `survive` criterion needs I2
     # (absent in the averaged ODE) so it stays NOT_EVALUATED for CERTIFICATION. But the ODE Vdc IS
@@ -72,7 +79,110 @@ def evaluate_scenario(model, env_cls, scenario):
     vdc_min = float(np.min(tr['Vdc'])) if tr['Vdc'].size else 1.0
     res['vdc_survive_proxy'] = FV2.PASS if vdc_min >= FV2.VDC_LO else FV2.FAIL
     res['vdc_min'] = vdc_min
+    if res['vdc_survive_proxy'] == FV2.FAIL and res['survive']['status'] == FV2.NOT_EVALUATED:
+        res['survive'] = _crit(FV2.FAIL, FV2.VDC_LO - vdc_min, tr_eval['t'][int(np.argmin(tr['Vdc']))],
+                               'Vdc<0.75 visible in ODE; I2 still unavailable')
+        _refresh_frt_pass(res)
     return {'kind': 'evaluated', 'res': res}
+
+
+def _refresh_frt_pass(res):
+    statuses = [res[c]['status'] for c in CRITERIA]
+    res['frt_pass'] = (False if FV2.FAIL in statuses
+                       else (None if FV2.NOT_EVALUATED in statuses else True))
+
+
+def _apply_simulink_visible_ode_overrides(res, tr, scenario, t_fault, dur):
+    """Make the averaged ODE conservative on failure modes proven visible in Simulink.
+
+    The shared frt-v2 evaluator remains measurement-pure. This adapter adds ODE-side diagnostic
+    visibility for training/selection: if the scenario event has a clear reactive demand, evaluate
+    support against that event severity instead of letting an optimistic ODE voltage lift erase the
+    demand; if the rollout terminates before recovery can be assessed, mark recovery as failed.
+    """
+    _override_reactive_from_event_severity(res, tr, scenario, t_fault, dur)
+    _override_recover_from_available_postwindow(res, tr, scenario, t_fault, dur)
+    _refresh_frt_pass(res)
+
+
+def _override_reactive_from_event_severity(res, tr, scenario, t_fault, dur):
+    if res['reactive']['status'] == FV2.FAIL:
+        return
+    t, V1, iq = tr['t'], tr['V1'], tr['iq']
+    if iq is None:
+        return
+    category = scenario['category']
+    target = float(scenario['target_V_pu'])
+    ft = scenario['fault_type']
+    vg_p, _ = fault_sequence(ft, target)
+    event_v = target if category == 'HVRT' else vg_p
+    in_fault = (t >= t_fault) & (t <= t_fault + dur)
+    assess = in_fault & (t >= t_fault + FV2.REACTIVE_DELAY)
+    if not assess.any():
+        return
+    if category == 'LVRT':
+        demand_v = np.minimum(V1, event_v)
+    else:
+        demand_v = np.maximum(V1, event_v)
+    ref = np.array([FV2.iq_ref_droop(v) for v in demand_v])
+    demanded = assess & (np.abs(ref) > EVENT_REACTIVE_TOL)
+    if not demanded.any():
+        return
+    wrong = np.any((demand_v[assess] < 0.9) & (iq[assess] < -FV2.REACTIVE_SIGN_EPS)) or \
+            np.any((demand_v[assess] > 1.1) & (iq[assess] > FV2.REACTIVE_SIGN_EPS))
+    if wrong:
+        res['reactive'] = _crit(FV2.FAIL, np.nan, t_fault,
+                                'wrong sign under event-severity reactive proxy')
+        res['reactive']['detail'] = {'event_severity_proxy': True, 'event_v': float(event_v)}
+        return
+    iq_d, ref_d, t_d = iq[demanded], ref[demanded], t[demanded]
+    if category == 'LVRT':
+        shortfall = np.maximum(0.0, (ref_d - EVENT_REACTIVE_TOL) - iq_d)
+    else:
+        shortfall = np.maximum(0.0, iq_d - (ref_d + EVENT_REACTIVE_TOL))
+    met = shortfall <= 1e-9
+    met_frac = float(np.mean(met))
+    if met_frac < FV2.REACTIVE_DWELL:
+        j = int(np.argmax(shortfall))
+        res['reactive'] = _crit(FV2.FAIL, float(shortfall.max()), float(t_d[j]),
+                                f'event-severity support held only {met_frac:.0%}')
+        res['reactive']['detail'] = {
+            'event_severity_proxy': True,
+            'event_v': float(event_v),
+            'met_fraction': met_frac,
+            'n_demanded': int(demanded.sum()),
+        }
+
+
+def _override_recover_from_available_postwindow(res, tr, scenario, t_fault, dur):
+    if res['recover']['status'] == FV2.FAIL:
+        return
+    t, V1 = tr['t'], tr['V1']
+    clear = t_fault + dur
+    post = t > clear
+    strong_grid = float(scenario.get('scr', 0.0)) >= 8.0
+    if post.any() and strong_grid:
+        tp, Vp = t[post], V1[post]
+        settled = tp >= clear + 0.02
+        if settled.any():
+            dev = np.abs(Vp[settled] - 1.0)
+            j = int(np.argmax(dev))
+            if float(dev[j]) > FV2.RECOVER_BAND:
+                res['recover'] = _crit(FV2.FAIL, float(dev[j]), float(tp[settled][j]),
+                                       'post-clear recovery deviation exceeded band')
+                return
+    if res['recover']['status'] != FV2.NOT_EVALUATED:
+        return
+    if post.any():
+        tp, Vp = t[post], V1[post]
+        tail = Vp[tp >= tp[-1] - min(0.12, max(0.0, tp[-1] - clear))]
+        final_dev = float(np.abs(tail - 1.0).max()) if tail.size else float(abs(Vp[-1] - 1.0))
+        if final_dev > FV2.RECOVER_BAND:
+            res['recover'] = _crit(FV2.FAIL, final_dev, float(tp[-1]),
+                                   'short ODE post-window already outside recovery band')
+    elif res['connect']['status'] == FV2.FAIL:
+        res['recover'] = _crit(FV2.FAIL, abs(float(V1[-1]) - 1.0), float(t[-1]),
+                               'rollout ended before recovery after connection failure')
 
 
 def _response_of(tr, t_fault, residual):

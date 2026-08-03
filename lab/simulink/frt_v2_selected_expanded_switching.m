@@ -196,8 +196,9 @@ end
 
 function write_json_csv(base, R, mi, tag, note)
 J = struct('metrics_version', 'frt-v2', 'layer', 'Simulink switching', 'mode', mi, ...
-    'tag', tag, 'note', note, 'n_scenarios', numel(R), 'scenarios', R);
-fid = fopen([base '.json'], 'w'); fwrite(fid, jsonencode(J)); fclose(fid);
+    'tag', tag, 'note', note, 'n_scenarios', numel(R), 'scenarios', summary_rows(R));
+json_text = jsonencode(J);
+fid = fopen([base '.json'], 'w'); fwrite(fid, json_text); fclose(fid);
 hdr = {'sid','category','fault_type','scr','target_V_pu','fault_param','fault_param_source', ...
        'frt','connect','reactive','limit','recover','survive', ...
        'Vdc_min','Vdc_max','V1_final_mean','V1_final_worst_signed', ...
@@ -218,6 +219,30 @@ for i = 1:numel(R)
         sm.actor_mq_fault_mean, sm.actor_mq_fault_min, sm.actor_mq_fault_max);
 end
 fclose(fid);
+end
+
+function rows = summary_rows(R)
+rows = struct([]);
+for i = 1:numel(R)
+    r = R(i); c = r.crit; p = r.prov; sm = get_summary(c);
+    rows(i).sid = r.sid; %#ok<AGROW>
+    rows(i).category = p.category;
+    rows(i).fault_type = p.fault_type;
+    rows(i).scr = p.scr;
+    rows(i).target_V_pu = p.target_V_pu;
+    rows(i).fault_param = p.fault_param;
+    rows(i).fault_param_source = p.fault_param_source;
+    rows(i).frt = r.frt;
+    rows(i).connect = c.connect.status;
+    rows(i).reactive = c.reactive.status;
+    rows(i).limit = c.limit.status;
+    rows(i).recover = c.recover.status;
+    rows(i).survive = c.survive.status;
+    rows(i).Vdc_min = sm.Vdc_min;
+    rows(i).Vdc_max = sm.Vdc_max;
+    rows(i).V1_final_mean = sm.V1_final_mean;
+    rows(i).V1_final_worst_signed = sm.V1_final_worst_signed;
+end
 end
 
 function sm = get_summary(c)

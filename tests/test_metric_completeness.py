@@ -90,3 +90,70 @@ def test_evaluate_scenario_does_not_swallow_valueerror():
     src = inspect.getsource(FM.evaluate_scenario)
     assert 'return None' not in src                   # no silent None
     assert "'kind': 'unevaluable'" in src and 'str(e)' in src
+
+
+def test_evaluate_scenario_maps_compressed_ode_time_to_real_time(monkeypatch):
+    from hpt_frt.device import frt_metrics as FM
+    from hpt_frt.device.frt_env import TSCALE
+
+    t_fault = 0.02
+    tr = dict(t=np.array([0.0, t_fault, t_fault + 0.02]),
+              V1=np.ones(3), V2=np.zeros(3), Vdc=np.ones(3), iq=np.zeros(3),
+              i_peak=None, idq_mag=None, i2=None)
+    captured = {}
+
+    def fake_run_episode(model, env):
+        return tr
+
+    def fake_eval(t, V1, category, residual, tf, dur, **kwargs):
+        captured['t'] = t
+        captured['tf'] = tf
+        captured['dur'] = dur
+        return _res({c: FV2.PASS for c in FV2.MANDATORY})
+
+    class Env:
+        def __init__(self, scenarios, seed=42, train_mode=False):
+            pass
+
+    monkeypatch.setattr(FM, 'run_episode', fake_run_episode)
+    monkeypatch.setattr(FM.FV2, 'evaluate', fake_eval)
+
+    scenario = dict(category='LVRT', fault_type='sym3ph', target_V_pu=0.5,
+                    t_fault=t_fault, fault_dur=0.5)
+    cls = FM.evaluate_scenario(object(), Env, scenario)
+
+    assert cls['kind'] == 'evaluated'
+    assert captured['tf'] == t_fault
+    assert captured['dur'] == 0.5
+    assert captured['t'][2] == pytest.approx(t_fault + 0.02 / TSCALE)
+
+
+def test_evaluate_scenario_uses_switching_capped_fault_duration(monkeypatch):
+    from hpt_frt.device import frt_metrics as FM
+
+    t_fault = 0.02
+    tr = dict(t=np.array([0.0, t_fault, t_fault + 0.02]),
+              V1=np.ones(3), V2=np.zeros(3), Vdc=np.ones(3), iq=np.zeros(3),
+              i_peak=None, idq_mag=None, i2=None)
+    captured = {}
+
+    def fake_run_episode(model, env):
+        return tr
+
+    def fake_eval(t, V1, category, residual, tf, dur, **kwargs):
+        captured['dur'] = dur
+        return _res({c: FV2.PASS for c in FV2.MANDATORY})
+
+    class Env:
+        def __init__(self, scenarios, seed=42, train_mode=False):
+            pass
+
+    monkeypatch.setattr(FM, 'run_episode', fake_run_episode)
+    monkeypatch.setattr(FM.FV2, 'evaluate', fake_eval)
+
+    scenario = dict(category='HVRT', fault_type='swell_3ph', target_V_pu=1.2,
+                    t_fault=t_fault, fault_dur=1.0)
+    cls = FM.evaluate_scenario(object(), Env, scenario)
+
+    assert cls['kind'] == 'evaluated'
+    assert captured['dur'] == 0.5

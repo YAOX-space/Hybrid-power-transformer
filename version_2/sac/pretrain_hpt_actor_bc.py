@@ -33,7 +33,13 @@ from .hpt_voltage_sac_env import (
     HPTVoltageSACEnv,
     execution_guard_teacher_action,
 )
-from .train_hpt_voltage_sac import MODELS, RESULTS, TOPOLOGY_MODELS, scenario_summary, select_scenarios
+from .offline.train_hpt_voltage_sac import (
+    MODELS,
+    RESULTS,
+    TOPOLOGY_MODELS,
+    scenario_summary,
+    select_scenarios,
+)
 
 
 def make_env_config(args: argparse.Namespace) -> HPTVoltageEnvConfig:
@@ -180,6 +186,44 @@ def append_step4_corrections(
     )
 
 
+def append_anchor_dataset_samples(
+    X: np.ndarray,
+    Y: np.ndarray,
+    dataset: Path | None,
+    *,
+    repeat: int,
+) -> tuple[np.ndarray, np.ndarray, int]:
+    """Append pre-built observation/action anchors from an ``.npz`` dataset."""
+
+    if dataset is None:
+        return X, Y, 0
+    if not dataset.exists():
+        raise FileNotFoundError(dataset)
+    with np.load(dataset, allow_pickle=False) as data:
+        obs_key = "observations" if "observations" in data.files else "obs"
+        act_key = "actions" if "actions" in data.files else "acts"
+        if obs_key not in data.files or act_key not in data.files:
+            raise ValueError(
+                f"Anchor dataset must contain observations/actions arrays: {dataset}"
+            )
+        extra_x = np.asarray(data[obs_key], dtype=np.float32)
+        extra_y = np.asarray(data[act_key], dtype=np.float32)
+    if extra_x.ndim != 2 or extra_x.shape[1] != OBS_DIM_HPT:
+        raise RuntimeError(f"Bad anchor observation shape: {extra_x.shape}")
+    if extra_y.ndim != 2 or extra_y.shape[1] != ACT_DIM_HPT:
+        raise RuntimeError(f"Bad anchor action shape: {extra_y.shape}")
+    if repeat > 1:
+        extra_x = np.repeat(extra_x, int(repeat), axis=0)
+        extra_y = np.repeat(extra_y, int(repeat), axis=0)
+    if extra_x.shape[0] <= 0:
+        return X, Y, 0
+    return (
+        np.concatenate([X, extra_x], axis=0),
+        np.concatenate([Y, extra_y], axis=0),
+        int(extra_x.shape[0]),
+    )
+
+
 def _scenario_type_allowed(row: dict[str, str], scenario_types: str) -> bool:
     if scenario_types == "all":
         return True
@@ -252,6 +296,21 @@ def append_switch_trace_samples(
     fixed_target: str | None,
     energy_vdc_feedback_gain: float,
     energy_vdc_ref_pu: float,
+    energy_two_zone_enable: bool,
+    energy_two_zone_topology2_only: bool,
+    energy_vdc_low_pu: float,
+    energy_vdc_high_pu: float,
+    energy_low_d_gain: float,
+    energy_low_q_gain: float,
+    energy_high_d_gain: float,
+    energy_high_q_gain: float,
+    energy_dvdc_d_gain: float,
+    energy_dvdc_q_gain: float,
+    energy_d_min: float,
+    energy_d_max: float,
+    energy_q_min: float,
+    energy_q_max: float,
+    energy_limit: float,
     q_gate_lv_min_pu: float,
     q_gate_time_min_s: float,
     q_gate_vdc_min_pu: float,
@@ -261,7 +320,10 @@ def append_switch_trace_samples(
     q_gate_time_full_s: float,
     fault_window_repeat_mult: int,
     recovery_window_repeat_mult: int,
+    pre_window_repeat_mult: int,
     target_profile: str,
+    target_columns: str,
+    profile_csv: Path | None,
     profile_dt: float,
     profile_stop_time: float,
     profile_base_action: list[float],
@@ -280,7 +342,37 @@ def append_switch_trace_samples(
 
     profile_t: np.ndarray | None = None
     profile_y: np.ndarray | None = None
-    if target_profile != "csv":
+    if target_profile == "csv_file":
+        if profile_csv is None:
+            raise ValueError("--switch-trace-profile-csv is required when target profile is csv_file")
+        if not profile_csv.exists():
+            raise FileNotFoundError(profile_csv)
+        t_values: list[float] = []
+        y_values: list[list[float]] = []
+        with profile_csv.open("r", newline="", encoding="utf-8-sig") as pf:
+            for profile_row in csv.DictReader(pf):
+                t_values.append(float(profile_row.get("t") or 0.0))
+                if "m_reg_d" in profile_row:
+                    y_values.append(
+                        [
+                            float(profile_row.get("m_reg_d") or 0.0),
+                            float(profile_row.get("m_reg_q") or 0.0),
+                            float(profile_row.get("m_energy_d") or 0.0),
+                            float(profile_row.get("m_energy_q") or 0.0),
+                        ]
+                    )
+                else:
+                    y_values.append(
+                        [
+                            float(profile_row.get(f"action_{idx:02d}") or 0.0)
+                            for idx in range(1, ACT_DIM_HPT + 1)
+                        ]
+                    )
+        if not t_values:
+            raise ValueError(f"Empty trajectory profile CSV: {profile_csv}")
+        profile_t = np.asarray(t_values, dtype=float)
+        profile_y = np.asarray(y_values, dtype=float)
+    elif target_profile != "csv":
         spec = TrajectorySpec(
             preset=target_profile,
             dt=profile_dt,
@@ -321,8 +413,9 @@ def append_switch_trace_samples(
                     idx -= 1
                 target = np.asarray(profile_y[idx, :], dtype=np.float32)
             else:
+                prefix = "actor_action" if target_columns == "actor_action" else "action"
                 target = np.asarray(
-                    [float(row[f"action_{idx:02d}"]) for idx in range(1, ACT_DIM_HPT + 1)],
+                    [float(row[f"{prefix}_{idx:02d}"]) for idx in range(1, ACT_DIM_HPT + 1)],
                     dtype=np.float32,
                 )
             if fixed_target and profile_t is None:
@@ -365,6 +458,37 @@ def append_switch_trace_samples(
                         0.95,
                     )
                 )
+            if energy_two_zone_enable:
+                topology = str(row.get("topology", "")).lower()
+                topology2 = topology == "topology2" or bool(obs[15] > 0.5)
+                if (not energy_two_zone_topology2_only) or topology2:
+                    vdc_pu = float(row.get("vdc_inst") or 0.0) / 800.0
+                    if vdc_pu <= 0.0 or not np.isfinite(vdc_pu):
+                        vdc_pu = float(obs[3])
+                    dvdc = float(obs[23]) if obs.size > 23 and np.isfinite(obs[23]) else 0.0
+                    low_err = max(0.0, energy_vdc_low_pu - vdc_pu)
+                    high_err = max(0.0, vdc_pu - energy_vdc_high_pu)
+                    dvdc_pos = max(0.0, dvdc)
+                    target[2] = float(
+                        np.clip(
+                            target[2]
+                            + energy_low_d_gain * low_err
+                            + energy_high_d_gain * high_err
+                            + energy_dvdc_d_gain * dvdc_pos,
+                            max(-energy_limit, energy_d_min),
+                            min(energy_limit, energy_d_max),
+                        )
+                    )
+                    target[3] = float(
+                        np.clip(
+                            target[3]
+                            + energy_low_q_gain * low_err
+                            + energy_high_q_gain * high_err
+                            + energy_dvdc_q_gain * dvdc_pos,
+                            max(-energy_limit, energy_q_min),
+                            min(energy_limit, energy_q_max),
+                        )
+                    )
             if (
                 topology2_phase_equivalent
                 and str(row.get("topology", "")).lower() == "topology2"
@@ -376,7 +500,9 @@ def append_switch_trace_samples(
                 target[1] = reg_d * np.sin(phase_shift_rad)
             window_zone = str(row.get("window_zone", "")).strip().lower()
             zone_mult = 1
-            if window_zone == "fault":
+            if window_zone in {"pre", "prefault"}:
+                zone_mult = max(1, pre_window_repeat_mult)
+            elif window_zone == "fault":
                 zone_mult = max(1, fault_window_repeat_mult)
             elif window_zone == "recovery":
                 zone_mult = max(1, recovery_window_repeat_mult)
@@ -646,6 +772,7 @@ def train_actor_bc(
     lr: float,
     seed: int,
     action_weights: tuple[float, float, float, float] = (4.0, 1.0, 0.5, 0.5),
+    energy_head_only: bool = False,
 ) -> dict:
     device = model.policy.device
     obs = torch.as_tensor(X, dtype=torch.float32, device=device)
@@ -655,7 +782,18 @@ def train_actor_bc(
     target = 2.0 * (target_action - act_low) / torch.clamp(act_high - act_low, min=1e-6) - 1.0
     target = torch.clamp(target, -1.0, 1.0)
     weights = torch.as_tensor(action_weights, dtype=torch.float32, device=device)
-    opt = torch.optim.Adam(model.policy.actor.parameters(), lr=lr)
+    trainable_params = list(model.policy.actor.parameters())
+    if energy_head_only:
+        trainable_params = [
+            parameter
+            for name, parameter in model.policy.actor.named_parameters()
+            if "mu.energy_head" in name
+        ]
+        if not trainable_params:
+            raise ValueError(
+                "energy_head_only BC requires a split-head actor with mu.energy_head parameters"
+            )
+    opt = torch.optim.Adam(trainable_params, lr=lr)
     rng = np.random.default_rng(seed)
     losses: list[float] = []
     n = X.shape[0]
@@ -667,7 +805,7 @@ def train_actor_bc(
             loss = torch.mean(((pred - target[idx]) * weights) ** 2)
             opt.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.policy.actor.parameters(), 5.0)
+            torch.nn.utils.clip_grad_norm_(trainable_params, 5.0)
             opt.step()
             losses.append(float(loss.detach().cpu().item()))
     with torch.no_grad():
@@ -679,6 +817,7 @@ def train_actor_bc(
         "mean_loss_tail": float(np.mean(losses[-min(50, len(losses)) :])) if losses else float("nan"),
         "action_mse": [float(v) for v in mse],
         "samples": int(n),
+        "energy_head_only": bool(energy_head_only),
     }
 
 
@@ -687,7 +826,16 @@ def main() -> None:
     parser.add_argument("--run-id", default=None)
     parser.add_argument(
         "--curriculum",
-        choices=["all", "steady_step4", "topology2_fault", "switch_fault_transition", "expanded_fault_transition"],
+        choices=[
+            "all",
+            "steady_step4",
+            "topology2_fault",
+            "switch_fault_transition",
+            "expanded_fault_transition",
+            "topology2_lvrt_family_v1",
+            "topology2_lvrt_family_holdout_v1",
+            "topology1_lvrt_balanced_family_v1",
+        ],
         default="steady_step4",
     )
     parser.add_argument("--teacher-source", choices=["table", "execution_guard"], default="table")
@@ -710,6 +858,31 @@ def main() -> None:
     parser.add_argument("--switch-trace-fixed-target", default=None)
     parser.add_argument("--switch-trace-energy-vdc-feedback-gain", type=float, default=0.0)
     parser.add_argument("--switch-trace-energy-vdc-ref-pu", type=float, default=1.0)
+    parser.add_argument(
+        "--switch-trace-energy-two-zone",
+        action="store_true",
+        help=(
+            "Relabel energy-head targets from Vdc state: low-Vdc support and "
+            "high-Vdc suppression use separate signed d/q gains."
+        ),
+    )
+    parser.add_argument(
+        "--switch-trace-energy-two-zone-all-topologies",
+        action="store_true",
+        help="Apply the two-zone energy relabeling to all topologies instead of topology2 only.",
+    )
+    parser.add_argument("--switch-trace-energy-vdc-low-pu", type=float, default=0.95)
+    parser.add_argument("--switch-trace-energy-vdc-high-pu", type=float, default=1.12)
+    parser.add_argument("--switch-trace-energy-low-d-gain", type=float, default=-2.0)
+    parser.add_argument("--switch-trace-energy-low-q-gain", type=float, default=1.0)
+    parser.add_argument("--switch-trace-energy-high-d-gain", type=float, default=0.20)
+    parser.add_argument("--switch-trace-energy-high-q-gain", type=float, default=-0.80)
+    parser.add_argument("--switch-trace-energy-dvdc-d-gain", type=float, default=0.0)
+    parser.add_argument("--switch-trace-energy-dvdc-q-gain", type=float, default=-0.20)
+    parser.add_argument("--switch-trace-energy-d-min", type=float, default=-0.95)
+    parser.add_argument("--switch-trace-energy-d-max", type=float, default=0.95)
+    parser.add_argument("--switch-trace-energy-q-min", type=float, default=-0.95)
+    parser.add_argument("--switch-trace-energy-q-max", type=float, default=0.95)
     parser.add_argument("--switch-trace-q-gate-lv-min-pu", type=float, default=0.0)
     parser.add_argument("--switch-trace-q-gate-time-min-s", type=float, default=0.0)
     parser.add_argument("--switch-trace-q-gate-vdc-min-pu", type=float, default=0.0)
@@ -730,11 +903,35 @@ def main() -> None:
         help="Extra repeat multiplier for switch-trace samples with window_zone=recovery.",
     )
     parser.add_argument(
+        "--switch-trace-pre-window-repeat-mult",
+        type=int,
+        default=1,
+        help="Extra repeat multiplier for switch-trace samples with window_zone=pre.",
+    )
+    parser.add_argument(
         "--switch-trace-target-profile",
-        choices=["csv", "zero", "constant", "step", "ramp", "two_stage", "two_stage_window", "fault_window"],
+        choices=[
+            "csv",
+            "csv_file",
+            "zero",
+            "constant",
+            "step",
+            "ramp",
+            "two_stage",
+            "two_stage_window",
+            "fault_window",
+            "fault_recovery",
+        ],
         default="csv",
         help="Relabel switch trace states with a generated trajectory profile instead of CSV action columns.",
     )
+    parser.add_argument(
+        "--switch-trace-target-columns",
+        choices=["action", "actor_action"],
+        default="action",
+        help="When --switch-trace-target-profile=csv, choose executed action_* or raw actor_action_* trace columns.",
+    )
+    parser.add_argument("--switch-trace-profile-csv", type=Path, default=None)
     parser.add_argument("--switch-trace-profile-dt", type=float, default=0.002)
     parser.add_argument("--switch-trace-profile-stop-time", type=float, default=0.24)
     parser.add_argument("--switch-trace-profile-base-action", type=float, nargs=4, default=[0.0, 0.0, 0.0, 0.0])
@@ -754,6 +951,17 @@ def main() -> None:
     parser.add_argument("--energy-teacher-trace-repeat", type=int, default=16)
     parser.add_argument("--energy-teacher-trace-scenario-types", choices=["all", "steady", "fault"], default="all")
     parser.add_argument("--energy-teacher-min-time", type=float, default=0.0)
+    parser.add_argument(
+        "--anchor-dataset",
+        type=Path,
+        default=None,
+        help=(
+            "Optional .npz with observations/actions arrays.  This is used to "
+            "clone switch-level supported trajectory anchors into a SAC-format "
+            "actor checkpoint."
+        ),
+    )
+    parser.add_argument("--anchor-dataset-repeat", type=int, default=1)
     parser.add_argument(
         "--bc-obs-noise-std",
         type=float,
@@ -812,6 +1020,12 @@ def main() -> None:
         repeat=args.step4_correction_repeat,
         reg_limit=args.reg_limit,
     )
+    X, Y, anchor_dataset_samples = append_anchor_dataset_samples(
+        X,
+        Y,
+        args.anchor_dataset,
+        repeat=args.anchor_dataset_repeat,
+    )
     X, Y, switch_trace_samples = append_switch_trace_samples(
         X,
         Y,
@@ -827,6 +1041,21 @@ def main() -> None:
         fixed_target=args.switch_trace_fixed_target,
         energy_vdc_feedback_gain=args.switch_trace_energy_vdc_feedback_gain,
         energy_vdc_ref_pu=args.switch_trace_energy_vdc_ref_pu,
+        energy_two_zone_enable=args.switch_trace_energy_two_zone,
+        energy_two_zone_topology2_only=not args.switch_trace_energy_two_zone_all_topologies,
+        energy_vdc_low_pu=args.switch_trace_energy_vdc_low_pu,
+        energy_vdc_high_pu=args.switch_trace_energy_vdc_high_pu,
+        energy_low_d_gain=args.switch_trace_energy_low_d_gain,
+        energy_low_q_gain=args.switch_trace_energy_low_q_gain,
+        energy_high_d_gain=args.switch_trace_energy_high_d_gain,
+        energy_high_q_gain=args.switch_trace_energy_high_q_gain,
+        energy_dvdc_d_gain=args.switch_trace_energy_dvdc_d_gain,
+        energy_dvdc_q_gain=args.switch_trace_energy_dvdc_q_gain,
+        energy_d_min=args.switch_trace_energy_d_min,
+        energy_d_max=args.switch_trace_energy_d_max,
+        energy_q_min=args.switch_trace_energy_q_min,
+        energy_q_max=args.switch_trace_energy_q_max,
+        energy_limit=args.energy_limit,
         q_gate_lv_min_pu=args.switch_trace_q_gate_lv_min_pu,
         q_gate_time_min_s=args.switch_trace_q_gate_time_min_s,
         q_gate_vdc_min_pu=args.switch_trace_q_gate_vdc_min_pu,
@@ -836,7 +1065,10 @@ def main() -> None:
         q_gate_time_full_s=args.switch_trace_q_gate_time_full_s,
         fault_window_repeat_mult=args.switch_trace_fault_window_repeat_mult,
         recovery_window_repeat_mult=args.switch_trace_recovery_window_repeat_mult,
+        pre_window_repeat_mult=args.switch_trace_pre_window_repeat_mult,
         target_profile=args.switch_trace_target_profile,
+        target_columns=args.switch_trace_target_columns,
+        profile_csv=args.switch_trace_profile_csv,
         profile_dt=args.switch_trace_profile_dt,
         profile_stop_time=args.switch_trace_profile_stop_time,
         profile_base_action=args.switch_trace_profile_base_action,
@@ -914,6 +1146,7 @@ def main() -> None:
         },
         "metrics": {
             **metrics,
+            "anchor_dataset_samples": int(anchor_dataset_samples),
             "switch_trace_augmented_samples": int(switch_trace_samples),
             "raw_smoke_correction_samples": int(raw_smoke_samples),
             "energy_teacher_trace_samples": int(energy_teacher_samples),

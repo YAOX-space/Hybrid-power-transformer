@@ -11,7 +11,8 @@ Protected interfaces:
 Before replacing an old interface:
 
 1. Record old and new names in `migration_notes.md`.
-2. Add wrappers or compatibility routes when possible.
+2. Add wrappers or compatibility routes only when backward compatibility is
+   required by the user or by active scripts.
 3. Update tests before removing old assumptions.
 4. Re-run MATLAB/Python smoke gates.
 5. Re-run proxy and switch-level validation if observations, actions, reward,

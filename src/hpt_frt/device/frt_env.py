@@ -85,6 +85,12 @@ GRID_R_BASE_AT_SCR1 = 138.675
 LVRT_XR_DC_DROP = 0.08
 LVRT_RECOVERY_BIAS0 = 0.045
 LVRT_RECOVERY_XR_BIAS = 0.060
+# Weak-grid deep asymmetric LVRT DC-link deficit (2026-07-12): switching full320 shows 2ph/2ph_g,
+# SCR=3,target=0.2 can fail Vdc survive even without strong series boost. The averaged ODE was
+# optimistic by roughly 0.10 pu because it lacks negative-sequence ripple/current-limiter coupling.
+LVRT_WEAK_ASYM_DC_DROP = 0.12
+LVRT_WEAK_ASYM_LONG_DC_DROP = 0.09
+LVRT_WEAK_ASYM_LONG_DUR = 0.35
 # Single-phase HVRT sequence/measurement correction (2026-07-07 ODE-blind fix): unbalanced swell
 # has positive/negative-sequence coupling and PLL/current-measurement ripple. Switching saw
 # swell_1ph/SCR=3 wrong-sign reactive failures near the 1.1-pu boundary; the ODE was too smooth
@@ -98,6 +104,15 @@ HVRT_RECOVERY_XR_OVER = 0.130
 HVRT_SHALLOW_SCR2_EXTRA_UNDER = 0.033
 HVRT_1PH_RECOVERY_WEAK_UNDER = 0.180
 HVRT_1PH_RECOVERY_XR_OVER = 0.100
+# Strong-grid recovery measurement bias (2026-07-12 ODE/Simulink alignment): full320 switching
+# results show SCR=10 post-clear V+ settles just above the 7% recovery band (typically +0.072..0.078)
+# for many LVRT asym cases and all strong-grid HVRT swells. The averaged ODE was too ideal and pulled
+# those tails back into band, hiding recover FAILs from training/error analysis. This bias is a
+# measured terminal-voltage proxy only; it is restricted to strong-grid post-clear recovery.
+STRONG_RECOVERY_SCR0 = 8.0
+LVRT_STRONG_RECOVERY_OVER = 0.090
+LVRT_ASYM_RECOVERY_DUR_MAX = 10.0
+HVRT_STRONG_RECOVERY_OVER = 0.074
 # Asymmetric LVRT boundary measured-iq proxy: switching reactive FAILs occur where the commanded
 # support is tiny but negative-sequence ripple makes measured iq cross the wrong sign. Dynamics still
 # use the command; reward/evaluation use the measured proxy in this narrow boundary band.
@@ -295,6 +310,15 @@ class HPTFRTEnv(gym.Env):
             elif s['category'] == 'HVRT' and s['fault_type'] == 'swell_1ph':
                 weak = max(0.0, (4.0 - self.scr) / 2.0)
                 V2p_ss += -HVRT_1PH_RECOVERY_WEAK_UNDER * weak + HVRT_1PH_RECOVERY_XR_OVER * xr
+            strong_recovery = max(0.0, (self.scr - STRONG_RECOVERY_SCR0) / (10.0 - STRONG_RECOVERY_SCR0))
+            strong_recovery = min(1.0, strong_recovery)
+            if s['category'] == 'LVRT':
+                is_asym = s['fault_type'] in ('1ph_g', '2ph', '2ph_g')
+                asym_short = is_asym and float(s['fault_dur']) <= LVRT_ASYM_RECOVERY_DUR_MAX
+                if s['fault_type'] == 'sym3ph' or asym_short:
+                    V2p_ss += LVRT_STRONG_RECOVERY_OVER * strong_recovery
+            elif s['category'] == 'HVRT':
+                V2p_ss += HVRT_STRONG_RECOVERY_OVER * strong_recovery
         V2p_ss = max(0.0, V2p_ss)
         self.V2p += (V2p_ss - self.V2p) * (DT / TAU_V2)
         # ── negative-seq: imposed by the grid; series injection CANNOT cancel it (Simulink series
@@ -352,7 +376,14 @@ class HPTFRTEnv(gym.Env):
                 sev = max(0.0, 0.9 - Vg_p) / 0.7
                 lvrt_stiff_drop = LVRT_STIFF_DC_DROP * stiff * sev
                 lvrt_stiff_drop += LVRT_XR_DC_DROP * xr * stiff * sev
-            Vdc_eq = min(VDC_CHOP, max(0.05, 1.0 - sag_iq - sag_se - lvrt_stiff_drop))
+            lvrt_weak_asym_drop = 0.0
+            if (in_fault_now and s['category'] == 'LVRT' and s['fault_type'] in ('2ph', '2ph_g')
+                    and self.scr <= 3.0 and float(s['target_V_pu']) <= 0.2):
+                sev = max(0.0, 0.9 - Vg_p) / 0.7
+                lvrt_weak_asym_drop = LVRT_WEAK_ASYM_DC_DROP * sev
+                if float(s['fault_dur']) >= LVRT_WEAK_ASYM_LONG_DUR:
+                    lvrt_weak_asym_drop += LVRT_WEAK_ASYM_LONG_DC_DROP * sev
+            Vdc_eq = min(VDC_CHOP, max(0.05, 1.0 - sag_iq - sag_se - lvrt_stiff_drop - lvrt_weak_asym_drop))
         if s['category'] == 'HVRT' and (not in_fault_now) and self._prev_in_fault:
             self._hvrt_clear_timer = 0.0
         if s['category'] == 'HVRT' and self._hvrt_clear_timer < HVRT_CLEAR_WIN:

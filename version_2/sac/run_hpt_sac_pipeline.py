@@ -57,7 +57,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
     frt_matrix_cmd = _matlab_batch(
         "cd('E:/research_space/Hybrid-power-transformer/version_2/simulink'); "
         "hpt_calib_mode='full'; hpt_calib_topology='all'; "
-        "collect_hpt_v2_frt_calibration_matrix;"
+        "run(fullfile(pwd,'collectors','collect_hpt_v2_frt_calibration_matrix.m'));"
     )
 
     return {
@@ -72,7 +72,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.calibrate_hpt_frt_proxy_from_matrix",
+                "version_2.sac.calibration.calibrate_hpt_frt_proxy_from_matrix",
                 "--matrix-csv",
                 str(matrix),
             ),
@@ -83,7 +83,18 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.measure_hpt_frt_proxy_gap",
+                "version_2.sac.calibration.measure_hpt_frt_proxy_gap",
+                "--matrix-csv",
+                str(matrix),
+            ),
+        ),
+        "frt-proxy-rollout-alignment": Stage(
+            name="frt-proxy-rollout-alignment",
+            description="Verify actual HPTVoltageSACEnv rollouts against switch-level matrix rows, including timestep envelope metrics.",
+            command=(
+                sys.executable,
+                "-m",
+                "version_2.sac.calibration.verify_hpt_proxy_rollout_alignment",
                 "--matrix-csv",
                 str(matrix),
             ),
@@ -94,7 +105,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.build_hpt_frt_teacher_traces",
+                "version_2.sac.datasets.build_hpt_frt_teacher_traces",
                 "--matrix-csv",
                 str(matrix),
                 "--trace-csv",
@@ -107,7 +118,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.measure_hpt_reward_alignment",
+                "version_2.sac.calibration.measure_hpt_reward_alignment",
                 "--matrix-csv",
                 str(matrix),
             ),
@@ -118,7 +129,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.train_hpt_reward_correction",
+                "version_2.sac.calibration.train_hpt_reward_correction",
             ),
         ),
         "control-comparison-smoke": Stage(
@@ -130,7 +141,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
                 "hpt_compare_scenario_type='fault'; "
                 "hpt_compare_case_name='sag_0p90'; "
                 "hpt_compare_modes={'legacy_conventional','conventional_dq','sac_actor_raw_guard0'}; "
-                "eval_hpt_v2_control_comparison;"
+                "run(fullfile(pwd,'evaluators','eval_hpt_v2_control_comparison.m'));"
             ),
         ),
         "control-comparison-summary": Stage(
@@ -139,7 +150,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.summarize_hpt_control_comparison",
+                "version_2.sac.summaries.summarize_hpt_control_comparison",
             ),
         ),
         "fault-specialists-smoke": Stage(
@@ -148,7 +159,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.train_hpt_case_specialists",
+                "version_2.sac.offline.train_hpt_case_specialists",
                 "--topology",
                 "topology2",
                 "--scenario-type",
@@ -169,7 +180,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.build_hpt_boundary_full_action_dataset",
+                "version_2.sac.datasets.build_hpt_boundary_full_action_dataset",
                 "--conventional-csv",
                 str(conventional_boundary),
                 "--matrix-csv",
@@ -184,7 +195,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.train_hpt_fault_specialists_vs_baseline",
+                "version_2.sac.offline.train_hpt_fault_specialists_vs_baseline",
                 "--baseline-csv",
                 str(conventional_boundary),
                 "--run-id",
@@ -213,7 +224,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.train_hpt_fault_specialists_vs_baseline",
+                "version_2.sac.offline.train_hpt_fault_specialists_vs_baseline",
                 "--baseline-csv",
                 str(conventional_boundary),
                 "--run-id",
@@ -252,7 +263,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.train_hpt_offline_full_action_baselines",
+                "version_2.sac.offline.train_hpt_offline_full_action_baselines",
                 "--run-id",
                 "hpt_offline_full_action_smoke",
                 "--topology",
@@ -269,6 +280,10 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
                 "32",
                 "--algorithms",
                 "auto",
+                "--specialist-mode",
+                "trajectory",
+                "--controller-heads",
+                "split",
             ),
         ),
         "offline-full-action-boundary": Stage(
@@ -277,7 +292,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.train_hpt_offline_full_action_baselines",
+                "version_2.sac.offline.train_hpt_offline_full_action_baselines",
                 "--run-id",
                 "hpt_offline_full_action_boundary",
                 "--topology",
@@ -294,6 +309,10 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
                 "64",
                 "--algorithms",
                 "auto",
+                "--specialist-mode",
+                "trajectory",
+                "--controller-heads",
+                "split",
             ),
         ),
         "offline-full-action-group-boundary": Stage(
@@ -302,7 +321,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.train_hpt_offline_full_action_baselines",
+                "version_2.sac.offline.train_hpt_offline_full_action_baselines",
                 "--run-id",
                 "hpt_offline_full_action_group_boundary",
                 "--topology",
@@ -319,6 +338,10 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
                 "32",
                 "--algorithms",
                 "auto",
+                "--specialist-mode",
+                "trajectory",
+                "--controller-heads",
+                "split",
                 "--group-specialists",
             ),
         ),
@@ -328,7 +351,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.validate_hpt_offline_actions_switchlevel",
+                "version_2.sac.offline.validate_hpt_offline_actions_switchlevel",
                 "--case-results-csv",
                 str(RESULTS / "hpt_offline_full_action_group_boundary" / "case_results.csv"),
                 "--run-id",
@@ -349,7 +372,7 @@ def build_stages(matrix_csv: str | None, trace_csv: str | None) -> dict[str, Sta
             command=(
                 sys.executable,
                 "-m",
-                "version_2.sac.train_hpt_case_specialists",
+                "version_2.sac.offline.train_hpt_case_specialists",
                 "--all-cases",
                 "--scenario-type",
                 "fault",

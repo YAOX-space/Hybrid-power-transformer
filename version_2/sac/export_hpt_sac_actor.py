@@ -34,7 +34,27 @@ def _actor_dict(model) -> dict:
     sd = model.policy.actor.state_dict()
     n_obs = int(np.prod(model.observation_space.shape))
     n_act = int(np.prod(model.action_space.shape))
-    mu_w = sd["mu.weight"].cpu().numpy()
+    if "mu.weight" in sd:
+        mu_w = sd["mu.weight"].cpu().numpy()
+        mu_b = sd["mu.bias"].cpu().numpy()
+    elif "mu.reg_head.weight" in sd and "mu.energy_head.weight" in sd:
+        mu_w = np.concatenate(
+            [
+                sd["mu.reg_head.weight"].cpu().numpy(),
+                sd["mu.energy_head.weight"].cpu().numpy(),
+            ],
+            axis=0,
+        )
+        mu_b = np.concatenate(
+            [
+                sd["mu.reg_head.bias"].cpu().numpy(),
+                sd["mu.energy_head.bias"].cpu().numpy(),
+            ],
+            axis=0,
+        )
+    else:
+        keys = ", ".join(sorted(sd))
+        raise KeyError(f"Actor state dict does not contain an exportable mu head: {keys}")
     if n_obs != OBS_DIM_HPT or n_act != ACT_DIM_HPT or tuple(mu_w.shape) != (ACT_DIM_HPT, 256):
         raise ValueError(
             f"Expected HPT SAC contract {OBS_DIM_HPT}/{ACT_DIM_HPT} with "
@@ -43,8 +63,10 @@ def _actor_dict(model) -> dict:
     out = {
         k.replace(".", "_"): v.cpu().numpy().astype("float64")
         for k, v in sd.items()
-        if "latent_pi" in k or k.startswith("mu.")
+        if "latent_pi" in k
     }
+    out["mu_weight"] = mu_w.astype("float64")
+    out["mu_bias"] = mu_b.reshape(-1, 1).astype("float64")
     out["act_low"] = model.action_space.low.astype("float64")
     out["act_high"] = model.action_space.high.astype("float64")
     out["n_obs"] = np.array([[n_obs]], dtype="float64")

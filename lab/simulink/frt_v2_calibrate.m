@@ -4,10 +4,9 @@ function frt_v2_calibrate(category, scrval)
 % fault_sequence(ft,target_V_pu)). For each fault_type at one SCR, sweep the fault resistance (LVRT) or
 % source swell amplitude (HVRT) with the HLC in mode 10 (external setpoint) commanding ZERO injection,
 % and record the settled LV-terminal positive-seq V+. Saves ../results/calib_<category>_scr<scr>.mat.
-%   frt_v2_calibrate('LVRT',3) / ('LVRT',10) / ('HVRT',3) / ('HVRT',10)
+%   frt_v2_calibrate('LVRT',3) / ('LVRT',10) / ('HVRT',2) / ('HVRT',15)
 here=fileparts(mfilename('fullpath')); cd(here); p=pu_params(); Vnom=p.VLN_peak; M='hpt_frt_full';
-% 2 grid configs (from frt_scenarios.csv): scr 10 -> strong, scr 3 -> weak
-if scrval==10, Rg=7.9057; Lg=0.075494; else, Rg=26.3523; Lg=0.251646; end
+[Rg,Lg] = grid_impedance_for_scr(scrval);
 
 isH = strcmp(category,'HVRT');
 if isH, build_hpt_frt_full(4,'swell'); fts={'swell_3ph','swell_1ph'}; sweep=linspace(1.10,2.40,9);
@@ -47,7 +46,21 @@ for fi=1:numel(fts)
   curves(fi) = struct('ft',ft,'param',sweep,'Vplus',Vp);
 end
 out=sprintf('../results/calib_%s_scr%g.mat',category,scrval);
-save(out,'curves'); fprintf('wrote %s\n', out);
+metrics_version='frt-v2'; %#ok<NASGU>
+calibration = struct('category',category,'scr',scrval,'Rg_ohm',Rg,'Lg_H',Lg, ...
+    'source','frt_scenarios_expanded.csv/frt_scenarios.csv');
+save(out,'curves','metrics_version','calibration'); fprintf('wrote %s\n', out);
+end
+function [Rg,Lg]=grid_impedance_for_scr(scrval)
+  files={'../frt_scenarios_expanded.csv','../frt_scenarios.csv'};
+  for fi=1:numel(files)
+    if isfile(files{fi})
+      A=readtable(files{fi});
+      ix=find(abs(A.scr-scrval)<1e-9,1);
+      if ~isempty(ix), Rg=A.Rg_ohm(ix); Lg=A.Lg_H(ix); return; end
+    end
+  end
+  error('No grid impedance found for SCR=%g in scenario CSV files', scrval);
 end
 function s=oo(b), if b, s='on'; else, s='off'; end, end
 function s=tern(c,a,b), if c, s=a; else, s=b; end, end

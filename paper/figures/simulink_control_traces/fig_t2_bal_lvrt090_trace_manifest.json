@@ -1,0 +1,80 @@
+{
+  "schema": "hpt-paper-figure-trace-manifest-v1",
+  "scenario": "topology2 balanced LVRT 0.90 pu / 60 ms",
+  "fault_start_s": 0.035,
+  "fault_clear_s": 0.095,
+  "sample_stride_s": 0.002,
+  "traces": {
+    "SAC initial (pre fine-tune)": "lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_paper_t2_bal_lvrt090_sac_initial_dagger_20260730_20260730_234739.csv",
+    "SAC after fine-tune": "lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_paper_t2_bal_lvrt090_sac_after_finetune_20260730_20260730_234928.csv",
+    "strong dq closed-loop": "lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_paper_t2_bal_lvrt090_strong_dq_20260730_20260730_235101.csv"
+  },
+  "figures": {
+    "actions_png": "paper\\figures\\simulink_control_traces\\fig_t2_bal_lvrt090_m_actions_sac_init_sac_trained_dq.png",
+    "actions_pdf": "paper\\figures\\simulink_control_traces\\fig_t2_bal_lvrt090_m_actions_sac_init_sac_trained_dq.pdf",
+    "voltage_png": "paper\\figures\\simulink_control_traces\\fig_t2_bal_lvrt090_voltage_sac_init_sac_trained_dq.png",
+    "voltage_pdf": "paper\\figures\\simulink_control_traces\\fig_t2_bal_lvrt090_voltage_sac_init_sac_trained_dq.pdf"
+  },
+  "metrics": {
+    "SAC initial (pre fine-tune)": {
+      "lv_fault_mean": 197.23903660620587,
+      "lv_fault_min": 190.557373892723,
+      "lv_fault_max": 202.890472116631,
+      "lv_recovery_mean": 210.76537918482975,
+      "vdc_min": 722.456028696932,
+      "vdc_max": 943.887567639672,
+      "action_fault_mean": [
+        0.17505229153409832,
+        -0.05649465352195009,
+        0.0001421158730685791,
+        0.0004155698723944931
+      ],
+      "action_abs_max": [
+        0.19083178538491,
+        0.0626859544254882,
+        0.00071146077974203,
+        0.00062915591586824
+      ]
+    },
+    "SAC after fine-tune": {
+      "lv_fault_mean": 197.23903660620587,
+      "lv_fault_min": 190.557373892723,
+      "lv_fault_max": 202.890472116631,
+      "lv_recovery_mean": 210.5204469849158,
+      "vdc_min": 723.548018542227,
+      "vdc_max": 943.887567639672,
+      "action_fault_mean": [
+        0.17503511143756317,
+        -0.0564407300359773,
+        8.305906994055406e-05,
+        0.00042453416950550117
+      ],
+      "action_abs_max": [
+        0.190967055991095,
+        0.0627102140203657,
+        0.000661522573536332,
+        0.000785963204642784
+      ]
+    },
+    "strong dq closed-loop": {
+      "lv_fault_mean": 199.36885772025926,
+      "lv_fault_min": 190.24165444618,
+      "lv_fault_max": 205.912743247668,
+      "lv_recovery_mean": 204.86719502172573,
+      "vdc_min": 800.015618224785,
+      "vdc_max": 888.54137725809,
+      "action_fault_mean": [
+        0.21791953073146159,
+        -0.12478416518749455,
+        0.0,
+        0.0
+      ],
+      "action_abs_max": [
+        0.549672915816684,
+        0.241685736603677,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

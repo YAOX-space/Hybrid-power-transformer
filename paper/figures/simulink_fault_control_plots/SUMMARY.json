@@ -1,0 +1,92 @@
+{
+  "topology": "topology2",
+  "scenario_count": 14,
+  "elapsed_s": 1391.8360199928284,
+  "output_dir": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots",
+  "results": [
+    {
+      "title": "topology2 BALANCED LVRT 0.90 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_balanced_lvrt_0p90pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_balanced_lvrt_0p90pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_balanced_lvrt_0p90pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 A LVRT 0.90 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_a_lvrt_0p90pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_a_lvrt_0p90pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_a_lvrt_0p90pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 B LVRT 0.90 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_b_lvrt_0p90pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_b_lvrt_0p90pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_b_lvrt_0p90pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 C LVRT 0.90 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_c_lvrt_0p90pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_c_lvrt_0p90pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_c_lvrt_0p90pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 AB LVRT 0.90 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ab_lvrt_0p90pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ab_lvrt_0p90pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ab_lvrt_0p90pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 BC LVRT 0.90 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_bc_lvrt_0p90pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_bc_lvrt_0p90pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_bc_lvrt_0p90pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 CA LVRT 0.90 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ca_lvrt_0p90pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ca_lvrt_0p90pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ca_lvrt_0p90pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 BALANCED HVRT 1.10 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_balanced_hvrt_1p10pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_balanced_hvrt_1p10pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_balanced_hvrt_1p10pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 A HVRT 1.10 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_a_hvrt_1p10pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_a_hvrt_1p10pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_a_hvrt_1p10pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 B HVRT 1.10 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_b_hvrt_1p10pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_b_hvrt_1p10pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_b_hvrt_1p10pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 C HVRT 1.10 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_c_hvrt_1p10pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_c_hvrt_1p10pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_c_hvrt_1p10pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 AB HVRT 1.10 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ab_hvrt_1p10pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ab_hvrt_1p10pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ab_hvrt_1p10pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 BC HVRT 1.10 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_bc_hvrt_1p10pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_bc_hvrt_1p10pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_bc_hvrt_1p10pu_60ms.pdf"
+    },
+    {
+      "title": "topology2 CA HVRT 1.10 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ca_hvrt_1p10pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ca_hvrt_1p10pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_ca_hvrt_1p10pu_60ms.pdf"
+    }
+  ]
+}

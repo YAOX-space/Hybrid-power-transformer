@@ -1,0 +1,10 @@
+{
+  "schema": "hpt-family-runtime-selector-manifest-v1",
+  "source_manifest": "version_2\\sac\\experiments\\family_t1_lvrt_balanced_matrix_20260728.csv",
+  "out_manifest": "version_2\\sac\\experiments\\family_t1_lvrt_balanced_runtime_selector_full_20260729.csv",
+  "comparison_mode": "sac_actor_depth_selector_raw",
+  "base_model": "data/models/hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger2.zip",
+  "dynamic_model": "data/models/hpt_t1_lvrt_bal_family_sac_supportdataset_pilot_20260729.zip",
+  "case_count": 19,
+  "selector_logic": "Simulink HPTSACController actor_select_mode=4.0: dynamic actor is used online for topology1 deep LVRT when g_vpos or v_fault_min <= 0.885 during fault/recovery."
+}

@@ -11,7 +11,9 @@
 
 - Refresh or verify FRT calibration matrix.
 - Run conventional dq versus active RL controller on representative topology1
-  and topology2 cases.
+  and topology2 voltage-survival cases.
+- Build balanced and unbalanced boundary cases where SAC can be compared
+  against the strongest conventional dq baseline.
 - Re-run proxy gap, reward alignment, and rollout alignment after any interface
   change.
 
@@ -20,6 +22,8 @@
 - Select depth-duration LVRT/HVRT grid for generalization.
 - Add parameter/grid uncertainty only after baseline gates are stable.
 - Analyze failed transfer cases and run targeted ablations.
+- Defer full FRT certification gates until the voltage-survival and
+  beat-conventional boundary matrix is stable.
 
 ## Week 4 - Paper Draft
 

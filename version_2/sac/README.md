@@ -1,11 +1,35 @@
 # Version 2 HPT SAC Package
 
 This package contains the controller-training workflow for the version 2
-switch-level Hybrid Power Transformer models.  Keep this package import-stable:
-existing commands such as `py -3.8 -m version_2.sac.train_hpt_case_specialists`
-are treated as public entry points.
+switch-level Hybrid Power Transformer models.  Use the subpackage module paths
+listed below for calibration, dataset, offline, campaign, and summary tools.
 
 ## Package Map
+
+### Source Tree After Cleanup
+
+The top level contains active main-line modules and core shared utilities only.
+Historical wrapper files were removed; use the focused subpackage paths:
+
+```text
+version_2/sac/calibration/   proxy calibration, reward alignment, proxy gap checks
+version_2/sac/datasets/      dataset and teacher-trace builders
+version_2/sac/offline/       older proxy/offline training and validation routes
+version_2/sac/campaigns/     long or historical orchestration scripts
+version_2/sac/summaries/     CSV/report summarizers
+version_2/sac/legacy/        retired overnight scripts kept for reproducibility
+```
+
+Current trajectory specialist commands remain as top-level implementation files
+because they are the active workflow:
+
+- `run_hpt_trajectory_specialist_campaign.py`
+- `validate_hpt_trajectory_switchlevel.py`
+- `validate_hpt_accepted_specialists.py`
+- `search_hpt_frt_trajectory_cem.py`
+- `build_hpt_action_trajectory.py`
+- `pretrain_hpt_actor_bc.py`
+- `export_hpt_sac_actor.py`
 
 Core environment and metadata:
 
@@ -15,45 +39,56 @@ Core environment and metadata:
 
 Switch-level data and calibration:
 
-- `build_hpt_switch_dataset.py` - converts switch-level traces into ML datasets.
-- `build_hpt_boundary_full_action_dataset.py` - builds the boundary-centered
+- `datasets/build_hpt_switch_dataset.py` - converts switch-level traces into ML datasets.
+- `datasets/build_hpt_boundary_full_action_dataset.py` - builds the boundary-centered
   full-action dataset used to train direct actors against the conventional DQ
   baseline.
-- `calibrate_hpt_proxy_from_sweep.py` - steady/regulating proxy calibration.
-- `calibrate_hpt_energy_proxy_from_sweep.py` - energy-bridge proxy calibration.
-- `calibrate_hpt_frt_proxy_from_matrix.py` - GB/T FRT matrix calibration.
-- `build_hpt_frt_teacher_traces.py` - selects switch-level FRT teacher actions
+- `calibration/calibrate_hpt_proxy_from_sweep.py` - steady/regulating proxy calibration.
+- `calibration/calibrate_hpt_energy_proxy_from_sweep.py` - energy-bridge proxy calibration.
+- `calibration/calibrate_hpt_frt_proxy_from_matrix.py` - GB/T FRT matrix calibration.
+- `datasets/build_hpt_frt_teacher_traces.py` - selects switch-level FRT teacher actions
   and builds per-SAC-step teacher traces.
+- `datasets/build_hpt_trajectory_teacher_dataset.py` - indexes trajectory-search
+  switch-level candidates and splits them into strict training rows,
+  calibration-only near-pass rows, and diagnostic failures.  This is the
+  trajectory-level replacement for using fixed-action rows as final teachers.
 
 Proxy validation:
 
-- `measure_hpt_proxy_gap.py` - steady and step proxy-vs-Simulink gap report.
-- `measure_hpt_frt_proxy_gap.py` - FRT proxy-vs-Simulink gap report.
-- `measure_hpt_reward_alignment.py` - ranking test between calibrated proxy
+- `calibration/measure_hpt_proxy_gap.py` - steady and step proxy-vs-Simulink gap report.
+- `calibration/measure_hpt_frt_proxy_gap.py` - FRT proxy-vs-Simulink gap report.
+- `calibration/measure_hpt_reward_alignment.py` - ranking test between calibrated proxy
   reward-like scores and switch-level FRT matrix scores.
-- `train_hpt_reward_correction.py` - supervised correction from proxy reward to
+- `frt_envelope.py` - shared Python definition of the per-step LVRT/HVRT
+  voltage envelope used by the proxy reward and pass/fail gates.
+- `calibration/train_hpt_reward_correction.py` - supervised correction from proxy reward to
   switch-level reward-like action ranking, with held-out action evaluation.
-- `summarize_hpt_control_comparison.py` - summarizes switch-level legacy
+- `summaries/summarize_hpt_control_comparison.py` - summarizes switch-level legacy
   conventional, strong conventional, and SAC comparison CSVs.
-- `validate_hpt_offline_actions_switchlevel.py` - promotes proxy-beating
+- `offline/validate_hpt_offline_actions_switchlevel.py` - promotes proxy-beating
   offline full-action candidates into switch-level fixed-action validation
   against the traditional baseline.
 
 Training:
 
-- `train_hpt_voltage_sac.py` - baseline SAC training on the proxy.
+- `offline/train_hpt_voltage_sac.py` - baseline SAC training on the proxy.
 - `pretrain_hpt_actor_bc.py` - behavior-cloning and mixed teacher pretraining.
-- `train_hpt_offline_full_action_baselines.py` - TD3+BC-style and
+- `offline/train_hpt_offline_full_action_baselines.py` - TD3+BC-style and
   AWAC/IQL-style contextual offline baselines from the full-action boundary
   dataset.  This is the stronger behavior-constrained route used when ordinary
-  proxy SAC drifts outside switch-level support.
-- `train_hpt_case_specialists.py` - topology/case specialist training and
+  proxy SAC drifts outside switch-level support.  The default actor is now a
+  trajectory specialist with split regulating/energy output heads.
+- `offline/train_hpt_fault_specialists_vs_baseline.py` - online proxy SAC specialist
+  training against the conventional DQ boundary.  It now supports
+  `--controller-heads split` so the regulating bridge and energy bridge have
+  separate final actor heads.
+- `offline/train_hpt_case_specialists.py` - topology/case specialist training and
   switch-level promotion gate.
 - `run_hpt_specialist_matrix_campaign.py` - resumable per-topology/per-fault
   specialist matrix runner.  It reuses or launches switch-level campaigns and
   reports each actor as `full_frt`, `voltage_survival`, or `diagnostic`.
-- `train_hpt_learned_proxy.py` - learned proxy experiments.
-- `train_hpt_safety_classifier.py` - safety classifier experiments.
+- `calibration/train_hpt_learned_proxy.py` - learned proxy experiments.
+- `calibration/train_hpt_safety_classifier.py` - safety classifier experiments.
 
 Export and deployment:
 
@@ -92,14 +127,18 @@ through `run_hpt_sac_pipeline.py` or documented in `experiments/README.md`.
    `reg_q_mean`, `energy_d_mean`, and `energy_q_mean` fields are treated as
    response-compatible fields; action labels must come from `raw_m_*` or
    `cmd_m_*`.
+9. New FRT datasets must contain timestep voltage-survival metrics.  Legacy
+   rows without `fault_lv_band_violation_max_pu`,
+   `envelope_violation_max_pu`, and `recovery_violation_max_pu` are not valid
+   for final SAC training.
 
 ## Canonical Workflow
 
 Use the pipeline helper to print or run repeatable stages:
 
 ```powershell
-py -3.8 -m version_2.sac.run_hpt_sac_pipeline --list
-py -3.8 -m version_2.sac.run_hpt_sac_pipeline --stage frt-matrix --dry-run
+py -3 -m version_2.sac.run_hpt_sac_pipeline --list
+py -3 -m version_2.sac.run_hpt_sac_pipeline --stage frt-matrix --dry-run
 ```
 
 The current full workflow is:
@@ -112,7 +151,8 @@ The current full workflow is:
 6. Train/evaluate reward correction for weak proxy-ranking groups.
 7. Run legacy-conventional/strong-conventional/SAC switch-level comparison.
 8. Build the boundary-centered full-action dataset.
-9. Run BC-only reproduction before any long SAC training.
+9. Run BC-only reproduction before any long SAC training.  The current default
+   is `--specialist-mode trajectory --controller-heads split`.
 10. Run offline full-action baselines (`offline-full-action-smoke`, then
     `offline-full-action-group-boundary`) to check whether behavior-constrained
     per-topology/per-fault policies can improve on conventional DQ without
@@ -158,6 +198,9 @@ The current full workflow is:
   `cmd_m_energy_d=+0.07` in topology2/HVRT can produce a measured effective
   response near `meas_energy_d=-0.02`.  Do not train new SAC policies from a
   dataset that lacks both `cmd_m_energy_d_mean` and `meas_energy_d_mean`.
+- The previous fixed-action accepted specialist matrix is now legacy under the
+  new trajectory/envelope gate.  Re-run the FRT matrix and proxy alignment
+  before quoting pass counts.
 - The interrupted full fault specialist run at
   `lab/results/hpt_case_specialists_20260717_011726` produced partial results
   only. It should be treated as diagnostic data, not a completed campaign.
@@ -201,14 +244,14 @@ The following files are intentionally not part of the maintained source tree:
 - Simulink generated caches: `slprj/`, `*.slxc`
 - one-off or broken MAT candidates beside the Simulink scripts
 
-The following Simulink sweep scripts are still in `version_2/simulink/` because
-they depend on that directory layout to find `topoloty1/` and `topology2/`.
-Treat them as diagnostics/calibration helpers, not as the main experiment
-entrypoint:
+The version-2 Simulink tree now mirrors the SAC cleanup:
 
-- `sweep_hpt_v2_sac_action_response.m`
-- `sweep_hpt_v2_sac_energy_response.m`
-- `sweep_hpt_v2_reg_energy_response.m`
-- `sweep_hpt_v2_fault_fixed_reg_response.m`
-- `sweep_hpt_v2_topology2_energy_signs.m`
-- `sweep_hpt_v2_topology2_fault_fixed_reg.m`
+- `version_2/simulink/collectors/`
+- `version_2/simulink/evaluators/`
+- `version_2/simulink/calibration/`
+- `version_2/simulink/sweeps/`
+- `version_2/simulink/tests/`
+- `version_2/simulink/actors/archive/`
+
+Use explicit `run(fullfile(pwd,'<subdir>','<script>.m'))` commands from the
+Simulink root; do not rely on old top-level MATLAB script names.

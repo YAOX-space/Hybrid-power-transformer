@@ -1,4 +1,4 @@
-# HPT Direct SAC Progress - 2026-07-17
+﻿# HPT Direct SAC Progress - 2026-07-17
 
 ## Interruption Handling
 
@@ -219,7 +219,7 @@ Interpretation:
 
 Added:
 
-- `version_2/simulink/eval_hpt_v2_control_comparison.m`
+- `version_2/simulink/evaluators/eval_hpt_v2_control_comparison.m`
 - `version_2/sac/summarize_hpt_control_comparison.py`
 
 Purpose:
@@ -514,14 +514,14 @@ baseline to beat rather than comparing against an all-pass or all-fail setup.
 
 Implementation:
 
-- `version_2/simulink/sweep_hpt_v2_conventional_boundary.m`
+- `version_2/simulink/sweeps/sweep_hpt_v2_conventional_boundary.m`
   - LVRT / undervoltage depths: `0.995, 0.990, 0.980, 0.950, 0.920,
     0.900, 0.880, 0.850, 0.800, 0.750, 0.700, 0.650, 0.600,
     0.500, 0.350, 0.200 pu`
   - HVRT / overvoltage depths: `1.005, 1.010, 1.020, 1.050, 1.080,
     1.100, 1.120, 1.150, 1.180, 1.200, 1.250, 1.300 pu`
   - Durations: `40 ms`, `80 ms`, `120 ms`, `200 ms`
-- `version_2/simulink/eval_hpt_v2_control_comparison.m`
+- `version_2/simulink/evaluators/eval_hpt_v2_control_comparison.m`
   - supports custom fault matrices and per-row duration
   - reports two pass levels:
     - `voltage_survival_pass`: fault-window LV RMS, recovery-window LV RMS,
@@ -772,7 +772,7 @@ Implemented:
     `[m_reg_d, m_reg_q, m_energy_d, m_energy_q]`;
   - runs the same case against `conventional_dq` and `fixed_action`;
   - writes candidate CSVs, MATLAB logs, summary JSON, and a report.
-- `version_2/simulink/eval_hpt_v2_control_comparison.m`
+- `version_2/simulink/evaluators/eval_hpt_v2_control_comparison.m`
   - added `fixed_action` mode;
   - passes `hpt_compare_fixed_action` into the model workspace so the existing
     controller fixed-policy path can be used without changing plant topology.
@@ -832,3 +832,4 @@ Interpretation:
   topology1/HVRT advantage transfers only partially to switch-level Simulink.
 - The next technical blocker is action-semantics alignment, especially the
   energy-bridge command/current sign and the recovery-window voltage response.
+

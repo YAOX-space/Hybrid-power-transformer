@@ -4,7 +4,10 @@ import numpy as np
 import pytest
 from hpt_frt.common import frt_v2 as FV2
 from hpt_frt.device import frt_env as L
+from hpt_frt.device.frt_metrics import evaluate_scenario
 from hpt_frt.device.frt_env_v2 import HPTFRTEnvV2
+from hpt_frt.device.overnight_constrained_projection import ProjectionPolicy, ProjectionSpec
+from hpt_frt.device.residual_env import HPTFRTResidualEnvV2
 
 SC = dict(scenario_id=1, family_id=1, category='LVRT', fault_type='sym3ph', target_V_pu=0.5,
           grid='weak', scr=3.0, t_fault=0.02, fault_dur=0.6, T_sim=2.5, random_seed=1)
@@ -87,3 +90,121 @@ def test_v2_hvrt_ceiling_is_time_varying():
     assert e._hvrt_ceiling(0.4 * L.TSCALE) == 1.30
     assert e._hvrt_ceiling(0.9 * L.TSCALE) == 1.20
     assert L.HPTFRTEnv([SC])._hvrt_ceiling(0.9 * L.TSCALE) == pytest.approx(1.32)  # legacy static
+
+
+def test_asymmetric_boundary_measured_iq_can_expose_wrong_sign():
+    sc = {**SC, 'category': 'LVRT', 'fault_type': '2ph', 'target_V_pu': 0.75,
+          'scr': 3.0, 't_fault': 0.0, 'fault_dur': 0.5, 'T_sim': 1.0}
+    e = HPTFRTEnvV2([sc]); e.reset()
+    info = None
+    for _ in range(30):
+        _, _, _, _, info = e.step([0.02, 0.04, 0.0])
+    assert info['iq_cmd'] > 0.0
+    assert info['V2n'] > 0.05
+    assert 0.82 <= info['V2p'] <= 0.91
+    assert info['iq'] < 0.0
+
+
+def test_residual_asym_prior_does_not_hide_shallow_measured_wrong_sign():
+    sc = {**SC, 'category': 'LVRT', 'fault_type': '2ph', 'target_V_pu': 0.75,
+          'scr': 3.0, 't_fault': 0.0, 'fault_dur': 0.5, 'T_sim': 1.0}
+    e = HPTFRTResidualEnvV2([sc]); e.reset()
+    info = None
+    for _ in range(30):
+        _, _, _, _, info = e.step([0.0, 0.0, 0.0])
+    assert info['V2n'] > 0.05
+    assert info['iq_cmd'] > 0.0
+    assert info['iq'] < 0.0
+
+
+def test_shallow_2phg_extra_bias_is_strong_grid_long_fault_only():
+    sc = {**SC, 'category': 'LVRT', 'fault_type': '2ph_g', 'target_V_pu': 0.75,
+          'scr': 3.0, 't_fault': 0.0, 'fault_dur': 0.5, 'T_sim': 1.0}
+    weak = HPTFRTResidualEnvV2([sc]); weak.reset()
+    weak_info = None
+    for _ in range(30):
+        _, _, _, _, weak_info = weak.step([0.0, 0.0, 0.0])
+    assert weak_info['V2n'] > 0.05
+    assert weak_info['iq'] >= 0.0
+
+    strong = HPTFRTResidualEnvV2([{**sc, 'scr': 10.0}]); strong.reset()
+    strong_info = None
+    for _ in range(30):
+        _, _, _, _, strong_info = strong.step([0.0, 0.0, 0.0])
+    assert strong_info['V2n'] > 0.05
+    assert strong_info['iq'] < 0.0
+
+
+def test_stiff_sym_lvrt_dc_sink_exposes_deep_mid_survive_risk():
+    sc = {**SC, 'category': 'LVRT', 'fault_type': 'sym3ph', 'target_V_pu': 0.2,
+          'scr': 10.0, 't_fault': 0.0, 'fault_dur': 0.5, 'T_sim': 1.0}
+    e = HPTFRTEnvV2([sc]); e.reset()
+    vdc_min = 1.0
+    info = None
+    for _ in range(40):
+        _, _, _, _, info = e.step([0.27, 0.0, 0.0])
+        vdc_min = min(vdc_min, info['Vdc'])
+    assert info['Vg_p'] == pytest.approx(0.2)
+    assert vdc_min < 0.75
+
+
+def test_weak_scr2_shallow_hvrt_recovery_stays_visible_to_ode():
+    sc = {**SC, 'category': 'HVRT', 'fault_type': 'swell_3ph', 'target_V_pu': 1.10,
+          'scr': 2.0, 't_fault': 0.02, 'fault_dur': 0.5, 'T_sim': 1.0}
+    e = HPTFRTEnvV2([sc]); e.reset()
+    info = None
+    for _ in range(120):
+        _, _, _, _, info = e.step([0.27, 0.12, 0.0])
+    assert 0.90 < info['V2p'] < 0.93
+
+
+def test_symmetric_hvrt_recovery_fallback_uses_physical_iq_cap():
+    class ZeroResidual:
+        action_space = None
+        observation_space = None
+
+        def predict(self, obs, deterministic=True):
+            return np.zeros(3, np.float32), None
+
+    sc = {**SC, 'category': 'HVRT', 'fault_type': 'swell_3ph', 'target_V_pu': 1.10,
+          'scr': 2.0, 't_fault': 0.02, 'fault_dur': 0.5, 'T_sim': 1.0}
+    spec = ProjectionSpec(
+        name='hvrt_recover_iq30',
+        lvrt_enable=False,
+        fallback_enable=True,
+        fallback_v_min=0.90,
+        fallback_v_max=0.97,
+        fallback_vdc_min=0.70,
+        fallback_iq=0.30,
+        fallback_md=0.118,
+    )
+    model = ProjectionPolicy(ZeroResidual(), spec)
+    res = evaluate_scenario(model, HPTFRTResidualEnvV2, sc)['res']
+    assert res['recover']['status'] == FV2.PASS
+    assert res['vdc_survive_proxy'] == FV2.PASS
+    assert res['vdc_min'] > 0.75
+
+
+def test_single_phase_hvrt_sequence_bias_exposes_wrong_sign_boundary():
+    sc = {**SC, 'category': 'HVRT', 'fault_type': 'swell_1ph', 'target_V_pu': 1.2,
+          'scr': 3.0, 't_fault': 0.0, 'fault_dur': 0.5, 'T_sim': 1.0}
+    e = HPTFRTEnvV2([sc]); e.reset()
+    info = None
+    for _ in range(40):
+        _, _, _, _, info = e.step([0.0, 0.05, 0.0])
+    assert info['V2n'] > 0.05
+    assert info['V2p'] > 1.1
+    assert info['iq_cmd'] == pytest.approx(0.0)
+    assert info['iq'] > 0.0
+
+
+def test_single_phase_hvrt_sequence_bias_is_weak_grid_only():
+    sc = {**SC, 'category': 'HVRT', 'fault_type': 'swell_1ph', 'target_V_pu': 1.2,
+          'scr': 10.0, 't_fault': 0.0, 'fault_dur': 0.5, 'T_sim': 1.0}
+    e = HPTFRTEnvV2([sc]); e.reset()
+    info = None
+    for _ in range(40):
+        _, _, _, _, info = e.step([0.0, 0.05, 0.0])
+    assert info['V2n'] > 0.05
+    assert info['V2p'] < 1.1
+    assert info['iq'] == pytest.approx(info['iq_cmd'])

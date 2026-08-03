@@ -1,0 +1,14 @@
+{
+  "topology": "topology2",
+  "scenario_count": 1,
+  "elapsed_s": 100.38573503494263,
+  "output_dir": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots",
+  "results": [
+    {
+      "title": "topology2 BALANCED LVRT 0.90 pu / 60 ms",
+      "trace": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_balanced_lvrt_0p90pu_60ms_trace.csv",
+      "png": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_balanced_lvrt_0p90pu_60ms.png",
+      "pdf": "E:\\research_space\\Hybrid-power-transformer\\paper\\figures\\simulink_fault_control_plots\\topology2_balanced_lvrt_0p90pu_60ms.pdf"
+    }
+  ]
+}

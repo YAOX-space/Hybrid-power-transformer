@@ -1,0 +1,44 @@
+{
+  "schema": "hpt-paper-figure-clarification-v1",
+  "reason_for_update": "Reveal overlapping SAC-init trace and show that dq baseline fails current gate, not voltage envelope.",
+  "input_trace_files": {
+    "SAC initial (pre fine-tune)": "lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_paper_t2_bal_lvrt090_sac_initial_dagger_20260730_20260730_234739.csv",
+    "SAC after fine-tune": "lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_paper_t2_bal_lvrt090_sac_after_finetune_20260730_20260730_234928.csv",
+    "strong dq closed-loop": "lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_paper_t2_bal_lvrt090_strong_dq_20260730_20260730_235101.csv"
+  },
+  "input_eval_csv": "lab\\results\\hpt_v2_control_comparison\\control_comparison_topology2_fault_all_hpt_t2_bal_lvrt090_preramp_split_safe_sacft_commonact_modeldefault_20260730_20260730_230938.csv",
+  "output_figures": {
+    "actions_revealed_png": "paper\\figures\\simulink_control_traces\\fig_t2_bal_lvrt090_m_actions_revealed_sac_init.png",
+    "actions_revealed_pdf": "paper\\figures\\simulink_control_traces\\fig_t2_bal_lvrt090_m_actions_revealed_sac_init.pdf",
+    "voltage_current_png": "paper\\figures\\simulink_control_traces\\fig_t2_bal_lvrt090_voltage_and_current_gate.png",
+    "voltage_current_pdf": "paper\\figures\\simulink_control_traces\\fig_t2_bal_lvrt090_voltage_and_current_gate.pdf"
+  },
+  "metrics": {
+    "strong dq closed-loop": {
+      "voltage_survival_pass": 0,
+      "voltage_survival_reason": "grid_current_limit",
+      "full_frt_pass": 0,
+      "full_frt_reason": "grid_current_limit;reactive_wrong_sign",
+      "grid_current_peak_pu": 1.50436532886966,
+      "control_score": 110.7676220676,
+      "envelope_violation_max_pu": 0.0,
+      "recovery_violation_max_pu": 0.0,
+      "fault_lv_band_violation_max_pu": 0.0,
+      "vdc_min": 797.47306416089,
+      "vdc_max": 899.574998492964
+    },
+    "SAC after fine-tune": {
+      "voltage_survival_pass": 1,
+      "voltage_survival_reason": "",
+      "full_frt_pass": 0,
+      "full_frt_reason": "reactive_wrong_sign",
+      "grid_current_peak_pu": 1.39198298778355,
+      "control_score": 107.57626631933,
+      "envelope_violation_max_pu": 0.0,
+      "recovery_violation_max_pu": 0.0,
+      "fault_lv_band_violation_max_pu": 0.0,
+      "vdc_min": 721.334833102547,
+      "vdc_max": 950.090370088637
+    }
+  }
+}

@@ -2,11 +2,13 @@
  "analysis": "post-processing of existing MAT/JSON only \u2014 NO training / Simulink / re-run",
  "metrics_version": "frt-v2",
  "layer": "switching",
+ "generated_at": "2026-07-07T15:47:27",
  "certified_full320": {
   "residual_SAC_mi14": {
    "strict_pass_pct": 53.1,
    "no_fail_effective_pct": 89.4,
    "fail_pct": 10.6,
+   "pass_determinable_pct": 83.3,
    "true": 170,
    "false": 34,
    "none": 116
@@ -15,6 +17,7 @@
    "strict_pass_pct": 39.7,
    "no_fail_effective_pct": 68.1,
    "fail_pct": 31.9,
+   "pass_determinable_pct": 55.5,
    "true": 127,
    "false": 102,
    "none": 91
@@ -62,6 +65,22 @@
   },
   "survive": {
    "HVRT/scr3": 10
+  }
+ },
+ "ode_visibility": {
+  "enabled": true,
+  "model": "sac_residual_best.zip",
+  "rule": "VISIBLE iff ODE reproduces a switching-failed criterion; survive uses vdc_survive_proxy",
+  "counts": {
+   "VISIBLE": 34
+  },
+  "by_switching_failed_criterion": {
+   "reactive": {
+    "VISIBLE": 24
+   },
+   "survive": {
+    "VISIBLE": 10
+   }
   }
  },
  "dq_also_fail": {

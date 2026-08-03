@@ -1,11 +1,11 @@
-# HPT Proxy Gap Note - 2026-07-15
+﻿# HPT Proxy Gap Note - 2026-07-15
 
 ## Run
 
 Command:
 
 ```powershell
-py -3.8 -m version_2.sac.measure_hpt_proxy_gap
+py -3.8 -m version_2.sac.calibration.measure_hpt_proxy_gap
 ```
 
 Local result folder:
@@ -69,3 +69,4 @@ Update the data-collection plan so every Simulink rollout stores:
 
 This is required before PETS/MOPO training; otherwise the learned proxy will
 mix two different action semantics.
+

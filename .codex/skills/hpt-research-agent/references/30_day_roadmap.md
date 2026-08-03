@@ -11,6 +11,8 @@ Week 1: reproducible platform.
 Week 2: core experiments.
 
 - Re-run baseline PI/conventional dq versus RL for topology1/topology2.
+- Prioritize switch-level voltage-survival specialists and boundary cases where
+  SAC can beat the strongest conventional dq baseline.
 - Refresh FRT matrix, proxy calibration, reward alignment, and rollout
   alignment if interface changes touched observations, actions, or envelope
   metrics.
@@ -21,6 +23,8 @@ Week 3: robustness and explanation.
 - Run selected LVRT/HVRT depth-duration generalization.
 - Add parameter/grid uncertainty only after Week 2 gates are stable.
 - Analyze transfer failures and ablations.
+- Defer full FRT certification gates until the voltage-survival and
+  beat-conventional boundary matrix is stable.
 
 Week 4: paper first draft.
 

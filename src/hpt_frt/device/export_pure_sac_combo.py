@@ -6,6 +6,8 @@ import json
 import time
 from pathlib import Path
 
+import scipy.io as sio
+
 from .export_sac_actor import export_actor
 from .model_io import load_sac
 from .train_common import sha256_file
@@ -80,7 +82,12 @@ def main():
     (RESULTS / ".p3_current_runid").write_text(args.run_id, encoding="utf-8")
     for expert, path in paths.items():
         ensure_sidecar(path, run_id=args.run_id, expert=expert, note=note)
-        export_actor(path, LAB / f"sac_{expert}_weights.mat", expected_run_id=None)
+        mat_path = LAB / f"sac_{expert}_weights.mat"
+        W = export_actor(path, mat_path, expected_run_id=None)
+        # Keep the codegen MAT structs identical across experts. Detailed source
+        # provenance stays in the combo manifest; Simulink reads this deployment id.
+        W["run_id"] = args.run_id
+        sio.savemat(str(mat_path), W)
     manifest = {
         "run_id": args.run_id,
         "pure_sac": True,

@@ -31,7 +31,8 @@ class ExpertRouter:
     def _name(self, obs):
         v2p = float(obs[1])
         v2n = float(obs[2])
-        if v2p > 1.10:
+        probs = obs[9:15]
+        if v2p >= 1.060 or float(probs[5]) > 0.5:
             return "hvrt_asym" if v2n > 0.05 else "hvrt_sym"
         if v2p < 0.90 or v2n > 0.05:
             return "asym" if v2n > 0.05 else "sym"

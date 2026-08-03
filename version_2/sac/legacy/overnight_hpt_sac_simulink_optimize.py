@@ -1,4 +1,4 @@
-"""Overnight HPT SAC optimization loop with Simulink-in-the-loop validation.
+﻿"""Overnight HPT SAC optimization loop with Simulink-in-the-loop validation.
 
 The SAC actor is still trained on the fast averaged proxy.  Every candidate is
 then exported and evaluated on the switch-level Simulink models.  A candidate is
@@ -256,7 +256,7 @@ def score_fault(csv_path: Path) -> ValidationScore:
 
 
 def run_step4(run_dir: Path, label: str) -> ValidationScore:
-    code = f"run('{(SIMULINK / 'test_hpt_v2_sac_switchlevel_voltage_regulation.m').as_posix()}')"
+    code = f"run('{(SIMULINK / 'tests' / 'test_hpt_v2_sac_switchlevel_voltage_regulation.m').as_posix()}')"
     rc = run_cmd(["matlab", "-batch", code], run_dir / "logs" / f"{label}_step4.log", timeout_s=1800)
     if rc != 0:
         return ValidationScore("step4", "", 1e9, False, 0.0, 0.0, 0.0, 0.0, 0.0, [f"matlab_rc={rc}"])
@@ -265,7 +265,7 @@ def run_step4(run_dir: Path, label: str) -> ValidationScore:
 
 
 def run_fault(run_dir: Path, label: str) -> ValidationScore:
-    code = f"run('{(SIMULINK / 'test_hpt_v2_sac_fault_transition.m').as_posix()}')"
+    code = f"run('{(SIMULINK / 'tests' / 'test_hpt_v2_sac_fault_transition.m').as_posix()}')"
     rc = run_cmd(["matlab", "-batch", code], run_dir / "logs" / f"{label}_fault.log", timeout_s=2400)
     if rc != 0:
         return ValidationScore("fault_transition", "", 1e9, False, 0.0, 0.0, 0.0, 0.0, 0.0, [f"matlab_rc={rc}"])
@@ -369,7 +369,7 @@ def train_candidate(
     cmd = [
         sys.executable,
         "-m",
-        "version_2.sac.train_hpt_voltage_sac",
+        "version_2.sac.offline.train_hpt_voltage_sac",
         "--steps",
         str(steps),
         "--n-envs",
@@ -580,3 +580,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

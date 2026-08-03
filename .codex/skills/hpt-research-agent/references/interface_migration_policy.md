@@ -13,7 +13,8 @@ Protected interfaces:
 Migration steps:
 
 1. Write the reason and affected files.
-2. Add a wrapper or compatibility path when public entry points move.
+2. Add a wrapper or compatibility path only when backward compatibility is
+   required by the user or by active scripts.
 3. Update smoke tests before removing old assumptions.
 4. Record old name, new name, reason, validation, and rollback in
    `version_2/docs/autonomy/migration_notes.md`.

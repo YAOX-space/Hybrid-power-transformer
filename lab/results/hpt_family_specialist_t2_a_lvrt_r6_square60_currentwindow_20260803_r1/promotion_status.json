@@ -1,0 +1,21 @@
+{
+  "schema": "hpt-switchlevel-matrix-promotion-v1",
+  "run_id": "hpt_family_specialist_t2_a_lvrt_r6_square60_currentwindow_20260803_r1",
+  "decision": "retain_targeted_r6_not_global_square60_promotion",
+  "evidence_level": "fresh_switch_level_voltage_survival",
+  "actor": "data/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+  "actor_sha256": "44dadac630f30d72555ae5ed363301296ac6b1ed2cd6201bfb1043ae1299cde5",
+  "one_actor_for_all_cells": true,
+  "matrix_cells": 60,
+  "strong_dq_pass_count": 48,
+  "r6_pass_count": 46,
+  "both_pass_count": 43,
+  "dq_fail_r6_pass_count": 3,
+  "dq_pass_r6_fail_count": 5,
+  "both_fail_count": 9,
+  "r6_score_beats_dq_count": 45,
+  "strong_dq_score_mean": 123.60036984284538,
+  "r6_score_mean": 115.5708186813595,
+  "interpretation": "r6 improves score and three local cells but does not expand total 10x6 pass coverage; retain its accepted targeted 3x3 claim only",
+  "claim_scope": "voltage_survival_not_full_frt"
+}

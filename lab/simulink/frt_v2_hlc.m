@@ -13,7 +13,7 @@ function varargout = frt_v2_hlc(cmd, varargin) %#codegen
 % The detector/obs use ONLY the controller clock `t` and MEASURED (V2p,V2n) — never the scenario
 % fault type, true onset, future duration, target residual or clearing time.
 OBS_DIM = 20; N_ACT = 3; H = 256;
-GATE_LV = 0.90; GATE_HV = 1.10; GATE_V2N = 0.05; ELAPSED_NORM = 0.5;
+GATE_LV = 0.90; GATE_HV = 1.060; GATE_V2N = 0.05; ELAPSED_NORM = 0.5;
 
 switch cmd
   case 'ofd'

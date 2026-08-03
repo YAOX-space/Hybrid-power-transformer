@@ -12,6 +12,11 @@ Primary research claim: an RL controller can improve HPT fault ride-through
 over traditional dq/PI-style control while satisfying voltage recovery,
 DC-link, current, and envelope constraints in switch-level validation.
 
+Current active scope: prove switch-level voltage-survival specialist SAC first,
+then boundary cases where SAC beats the strongest conventional dq baseline.
+Full FRT certification remains a later phase after the voltage-survival matrix
+is stable.
+
 Required deliverables:
 
 - clean audit of active Python/MATLAB/Simulink entry points;
@@ -24,8 +29,10 @@ Required deliverables:
 
 Hard constraints:
 
-- do not delete failed experiments;
+- do not delete evidence-bearing failed experiments; mark them diagnostic/stale
+  or archive them with a manifest;
 - do not overwrite active actor files without backup/restore;
-- do not move public entry points without wrappers or migration notes;
+- do not move public entry points without migration notes and updated canonical
+  commands; add wrappers only when compatibility is required;
 - do not trust proxy-only gains as final evidence;
 - do not commit unrelated dirty files.

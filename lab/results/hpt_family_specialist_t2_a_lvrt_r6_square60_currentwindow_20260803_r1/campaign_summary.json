@@ -1,0 +1,651 @@
+{
+  "metadata": {
+    "schema": "hpt-family-specialist-matrix-v1",
+    "run_id": "hpt_family_specialist_t2_a_lvrt_r6_square60_currentwindow_20260803_r1",
+    "command": [
+      "C:\\Users\\m1391\\AppData\\Local\\Programs\\Python\\Python38\\python.exe",
+      "-m",
+      "version_2.sac.campaigns.run_hpt_family_specialist_matrix",
+      "--run-id",
+      "hpt_family_specialist_t2_a_lvrt_r6_square60_currentwindow_20260803_r1",
+      "--eval-only",
+      "--topology",
+      "topology2",
+      "--category",
+      "LVRT",
+      "--phase-key",
+      "a",
+      "--family-label",
+      "t2_a_lvrt_r6_square60",
+      "--eval-depths",
+      "0.2,0.5,0.575,0.65,0.7,0.75,0.8,0.825,0.85,0.875",
+      "--eval-durations-ms",
+      "80,120,160,200,240,300",
+      "--fault-start-s",
+      "0.080",
+      "--reuse-sac-model",
+      "data/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+      "--actor-filter-tau",
+      "0.001"
+    ],
+    "family_label": "t2_a_lvrt_r6_square60",
+    "topology": "topology2",
+    "category": "LVRT",
+    "phase_key": "a",
+    "train_depths": null,
+    "eval_depths": [
+      0.2,
+      0.5,
+      0.575,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.825,
+      0.85,
+      0.875
+    ],
+    "train_durations_ms": null,
+    "eval_durations_ms": [
+      80,
+      120,
+      160,
+      200,
+      240,
+      300
+    ],
+    "train_cases": [],
+    "eval_cases": [
+      {
+        "fault_pu": 0.2,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0200_d080ms"
+      },
+      {
+        "fault_pu": 0.2,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0200_d120ms"
+      },
+      {
+        "fault_pu": 0.2,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0200_d160ms"
+      },
+      {
+        "fault_pu": 0.2,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0200_d200ms"
+      },
+      {
+        "fault_pu": 0.2,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0200_d240ms"
+      },
+      {
+        "fault_pu": 0.2,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0200_d300ms"
+      },
+      {
+        "fault_pu": 0.5,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0500_d080ms"
+      },
+      {
+        "fault_pu": 0.5,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0500_d120ms"
+      },
+      {
+        "fault_pu": 0.5,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0500_d160ms"
+      },
+      {
+        "fault_pu": 0.5,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0500_d200ms"
+      },
+      {
+        "fault_pu": 0.5,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0500_d240ms"
+      },
+      {
+        "fault_pu": 0.5,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0500_d300ms"
+      },
+      {
+        "fault_pu": 0.575,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0575_d080ms"
+      },
+      {
+        "fault_pu": 0.575,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0575_d120ms"
+      },
+      {
+        "fault_pu": 0.575,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0575_d160ms"
+      },
+      {
+        "fault_pu": 0.575,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0575_d200ms"
+      },
+      {
+        "fault_pu": 0.575,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0575_d240ms"
+      },
+      {
+        "fault_pu": 0.575,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0575_d300ms"
+      },
+      {
+        "fault_pu": 0.65,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0650_d080ms"
+      },
+      {
+        "fault_pu": 0.65,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0650_d120ms"
+      },
+      {
+        "fault_pu": 0.65,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0650_d160ms"
+      },
+      {
+        "fault_pu": 0.65,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0650_d200ms"
+      },
+      {
+        "fault_pu": 0.65,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0650_d240ms"
+      },
+      {
+        "fault_pu": 0.65,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0650_d300ms"
+      },
+      {
+        "fault_pu": 0.7,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0700_d080ms"
+      },
+      {
+        "fault_pu": 0.7,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0700_d120ms"
+      },
+      {
+        "fault_pu": 0.7,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0700_d160ms"
+      },
+      {
+        "fault_pu": 0.7,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0700_d200ms"
+      },
+      {
+        "fault_pu": 0.7,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0700_d240ms"
+      },
+      {
+        "fault_pu": 0.7,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0700_d300ms"
+      },
+      {
+        "fault_pu": 0.75,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0750_d080ms"
+      },
+      {
+        "fault_pu": 0.75,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0750_d120ms"
+      },
+      {
+        "fault_pu": 0.75,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0750_d160ms"
+      },
+      {
+        "fault_pu": 0.75,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0750_d200ms"
+      },
+      {
+        "fault_pu": 0.75,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0750_d240ms"
+      },
+      {
+        "fault_pu": 0.75,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0750_d300ms"
+      },
+      {
+        "fault_pu": 0.8,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0800_d080ms"
+      },
+      {
+        "fault_pu": 0.8,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0800_d120ms"
+      },
+      {
+        "fault_pu": 0.8,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0800_d160ms"
+      },
+      {
+        "fault_pu": 0.8,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0800_d200ms"
+      },
+      {
+        "fault_pu": 0.8,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0800_d240ms"
+      },
+      {
+        "fault_pu": 0.8,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0800_d300ms"
+      },
+      {
+        "fault_pu": 0.825,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0825_d080ms"
+      },
+      {
+        "fault_pu": 0.825,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0825_d120ms"
+      },
+      {
+        "fault_pu": 0.825,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0825_d160ms"
+      },
+      {
+        "fault_pu": 0.825,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0825_d200ms"
+      },
+      {
+        "fault_pu": 0.825,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0825_d240ms"
+      },
+      {
+        "fault_pu": 0.825,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0825_d300ms"
+      },
+      {
+        "fault_pu": 0.85,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0850_d080ms"
+      },
+      {
+        "fault_pu": 0.85,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0850_d120ms"
+      },
+      {
+        "fault_pu": 0.85,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0850_d160ms"
+      },
+      {
+        "fault_pu": 0.85,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0850_d200ms"
+      },
+      {
+        "fault_pu": 0.85,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0850_d240ms"
+      },
+      {
+        "fault_pu": 0.85,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0850_d300ms"
+      },
+      {
+        "fault_pu": 0.875,
+        "duration_s": 0.08,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0875_d080ms"
+      },
+      {
+        "fault_pu": 0.875,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0875_d120ms"
+      },
+      {
+        "fault_pu": 0.875,
+        "duration_s": 0.16,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0875_d160ms"
+      },
+      {
+        "fault_pu": 0.875,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0875_d200ms"
+      },
+      {
+        "fault_pu": 0.875,
+        "duration_s": 0.24,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0875_d240ms"
+      },
+      {
+        "fault_pu": 0.875,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_r6_square60",
+        "label": "t2_a_lvrt_r6_square60_pu0875_d300ms"
+      }
+    ],
+    "bc_epochs": 160,
+    "sac_steps": 80,
+    "skip_sac": false,
+    "eval_only": true,
+    "training_scope": "not_applicable_eval_only",
+    "reuse_seed_model": "",
+    "reuse_sac_model": "data\\models\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+    "one_actor_per_family": true,
+    "voltage_survival_current_gate": true
+  },
+  "anchor_summary": {
+    "dataset": ".",
+    "reused": false,
+    "eval_only": true
+  },
+  "family_anchor": ".",
+  "seed_model": "None",
+  "sac_model": "data\\models\\hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
+  "comparison_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_r6_square60_currentwindow_20260803_r1\\family_specialist_comparison_rows.csv",
+  "summary": {
+    "family_sac_after_finetune": {
+      "rows": 60,
+      "voltage_survival_pass_count": 46,
+      "envelope_pass_count": 60,
+      "recovery_pass_count": 60,
+      "vdc_pass_count": 52,
+      "gbt_vdc_survive_pass_count": 60,
+      "grid_current_pass_count": 60,
+      "score_mean": 115.5708186813595,
+      "score_min": 107.994899387403,
+      "score_max": 132.2397748134,
+      "grid_current_peak_max_pu": 1.36927773291655,
+      "envelope_violation_max_pu": 0.0,
+      "pass_while_dq_fails_count": 3,
+      "score_beats_dq_count": 45
+    },
+    "strong_dq": {
+      "rows": 60,
+      "voltage_survival_pass_count": 48,
+      "envelope_pass_count": 60,
+      "recovery_pass_count": 52,
+      "vdc_pass_count": 48,
+      "gbt_vdc_survive_pass_count": 48,
+      "grid_current_pass_count": 60,
+      "score_mean": 123.60036984284538,
+      "score_min": 109.232330779425,
+      "score_max": 226.750074740668,
+      "grid_current_peak_max_pu": 1.49367459924582,
+      "envelope_violation_max_pu": 0.0
+    }
+  }
+}

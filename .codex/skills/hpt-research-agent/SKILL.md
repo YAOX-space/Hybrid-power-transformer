@@ -12,7 +12,13 @@ The one-month goal is an IEEE Transactions-level first draft on an RL-based
 controller for HPT fault ride-through (FRT), backed by reproducible Simulink and
 Python evidence.
 
+Current active scope: first prove switch-level voltage-survival specialist SAC
+and beat-conventional boundary evidence.  Treat full FRT certification as a
+later phase until the voltage-survival matrix is stable.
+
 ## Start Every Session
+
+For long-running or code-changing research tasks:
 
 1. Read `version_2/docs/autonomy/research_charter.md`.
 2. Read the newest entries in `version_2/docs/autonomy/logs/research_log.md`.
@@ -22,12 +28,15 @@ Python evidence.
 5. Choose the highest-value unblocked task using the priority ladder below.
 6. Before edits, state the files and behavioral surface being changed.
 
+For short explanatory questions, read only the files needed to answer.
+
 ## Priority Ladder
 
 1. Restore or protect reproducibility: broken smoke tests, unclear MATLAB entry
    points, missing metadata, untracked final evidence, or unsafe Git state.
 2. Establish paper-critical baselines: PI/conventional dq versus SAC, topology1
-   and topology2 switch-level FRT, proxy-to-Simulink alignment.
+   and topology2 switch-level voltage-survival, boundary beat-conventional
+   evidence, and proxy-to-Simulink alignment.
 3. Improve generalization evidence: LVRT/HVRT duration/depth, parameter
    uncertainty, grid impedance, topology transfer.
 4. Add paper artifacts: figures, tables, method text, limitations, experiment
@@ -51,7 +60,9 @@ Load only the references needed for the current task:
 - `references/paper_workflow.md` when updating manuscript files or claims.
 
 The project copies of these documents live under
-`version_2/docs/autonomy/` and are the source of truth for this repository.
+`version_2/docs/autonomy/` and are the source of truth for this repository.  The
+bundled references are bootstrap copies; if they differ, the project documents
+override the bundled references.
 
 ## Experiment Rules
 
@@ -60,7 +71,9 @@ The project copies of these documents live under
 - Every run must have a run id, command, config, input dataset/actor hashes when
   applicable, Git metadata, stdout/stderr log, result summary, and next action.
 - Keep generated outputs under `lab/results/` or documented result folders.
-- Do not delete failed runs. Mark them diagnostic and explain why.
+- Do not delete evidence-bearing failed runs. Mark them diagnostic or stale, or
+  archive them with a manifest. Temporary caches and duplicated non-evidence
+  artifacts may be cleaned after confirming they are not referenced by reports.
 - Do not quote pass counts from stale accepted-specialist CSVs after interface
   or envelope-gate changes without re-running the relevant gate.
 
@@ -81,8 +94,9 @@ The project copies of these documents live under
   `py -3 -m version_2.sac.smoke_matlab_engine --dry-run`
   `py -3 -m version_2.sac.smoke_matlab_engine --runner engine --test interface`
 - Fall back to `matlab -batch` only when Engine is unavailable or unsuitable.
-- Preserve public MATLAB scripts and model folders unless a migration wrapper or
-  explicit migration note is added.
+- Preserve public MATLAB scripts and model folders unless migration notes and
+  updated canonical commands are added. Add wrappers only when backward
+  compatibility is required by the user or by active scripts.
 
 ## Logging
 

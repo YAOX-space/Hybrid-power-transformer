@@ -1,47 +1,48 @@
 {
   "metrics_version": "frt-v2",
   "layer": "ODE",
-  "generated_at": "2026-06-24T01:50:59",
-  "deployed_model": "sac_residual_ema_final.zip",
+  "generated_at": "2026-07-07T15:47:47",
+  "deployed_model": "sac_residual_best.zip",
   "deployment_mode": "mi=14 residual (MPC prior + residual)",
+  "scenario_file": "E:\\research_space\\Hybrid-power-transformer\\lab\\frt_scenarios.csv",
   "n_scenarios": 320,
   "DISCLAIMER": "ODE-LAYER PROXY. partial_proxy_pct counts only EVALUABLE criteria (connect/reactive/recover); limit + survive are NOT_EVALUATED in the ODE (no switching current / DC bus). This is NOT a certified frt-v2 pass rate. A faithful pass rate requires the switching layer; the CSV scenario fault params do not reproduce target_V_pu in Simulink (needs per-scenario re-calibration) \u2014 see the 12-case switching gate for validated transfer.",
   "overall": {
     "n": 320,
-    "partial_proxy_pct": 100.0,
+    "partial_proxy_pct": 76.9,
     "proxy_saturated": true,
-    "connect": 100.0,
-    "reactive": 100.0,
-    "recover": 100.0,
+    "connect": 90.9,
+    "reactive": 84.1,
+    "recover": 93.6,
     "connect_ne_pct": 0.0,
-    "reactive_ne_pct": 60.6,
-    "recover_ne_pct": 12.5,
-    "proxy_criteria_evaluated_mean": 2.27
+    "reactive_ne_pct": 33.1,
+    "recover_ne_pct": 2.8,
+    "proxy_criteria_evaluated_mean": 2.64
   },
   "by_category": {
     "HVRT": {
       "n": 80,
-      "partial_proxy_pct": 100.0,
+      "partial_proxy_pct": 50.0,
       "proxy_saturated": true,
-      "connect": 100.0,
-      "reactive": 100.0,
-      "recover": 100.0,
+      "connect": 75.0,
+      "reactive": 50.0,
+      "recover": 75.0,
       "connect_ne_pct": 0.0,
-      "reactive_ne_pct": 75.0,
-      "recover_ne_pct": 50.0,
-      "proxy_criteria_evaluated_mean": 1.75
+      "reactive_ne_pct": 50.0,
+      "recover_ne_pct": 0.0,
+      "proxy_criteria_evaluated_mean": 2.5
     },
     "LVRT": {
       "n": 240,
-      "partial_proxy_pct": 100.0,
+      "partial_proxy_pct": 85.8,
       "proxy_saturated": true,
-      "connect": 100.0,
-      "reactive": 100.0,
+      "connect": 96.2,
+      "reactive": 92.0,
       "recover": 100.0,
       "connect_ne_pct": 0.0,
-      "reactive_ne_pct": 55.8,
-      "recover_ne_pct": 0.0,
-      "proxy_criteria_evaluated_mean": 2.44
+      "reactive_ne_pct": 27.5,
+      "recover_ne_pct": 3.8,
+      "proxy_criteria_evaluated_mean": 2.69
     }
   },
   "by_fault_type": {
@@ -53,69 +54,69 @@
       "reactive": 100.0,
       "recover": 100.0,
       "connect_ne_pct": 0.0,
-      "reactive_ne_pct": 73.3,
+      "reactive_ne_pct": 66.7,
       "recover_ne_pct": 0.0,
-      "proxy_criteria_evaluated_mean": 2.27
+      "proxy_criteria_evaluated_mean": 2.33
     },
     "2ph": {
       "n": 60,
-      "partial_proxy_pct": 100.0,
+      "partial_proxy_pct": 80.0,
       "proxy_saturated": true,
       "connect": 100.0,
-      "reactive": 100.0,
+      "reactive": 76.9,
       "recover": 100.0,
       "connect_ne_pct": 0.0,
-      "reactive_ne_pct": 61.7,
+      "reactive_ne_pct": 13.3,
       "recover_ne_pct": 0.0,
-      "proxy_criteria_evaluated_mean": 2.38
+      "proxy_criteria_evaluated_mean": 2.87
     },
     "2ph_g": {
       "n": 60,
-      "partial_proxy_pct": 100.0,
+      "partial_proxy_pct": 96.7,
       "proxy_saturated": true,
       "connect": 100.0,
-      "reactive": 100.0,
+      "reactive": 95.2,
       "recover": 100.0,
       "connect_ne_pct": 0.0,
-      "reactive_ne_pct": 63.3,
+      "reactive_ne_pct": 30.0,
       "recover_ne_pct": 0.0,
-      "proxy_criteria_evaluated_mean": 2.37
+      "proxy_criteria_evaluated_mean": 2.7
     },
     "swell_1ph": {
       "n": 40,
-      "partial_proxy_pct": 100.0,
+      "partial_proxy_pct": 50.0,
       "proxy_saturated": true,
       "connect": 100.0,
-      "reactive": null,
+      "reactive": 0.0,
       "recover": 100.0,
       "connect_ne_pct": 0.0,
-      "reactive_ne_pct": 100.0,
+      "reactive_ne_pct": 50.0,
       "recover_ne_pct": 0.0,
-      "proxy_criteria_evaluated_mean": 2.0
+      "proxy_criteria_evaluated_mean": 2.5
     },
     "swell_3ph": {
       "n": 40,
-      "partial_proxy_pct": 100.0,
+      "partial_proxy_pct": 50.0,
       "proxy_saturated": true,
-      "connect": 100.0,
+      "connect": 50.0,
       "reactive": 100.0,
-      "recover": null,
+      "recover": 50.0,
       "connect_ne_pct": 0.0,
       "reactive_ne_pct": 50.0,
-      "recover_ne_pct": 100.0,
-      "proxy_criteria_evaluated_mean": 1.5
+      "recover_ne_pct": 0.0,
+      "proxy_criteria_evaluated_mean": 2.5
     },
     "sym3ph": {
       "n": 60,
-      "partial_proxy_pct": 100.0,
+      "partial_proxy_pct": 66.7,
       "proxy_saturated": true,
-      "connect": 100.0,
+      "connect": 85.0,
       "reactive": 100.0,
       "recover": 100.0,
       "connect_ne_pct": 0.0,
-      "reactive_ne_pct": 25.0,
-      "recover_ne_pct": 0.0,
-      "proxy_criteria_evaluated_mean": 2.75
+      "reactive_ne_pct": 0.0,
+      "recover_ne_pct": 15.0,
+      "proxy_criteria_evaluated_mean": 2.85
     }
   }
 }

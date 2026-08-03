@@ -1,9 +1,9 @@
-# HPT Specialist SAC Matrix Addendum - 2026-07-19
+﻿# HPT Specialist SAC Matrix Addendum - 2026-07-19
 
 ## Current Gate
 
 The current promotion gate is the switch-level `voltage_survival_pass` in
-`version_2/simulink/eval_hpt_v2_control_comparison.m`:
+`version_2/simulink/evaluators/eval_hpt_v2_control_comparison.m`:
 
 - LV fault-window mean: 176-238 V phase RMS.
 - LV recovery-window mean: 180-235 V phase RMS.
@@ -98,3 +98,4 @@ The trained `bc0` actor was promoted:
    the current gate and writes a stable `accepted_specialists.csv`.
 4. Train the next round per-case specialists from these accepted teachers,
    then re-test only the promoted checkpoints in switch-level Simulink.
+

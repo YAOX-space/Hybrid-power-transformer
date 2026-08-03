@@ -1,0 +1,23 @@
+COMMAND:
+matlab -batch cd('E:/research_space/Hybrid-power-transformer/version_2/simulink'); hpt_eval_topology='topology2'; hpt_eval_scenario_type='fault'; hpt_eval_case_name='swell_1p10'; hpt_eval_fault_phase_pu=[1.1 1 1.1]; hpt_eval_energy_enable=1.0; run(fullfile(pwd,'evaluators','eval_hpt_v2_sac_single_case.m'));
+
+STDOUT:
+[警告: The model name 'hpt_v2_topology2_paper' is shadowing another name in the MATLAB workspace or path. Type "which -all hpt_v2_topology2_paper" at the command line to find the
+other uses of this name. You should change the name of the model to avoid problems.] 
+[> 位置：build_hpt_v2_topology2_paper (第 19 行)
+位置: eval_hpt_v2_sac_single_case (第 84 行)
+位置: run (第 112 行)] 
+Built hpt_v2_topology2_paper.slx for topology2 paper-style HPT skeleton.
+[警告: The model name 'hpt_v2_topology2_paper' is shadowing another name in the MATLAB workspace or path. Type "which -all hpt_v2_topology2_paper" at the command line
+to find the other uses of this name. You should change the name of the model to avoid problems.] 
+[> 位置：build_hpt_v2_topology2_paper (第 19 行)
+位置: eval_hpt_v2_sac_single_case (第 105 行)
+位置: run (第 112 行)] 
+Built hpt_v2_topology2_paper.slx for topology2 paper-style HPT skeleton.
+Single-case raw SAC guard=0 diagnostic complete.
+topology2  fault    swell_1p10     216.495    221.024   646.243     0.373 false    gbt_recover;gbt_vdc_survive;grid_current_limit;not_evaluated_no_sustained_reactive_demand_after_delay
+Saved CSV: E:\research_space\Hybrid-power-transformer\version_2\simulink\..\..\lab\results\hpt_v2_sac_single_case\single_case_topology2_fault_swell_1p10_20260727_223243.csv
+Saved actor trace CSV: E:\research_space\Hybrid-power-transformer\version_2\simulink\..\..\lab\results\hpt_v2_sac_single_case_actor_traces\single_actor_trace_topology2_fault_swell_1p10_20260727_223243.csv
+
+
+STDERR:

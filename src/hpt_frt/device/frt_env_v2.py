@@ -21,7 +21,7 @@ from ..common import frt_v2 as FV2
 
 # online gate thresholds (must match the deployment HLC / network sac_wrapper)
 GATE_V2N_THR = 0.05
-GATE_LV, GATE_HV = 0.90, 1.10
+GATE_LV, GATE_HV = 0.90, 1.060
 ELAPSED_NORM = 0.5            # normalisation for the elapsed-since-detected-onset fraction (s)
 HVRT_RECOVERY_HOLD = 0.45     # online-measured hold after HVRT clears; no scenario labels/timing
 HVRT_RECOVERY_DEADBAND = 0.025

@@ -1,4 +1,4 @@
-# HPT Specialist SAC Matrix Progress - 2026-07-19
+﻿# HPT Specialist SAC Matrix Progress - 2026-07-19
 
 ## Goal
 
@@ -70,7 +70,7 @@ No actor currently passes full FRT certification.
 Additional sweep:
 
 ```powershell
-py -3 -m version_2.sac.run_hpt_dynamic_trajectory_sweep --run-id hpt_boundary_sweep_topo1_lvrt075_ramp5_20260719 --topology topology1 --fault-pu 0.75 --duration-s 0.08 --reg-d-grid 0.45,0.55,0.62,0.70 --reg-q-grid 0 --energy-d-grid 0,0.10,0.20,0.35 --energy-q-grid 0 --d-ramp-ms-grid 5 --q-ramp-ms-grid 5 --down-ms-grid 0 --max-cases 16 --timeout-s 1200
+py -3 -m version_2.sac.campaigns.run_hpt_dynamic_trajectory_sweep --run-id hpt_boundary_sweep_topo1_lvrt075_ramp5_20260719 --topology topology1 --fault-pu 0.75 --duration-s 0.08 --reg-d-grid 0.45,0.55,0.62,0.70 --reg-q-grid 0 --energy-d-grid 0,0.10,0.20,0.35 --energy-q-grid 0 --d-ramp-ms-grid 5 --q-ramp-ms-grid 5 --down-ms-grid 0 --max-cases 16 --timeout-s 1200
 ```
 
 Result:
@@ -159,7 +159,7 @@ Result:
 Additional sweep:
 
 ```powershell
-py -3 -m version_2.sac.run_hpt_dynamic_trajectory_sweep --run-id hpt_boundary_sweep_topo2_hvrt110_energy_20260719 --topology topology2 --fault-pu 1.10 --duration-s 0.08 --reg-d-grid=0,-0.05 --reg-q-grid 0 --energy-d-grid=-0.30,-0.20,-0.10,-0.05 --energy-q-grid 0.002 --d-ramp-ms-grid 5 --q-ramp-ms-grid 20 --down-ms-grid 40 --max-cases 8 --timeout-s 1200
+py -3 -m version_2.sac.campaigns.run_hpt_dynamic_trajectory_sweep --run-id hpt_boundary_sweep_topo2_hvrt110_energy_20260719 --topology topology2 --fault-pu 1.10 --duration-s 0.08 --reg-d-grid=0,-0.05 --reg-q-grid 0 --energy-d-grid=-0.30,-0.20,-0.10,-0.05 --energy-q-grid 0.002 --d-ramp-ms-grid 5 --q-ramp-ms-grid 20 --down-ms-grid 40 --max-cases 8 --timeout-s 1200
 ```
 
 Result:
@@ -442,3 +442,4 @@ Switch-level result:
   `reactive_wrong_sign`.
 
 This is the first accepted HVRT specialist in the version_2 matrix.
+

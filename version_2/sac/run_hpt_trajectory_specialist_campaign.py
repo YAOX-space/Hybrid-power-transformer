@@ -18,10 +18,12 @@ score improvement over the conventional baseline.
 from __future__ import annotations
 
 import argparse
+import atexit
 import csv
 import json
 import math
 import re
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -39,12 +41,117 @@ CONTROL_DIR = RESULTS / "hpt_v2_control_comparison"
 TRACE_DIR = RESULTS / "hpt_v2_trajectory_traces"
 
 
+STRONG_DQ_PROFILES: dict[str, list[tuple[str, float]]] = {
+    "none": [],
+    "t2_bal_lvrt090_currentgate": [
+        ("hpt_vreg_kp", 5.6),
+        ("hpt_vreg_ki", 0.35),
+        ("hpt_m_reg_max", 0.60),
+        ("hpt_sac_reg_max", 0.60),
+        ("hpt_sac_reg_q_gain", -1.0),
+        ("hpt_inj_phase_offset", -1.05),
+        ("hpt_vdc_kp", 0.0),
+        ("hpt_vdc_ki", 0.0),
+        ("hpt_energy_i_kp", 0.25),
+        ("hpt_energy_i_ki", 45.0),
+        ("hpt_energy_vff_gain", 0.20),
+        ("hpt_energy_control_sign", -1.0),
+        ("hpt_energy_bridge_polarity", -1.0),
+        ("hpt_conventional_energy_scale", 0.0),
+        ("hpt_conventional_recovery_reg_gain", 2.4),
+        ("hpt_conventional_recovery_reg_max", 0.44),
+    ],
+}
+
+COMMON_ACTUATION_PROFILE_NAMES = {
+    "hpt_m_reg_max",
+    "hpt_sac_reg_max",
+    "hpt_sac_reg_q_gain",
+    "hpt_inj_phase_offset",
+    "hpt_energy_i_kp",
+    "hpt_energy_i_ki",
+    "hpt_energy_vff_gain",
+    "hpt_energy_control_sign",
+    "hpt_energy_bridge_polarity",
+}
+
+
 def safe_token(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9_]+", "_", str(text)).strip("_")
 
 
 def matlab_string(text: str) -> str:
     return "'" + str(text).replace("'", "''") + "'"
+
+
+def matlab_vector(values: list[float] | None) -> str:
+    if not values:
+        return ""
+    return "[" + " ".join(f"{float(x):.12g}" for x in values) + "]"
+
+
+def matlab_fault_cell(
+    case_name: str,
+    fault_pu: float,
+    duration_s: float,
+    phase_pu: list[float] | None,
+) -> str:
+    if phase_pu:
+        return (
+            "{ "
+            f"{matlab_string(case_name)}, {fault_pu:.12g}, {duration_s:.12g}, "
+            f"{matlab_vector(phase_pu)} }}"
+        )
+    return "{ " f"{matlab_string(case_name)}, {fault_pu:.12g}, {duration_s:.12g} }}"
+
+
+def phase_recovery_end(args: argparse.Namespace) -> float:
+    return float(args.fault_start) + float(args.duration_s) + float(args.fault_stop_margin)
+
+
+def hpt_model_param_struct(
+    args: argparse.Namespace,
+    *,
+    include_control_profile: bool = False,
+) -> str:
+    base_rchop = (800.0**2) / 120e3
+    items = [
+        ("hpt_chopper_threshold", float(args.chopper_threshold)),
+        ("hpt_rchop", base_rchop * float(args.rchop_scale)),
+    ]
+    profile_items = STRONG_DQ_PROFILES.get(str(args.strong_dq_profile), [])
+    if include_control_profile:
+        items.extend(profile_items)
+    else:
+        items.extend(
+            (name, value)
+            for name, value in profile_items
+            if name in COMMON_ACTUATION_PROFILE_NAMES
+        )
+    if getattr(args, "phase_override", False):
+        fault_clear = float(args.fault_start) + float(args.duration_s)
+        items.extend(
+            [
+                ("hpt_sac_phase_override_enable", 1.0),
+                ("hpt_sac_phase_fault_start_s", float(args.fault_start)),
+                ("hpt_sac_phase_fault_clear_s", fault_clear),
+                ("hpt_sac_phase_recovery_end_s", phase_recovery_end(args)),
+            ]
+        )
+    body = ",".join(f"'{name}',{value:.12g}" for name, value in items)
+    return f"struct({body})"
+
+
+def hpt_conventional_param_struct(args: argparse.Namespace) -> str:
+    items = [
+        (name, value)
+        for name, value in STRONG_DQ_PROFILES.get(str(args.strong_dq_profile), [])
+        if name not in COMMON_ACTUATION_PROFILE_NAMES
+    ]
+    if not items:
+        return "struct()"
+    body = ",".join(f"'{name}',{value:.12g}" for name, value in items)
+    return f"struct({body})"
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -74,7 +181,22 @@ def latest_new_file(directory: Path, pattern: str, before: set[Path]) -> Path:
     return files[-1]
 
 
-def run_command(cmd: list[str], *, run_dir: Path, log_name: str, timeout_s: int) -> subprocess.CompletedProcess[str]:
+def new_file_or_none(directory: Path, pattern: str, before: set[Path]) -> Path | None:
+    after = set(directory.glob(pattern))
+    new_files = sorted(after - before, key=lambda p: p.stat().st_mtime)
+    if not new_files:
+        return None
+    return new_files[-1]
+
+
+def run_command(
+    cmd: list[str],
+    *,
+    run_dir: Path,
+    log_name: str,
+    timeout_s: int,
+    allow_nonzero: bool = False,
+) -> subprocess.CompletedProcess[str]:
     run_dir.mkdir(parents=True, exist_ok=True)
     proc = subprocess.run(
         cmd,
@@ -92,14 +214,76 @@ def run_command(cmd: list[str], *, run_dir: Path, log_name: str, timeout_s: int)
         + proc.stderr,
         encoding="utf-8",
     )
-    if proc.returncode != 0:
+    if proc.returncode != 0 and not allow_nonzero:
         raise RuntimeError(f"Command failed ({proc.returncode}): {' '.join(cmd)}")
     return proc
+
+
+def run_matlab_command_with_expected_file(
+    cmd: list[str],
+    *,
+    run_dir: Path,
+    log_name: str,
+    timeout_s: int,
+    expected_dir: Path,
+    expected_pattern: str,
+    before: set[Path],
+) -> tuple[subprocess.CompletedProcess[str], Path]:
+    """Run MATLAB and tolerate an exit crash only if a new output file exists."""
+
+    proc = run_command(
+        cmd,
+        run_dir=run_dir,
+        log_name=log_name,
+        timeout_s=timeout_s,
+        allow_nonzero=True,
+    )
+    out_path = new_file_or_none(expected_dir, expected_pattern, before)
+    if proc.returncode != 0 and out_path is None:
+        raise RuntimeError(f"Command failed ({proc.returncode}): {' '.join(cmd)}")
+    if out_path is None:
+        out_path = latest_new_file(expected_dir, expected_pattern, before)
+    return proc, out_path
 
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def register_dynamic_actor_restore(actor_mat: Path, run_dir: Path) -> str:
+    """Backup and restore the transient Simulink dynamic actor file.
+
+    The campaign evaluates candidate actors by exporting them to the shared
+    ``hpt_sac_actor_weights_dynamic.mat`` entry point.  Keep a per-run backup so
+    interrupted experiments do not silently change the default Simulink actor.
+    """
+
+    if not actor_mat.exists():
+        return ""
+    backup = run_dir / f"{actor_mat.stem}_backup_before_campaign{actor_mat.suffix}"
+    shutil.copy2(actor_mat, backup)
+
+    def _restore() -> None:
+        try:
+            if backup.exists():
+                shutil.copy2(backup, actor_mat)
+        except Exception:
+            # Avoid masking the original training/evaluation failure.
+            pass
+
+    atexit.register(_restore)
+    return str(backup)
+
+
+def jsonable_config(args: argparse.Namespace) -> dict[str, Any]:
+    config: dict[str, Any] = {}
+    for key, value in vars(args).items():
+        if isinstance(value, Path):
+            config[key] = str(value)
+        else:
+            config[key] = value
+    return config
 
 
 def trace_alignment_summary(reference_csv: Path, actor_csv: Path) -> dict[str, Any]:
@@ -174,6 +358,13 @@ def summarize_control_csv(path: Path, policy_mode: str) -> dict[str, Any]:
         "policy_full_frt_reason": policy.get("full_frt_reason", ""),
         "policy_lv_mean": to_float(policy.get("lv_mean")),
         "policy_lv_recovery_mean": to_float(policy.get("lv_recovery_mean")),
+        "policy_fault_lv_min": to_float(policy.get("fault_lv_min")),
+        "policy_fault_lv_max": to_float(policy.get("fault_lv_max")),
+        "policy_fault_lv_band_violation_max_pu": to_float(
+            policy.get("fault_lv_band_violation_max_pu")
+        ),
+        "policy_envelope_violation_max_pu": to_float(policy.get("envelope_violation_max_pu")),
+        "policy_recovery_violation_max_pu": to_float(policy.get("recovery_violation_max_pu")),
         "policy_vdc_min": to_float(policy.get("vdc_min")),
         "policy_vdc_max": to_float(policy.get("vdc_max")),
         "policy_action_max_abs": to_float(policy.get("action_max_abs")),
@@ -189,6 +380,31 @@ def make_case_name(duration_s: float, fault_pu: float) -> str:
 
 
 def build_initial_trajectory(args: argparse.Namespace, run_dir: Path) -> Path:
+    if args.trajectory_file is not None:
+        source = args.trajectory_file.resolve()
+        if not source.exists():
+            raise FileNotFoundError(f"Trajectory file does not exist: {source}")
+        path = run_dir / "initial_trajectory.mat"
+        if source != path.resolve():
+            shutil.copy2(source, path)
+        copied_sidecars: list[str] = []
+        for suffix in (".csv", ".json"):
+            sidecar = source.with_suffix(suffix)
+            if sidecar.exists():
+                sidecar_out = run_dir / f"initial_trajectory{suffix}"
+                shutil.copy2(sidecar, sidecar_out)
+                copied_sidecars.append(str(sidecar_out))
+        write_json(
+            run_dir / "initial_trajectory_source.json",
+            {
+                "schema": "hpt-trajectory-specialist-source-trajectory-v1",
+                "source_trajectory_file": str(source),
+                "path": str(path),
+                "copied_sidecars": copied_sidecars,
+            },
+        )
+        return path
+
     stop_time = args.fault_start + args.duration_s + args.fault_stop_margin
     spec = TrajectorySpec(
         preset=args.preset,
@@ -239,6 +455,19 @@ def validate_trajectory(args: argparse.Namespace, run_dir: Path) -> dict[str, An
         str(args.fault_start),
         "--fault-stop-margin",
         str(args.fault_stop_margin),
+        "--fault-settle-s",
+        str(args.fault_settle_s),
+        *(
+            ["--voltage-survival-current-gate"]
+            if args.voltage_survival_current_gate
+            else []
+        ),
+        "--strong-dq-profile",
+        args.strong_dq_profile,
+        "--chopper-threshold",
+        str(args.chopper_threshold),
+        "--rchop-scale",
+        str(args.rchop_scale),
         "--decision-dt",
         str(args.decision_dt),
         "--step-time",
@@ -256,13 +485,37 @@ def validate_trajectory(args: argparse.Namespace, run_dir: Path) -> dict[str, An
         "--timeout-s",
         str(args.matlab_timeout_s),
     ]
+    if args.fault_phase_pu is not None:
+        cmd += ["--fault-phase-pu", *[str(x) for x in args.fault_phase_pu]]
+    if args.trajectory_file is not None:
+        cmd += ["--trajectory-file", str(args.trajectory_file)]
+    if args.phase_override:
+        cmd += ["--phase-override"]
     if args.down_start is not None:
         cmd += ["--down-start", str(args.down_start)]
     if args.down_end is not None:
         cmd += ["--down-end", str(args.down_end)]
-    run_command(cmd, run_dir=run_dir, log_name="trajectory_validation.log", timeout_s=args.matlab_timeout_s + 60)
     summary_path = RESULTS / f"{args.run_id}_trajectory_validation" / "summary.json"
-    data = json.loads(summary_path.read_text(encoding="utf-8"))
+    data: dict[str, Any] = {}
+    for attempt in range(2):
+        log_name = "trajectory_validation.log" if attempt == 0 else f"trajectory_validation_retry{attempt}.log"
+        run_command(
+            cmd,
+            run_dir=run_dir,
+            log_name=log_name,
+            timeout_s=args.matlab_timeout_s + 60,
+            allow_nonzero=True,
+        )
+        data = json.loads(summary_path.read_text(encoding="utf-8"))
+        if not data.get("error"):
+            break
+        if attempt == 0:
+            time.sleep(2.0)
+    if data.get("error"):
+        raise RuntimeError(
+            f"Trajectory validation failed after retry: {data.get('error')} "
+            f"for {summary_path}"
+        )
     write_json(run_dir / "trajectory_validation_summary.json", data)
     return data
 
@@ -281,25 +534,47 @@ def collect_trace(
         f"cd({matlab_string(str(SIMULINK_DIR).replace(chr(92), '/'))})",
         f"hpt_trace_topology={matlab_string(args.topology)}",
         f"hpt_trace_fault_pu={args.fault_pu:.12g}",
+        (
+            f"hpt_trace_fault_phase_pu={matlab_vector(args.fault_phase_pu)}"
+            if args.fault_phase_pu is not None
+            else ""
+        ),
         f"hpt_trace_fault_duration={args.duration_s:.12g}",
         f"hpt_trace_fault_start={args.fault_start:.12g}",
         f"hpt_trace_fault_stop_margin={args.fault_stop_margin:.12g}",
+        f"hpt_trace_fault_settle_s={args.fault_settle_s:.12g}",
+        f"hpt_trace_model_params={hpt_model_param_struct(args, include_control_profile=(policy_mode == 0.0))}",
         f"hpt_trace_run_label={matlab_string(label)}",
         f"hpt_trace_policy_mode={policy_mode:.12g}",
         f"hpt_trace_actor_select_mode={actor_select_mode:.12g}",
+        f"hpt_trace_actor_filter_tau={args.actor_filter_tau:.12g}",
     ]
     if trajectory_file is not None:
         statements.append(
             f"hpt_trace_trajectory_file={matlab_string(str(trajectory_file).replace(chr(92), '/'))}"
         )
-    statements.append("collect_hpt_v2_trajectory_trace")
+    statements.append("run(fullfile(pwd,'collectors','collect_hpt_v2_trajectory_trace.m'))")
+    statements = [stmt for stmt in statements if stmt]
     proc = run_command(
         [args.matlab_cmd, "-batch", "; ".join(statements)],
         run_dir=run_dir,
         log_name=f"collect_trace_{safe_token(label)}.log",
         timeout_s=args.matlab_timeout_s,
+        allow_nonzero=True,
     )
-    path = latest_new_file(TRACE_DIR, "trajectory_trace_*.csv", before)
+    path = new_file_or_none(TRACE_DIR, "trajectory_trace_*.csv", before)
+    if proc.returncode != 0 and path is None:
+        raise RuntimeError(
+            f"Trace collection failed ({proc.returncode}) and produced no new CSV"
+        )
+    if path is None:
+        path = latest_new_file(TRACE_DIR, "trajectory_trace_*.csv", before)
+    if proc.returncode != 0:
+        warning_path = run_dir / f"collect_trace_{safe_token(label)}_nonzero_return.warning.txt"
+        warning_path.write_text(
+            f"MATLAB returned {proc.returncode}, but trace collection produced {path}.\n",
+            encoding="utf-8",
+        )
     (run_dir / f"trace_{safe_token(label)}.txt").write_text(str(path), encoding="utf-8")
     return path
 
@@ -345,6 +620,8 @@ def train_bc(
         str(args.lr),
         "--action-weights",
         args.action_weights,
+        "--teacher-prior-weight",
+        str(args.teacher_prior_weight),
         "--model-out",
         str(model_out),
     ]
@@ -359,6 +636,36 @@ def train_bc(
             "--switch-trace-energy-vdc-ref-pu",
             str(args.vdc_feedback_ref_pu),
         ]
+    if args.energy_two_zone:
+        cmd += [
+            "--switch-trace-energy-two-zone",
+            "--switch-trace-energy-vdc-low-pu",
+            str(args.energy_vdc_low_pu),
+            "--switch-trace-energy-vdc-high-pu",
+            str(args.energy_vdc_high_pu),
+            "--switch-trace-energy-low-d-gain",
+            str(args.energy_low_d_gain),
+            "--switch-trace-energy-low-q-gain",
+            str(args.energy_low_q_gain),
+            "--switch-trace-energy-high-d-gain",
+            str(args.energy_high_d_gain),
+            "--switch-trace-energy-high-q-gain",
+            str(args.energy_high_q_gain),
+            "--switch-trace-energy-dvdc-d-gain",
+            str(args.energy_dvdc_d_gain),
+            "--switch-trace-energy-dvdc-q-gain",
+            str(args.energy_dvdc_q_gain),
+            "--switch-trace-energy-d-min",
+            str(args.energy_d_min),
+            "--switch-trace-energy-d-max",
+            str(args.energy_d_max),
+            "--switch-trace-energy-q-min",
+            str(args.energy_q_min),
+            "--switch-trace-energy-q-max",
+            str(args.energy_q_max),
+        ]
+        if args.energy_two_zone_all_topologies:
+            cmd += ["--switch-trace-energy-two-zone-all-topologies"]
     if args.q_gate_lv_min_pu > 0.0:
         cmd += ["--switch-trace-q-gate-lv-min-pu", str(args.q_gate_lv_min_pu)]
     if args.q_gate_time_min_s > 0.0:
@@ -383,32 +690,46 @@ def train_bc(
             "--switch-trace-recovery-window-repeat-mult",
             str(args.recovery_window_repeat_mult),
         ]
-    if relabel_with_trajectory:
-        stop_time = args.fault_start + args.duration_s + args.fault_stop_margin
+    if args.pre_window_repeat_mult > 1:
         cmd += [
-            "--switch-trace-target-profile",
-            args.preset,
-            "--switch-trace-profile-dt",
-            str(args.decision_dt),
-            "--switch-trace-profile-stop-time",
-            str(stop_time),
-            "--switch-trace-profile-base-action",
-            *[str(x) for x in args.base_action],
-            "--switch-trace-profile-start-action",
-            *[str(x) for x in args.start_action],
-            "--switch-trace-profile-action",
-            *[str(x) for x in args.action],
-            "--switch-trace-profile-step-time",
-            str(args.step_time),
-            "--switch-trace-profile-ramp-start",
-            str(args.ramp_start),
-            "--switch-trace-profile-ramp-end",
-            str(args.ramp_end),
+            "--switch-trace-pre-window-repeat-mult",
+            str(args.pre_window_repeat_mult),
         ]
-        if args.down_start is not None:
-            cmd += ["--switch-trace-profile-down-start", str(args.down_start)]
-        if args.down_end is not None:
-            cmd += ["--switch-trace-profile-down-end", str(args.down_end)]
+    if relabel_with_trajectory:
+        copied_profile_csv = run_dir / "initial_trajectory.csv"
+        if args.trajectory_file is not None and copied_profile_csv.exists():
+            cmd += [
+                "--switch-trace-target-profile",
+                "csv_file",
+                "--switch-trace-profile-csv",
+                str(copied_profile_csv),
+            ]
+        else:
+            stop_time = args.fault_start + args.duration_s + args.fault_stop_margin
+            cmd += [
+                "--switch-trace-target-profile",
+                args.preset,
+                "--switch-trace-profile-dt",
+                str(args.decision_dt),
+                "--switch-trace-profile-stop-time",
+                str(stop_time),
+                "--switch-trace-profile-base-action",
+                *[str(x) for x in args.base_action],
+                "--switch-trace-profile-start-action",
+                *[str(x) for x in args.start_action],
+                "--switch-trace-profile-action",
+                *[str(x) for x in args.action],
+                "--switch-trace-profile-step-time",
+                str(args.step_time),
+                "--switch-trace-profile-ramp-start",
+                str(args.ramp_start),
+                "--switch-trace-profile-ramp-end",
+                str(args.ramp_end),
+            ]
+            if args.down_start is not None:
+                cmd += ["--switch-trace-profile-down-start", str(args.down_start)]
+            if args.down_end is not None:
+                cmd += ["--switch-trace-profile-down-end", str(args.down_end)]
     if args.bc_obs_noise_repeat > 0 and args.bc_obs_noise_std > 0:
         cmd += [
             "--bc-obs-noise-std",
@@ -455,19 +776,38 @@ def evaluate_actor(args: argparse.Namespace, run_dir: Path, *, label: str) -> di
         f"hpt_compare_topology={matlab_string(args.topology)}",
         "hpt_compare_scenario_type='fault'",
         "hpt_compare_modes=string({'conventional_dq','sac_actor_always_raw'})",
-        f"hpt_compare_faults={{ {matlab_string(case_name)}, {args.fault_pu:.12g}, {args.duration_s:.12g} }}",
+        f"hpt_compare_faults={matlab_fault_cell(case_name, args.fault_pu, args.duration_s, args.fault_phase_pu)}",
+        f"hpt_compare_model_params={hpt_model_param_struct(args)}",
+        "hpt_compare_conventional_profile='model_default'",
+        f"hpt_compare_conventional_params={hpt_conventional_param_struct(args)}",
         f"hpt_compare_fault_start={args.fault_start:.12g}",
         f"hpt_compare_fault_stop_margin={args.fault_stop_margin:.12g}",
+        f"hpt_compare_fault_settle_s={args.fault_settle_s:.12g}",
+        f"hpt_compare_voltage_survival_current_gate={str(bool(args.voltage_survival_current_gate)).lower()}",
+        f"hpt_compare_actor_filter_tau={args.actor_filter_tau:.12g}",
         f"hpt_compare_run_label={matlab_string(label)}",
-        "eval_hpt_v2_control_comparison",
+        "run(fullfile(pwd,'evaluators','eval_hpt_v2_control_comparison.m'))",
     ]
-    run_command(
+    proc = run_command(
         [args.matlab_cmd, "-batch", "; ".join(statements)],
         run_dir=run_dir,
         log_name=f"eval_actor_{safe_token(label)}.log",
         timeout_s=args.matlab_timeout_s,
+        allow_nonzero=True,
     )
-    csv_path = latest_new_file(CONTROL_DIR, "control_comparison_*.csv", before)
+    csv_path = new_file_or_none(CONTROL_DIR, "control_comparison_*.csv", before)
+    if proc.returncode != 0 and csv_path is None:
+        raise RuntimeError(
+            f"Actor evaluation failed ({proc.returncode}) and produced no new CSV"
+        )
+    if csv_path is None:
+        csv_path = latest_new_file(CONTROL_DIR, "control_comparison_*.csv", before)
+    if proc.returncode != 0:
+        warning_path = run_dir / f"eval_actor_{safe_token(label)}_nonzero_return.warning.txt"
+        warning_path.write_text(
+            f"MATLAB returned {proc.returncode}, but actor evaluation produced {csv_path}.\n",
+            encoding="utf-8",
+        )
     summary = summarize_control_csv(csv_path, "sac_actor_always_raw")
     write_json(run_dir / f"eval_summary_{safe_token(label)}.json", summary)
     return summary
@@ -507,10 +847,46 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--topology", default="topology2", choices=["topology1", "topology2"])
     parser.add_argument("--fault-pu", type=float, default=0.95)
+    parser.add_argument("--fault-phase-pu", type=float, nargs=3, default=None)
     parser.add_argument("--duration-s", type=float, default=0.08)
     parser.add_argument("--fault-start", type=float, default=0.035)
     parser.add_argument("--fault-stop-margin", type=float, default=0.125)
+    parser.add_argument("--fault-settle-s", type=float, default=0.0)
+    parser.add_argument(
+        "--phase-override",
+        action="store_true",
+        help=(
+            "Opt-in diagnostic observation contract: replace measured "
+            "fault/recovery phase features with scheduled phase features "
+            "derived from fault-start, duration, and fault-stop-margin."
+        ),
+    )
+    parser.add_argument("--chopper-threshold", type=float, default=850.0)
+    parser.add_argument("--rchop-scale", type=float, default=1.0)
+    parser.add_argument(
+        "--strong-dq-profile",
+        choices=sorted(STRONG_DQ_PROFILES),
+        default="none",
+        help="Optional named conventional-DQ parameter set to inject into traces and evaluations.",
+    )
+    parser.add_argument(
+        "--voltage-survival-current-gate",
+        action="store_true",
+        help="Require grid-current limit pass in the staged voltage-survival gate.",
+    )
+    parser.add_argument(
+        "--actor-filter-tau",
+        type=float,
+        default=0.001,
+        help="SAC actor command filter time constant in seconds; use 0 for raw actor diagnostics.",
+    )
     parser.add_argument("--case-name", default="")
+    parser.add_argument(
+        "--trajectory-file",
+        type=Path,
+        default=None,
+        help="Use an existing hpt_traj_t/hpt_traj_action MAT file as the initial teacher trajectory.",
+    )
     parser.add_argument(
         "--teacher-source",
         choices=["trajectory", "rule"],
@@ -522,7 +898,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--preset",
         default="constant",
-        choices=["zero", "constant", "step", "ramp", "two_stage", "two_stage_window", "fault_window"],
+        choices=[
+            "zero",
+            "constant",
+            "step",
+            "ramp",
+            "two_stage",
+            "two_stage_window",
+            "fault_window",
+            "fault_recovery",
+        ],
     )
     parser.add_argument("--decision-dt", type=float, default=2e-3)
     parser.add_argument("--action", type=float, nargs=4, default=[0.172, 0.0, 0.022, 0.002])
@@ -537,6 +922,31 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dagger-iters", type=int, default=2)
     parser.add_argument("--vdc-feedback-gain", type=float, default=0.10)
     parser.add_argument("--vdc-feedback-ref-pu", type=float, default=1.0)
+    parser.add_argument(
+        "--energy-two-zone",
+        action="store_true",
+        help=(
+            "Use state-feedback energy-head relabeling during BC/DAgger: "
+            "one signed d/q response for low Vdc and another for high Vdc."
+        ),
+    )
+    parser.add_argument(
+        "--energy-two-zone-all-topologies",
+        action="store_true",
+        help="Apply two-zone energy relabeling to topology1 as well as topology2.",
+    )
+    parser.add_argument("--energy-vdc-low-pu", type=float, default=0.95)
+    parser.add_argument("--energy-vdc-high-pu", type=float, default=1.12)
+    parser.add_argument("--energy-low-d-gain", type=float, default=-2.0)
+    parser.add_argument("--energy-low-q-gain", type=float, default=1.0)
+    parser.add_argument("--energy-high-d-gain", type=float, default=0.20)
+    parser.add_argument("--energy-high-q-gain", type=float, default=-0.80)
+    parser.add_argument("--energy-dvdc-d-gain", type=float, default=0.0)
+    parser.add_argument("--energy-dvdc-q-gain", type=float, default=-0.20)
+    parser.add_argument("--energy-d-min", type=float, default=-0.95)
+    parser.add_argument("--energy-d-max", type=float, default=0.95)
+    parser.add_argument("--energy-q-min", type=float, default=-0.95)
+    parser.add_argument("--energy-q-max", type=float, default=0.95)
     parser.add_argument("--q-gate-lv-min-pu", type=float, default=0.0)
     parser.add_argument("--q-gate-time-min-s", type=float, default=0.0)
     parser.add_argument("--q-gate-vdc-min-pu", type=float, default=0.0)
@@ -551,6 +961,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=512)
     parser.add_argument("--lr", type=float, default=2e-4)
     parser.add_argument("--action-weights", default="4,1,0.5,0.5")
+    parser.add_argument("--teacher-prior-weight", type=float, default=30.0)
     parser.add_argument("--bc-obs-noise-std", type=float, default=0.012)
     parser.add_argument("--bc-obs-noise-repeat", type=int, default=4)
     parser.add_argument(
@@ -564,6 +975,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=1,
         help="Extra BC repeat multiplier for switch trace rows marked window_zone=recovery.",
+    )
+    parser.add_argument(
+        "--pre-window-repeat-mult",
+        type=int,
+        default=1,
+        help="Extra BC repeat multiplier for switch trace rows marked window_zone=pre.",
     )
     parser.add_argument(
         "--dagger-label-source",
@@ -640,11 +1057,12 @@ def main() -> int:
             init_model=None,
             fixed_target=None,
             vdc_feedback_gain=0.0,
-            relabel_with_trajectory=False,
+            relabel_with_trajectory=args.teacher_source == "trajectory",
         )
     )
 
     actor_mat = SIMULINK_DIR / "hpt_sac_actor_weights_dynamic.mat"
+    dynamic_actor_backup = register_dynamic_actor_restore(actor_mat, run_dir)
     export_actor(args, run_dir, model=model, out=actor_mat, label="bc0_dynamic")
     eval_summary = evaluate_actor(args, run_dir, label=f"{args.run_id}_bc0_actor")
     eval_summary["label"] = "bc0"
@@ -720,11 +1138,12 @@ def main() -> int:
         "best_actor_evaluation": best,
         "final_model": str(best_model),
         "final_actor_mat": str(final_actor),
+        "dynamic_actor_backup": dynamic_actor_backup,
         "final_actor_trace": final_actor_trace,
         "trace_alignment": trace_alignment,
         "promoted_voltage_survival": bool(best["policy_voltage_pass"]),
         "promoted_beats_baseline": bool(best["policy_beats_baseline"]),
-        "config": vars(args),
+        "config": jsonable_config(args),
     }
     write_json(run_dir / "summary.json", summary)
     write_report(run_dir, summary)
