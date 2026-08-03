@@ -33,6 +33,8 @@
       "descriptor": "version_2/experts/topology1_balanced_lvrt/expert.json",
       "current_model": "version_2/experts/topology1_balanced_lvrt/models/hpt_t1_l090_pre24_b60_down35_clk_dg3_dagger2.zip",
       "current_result": "version_2/experts/topology1_balanced_lvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -52,6 +54,8 @@
       "descriptor": "version_2/experts/topology1_single_phase_lvrt/expert.json",
       "current_model": "version_2/experts/topology1_single_phase_lvrt/models/hpt_trustregion_promotion_20260726_round1_05_topology1_a_lvrt090_60ms_unbalanced_chunk03.zip",
       "current_result": "version_2/experts/topology1_single_phase_lvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -71,6 +75,8 @@
       "descriptor": "version_2/experts/topology1_two_phase_lvrt/expert.json",
       "current_model": "version_2/experts/topology1_two_phase_lvrt/models/hpt_stage6_repair_t1_ab_lvrt090_const036_sacft_micro_20260728_chunk01.zip",
       "current_result": "version_2/experts/topology1_two_phase_lvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -88,6 +94,8 @@
       "descriptor": "version_2/experts/topology1_balanced_hvrt/expert.json",
       "current_model": "version_2/experts/topology1_balanced_hvrt/models/hpt_t1_hvrt110_const249_current_iface_actor_20260722_bc0.zip",
       "current_result": "version_2/experts/topology1_balanced_hvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -107,6 +115,8 @@
       "descriptor": "version_2/experts/topology1_single_phase_hvrt/expert.json",
       "current_model": "version_2/experts/topology1_single_phase_hvrt/models/hpt_stage6_t1_a_hvrt110_detectorfix_sacft_20260728_chunk03.zip",
       "current_result": "version_2/experts/topology1_single_phase_hvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -126,6 +136,8 @@
       "descriptor": "version_2/experts/topology1_two_phase_hvrt/expert.json",
       "current_model": "version_2/experts/topology1_two_phase_hvrt/models/hpt_stage6_t1_ab_hvrt110_detectorfix_sacft_20260728_chunk01.zip",
       "current_result": "version_2/experts/topology1_two_phase_hvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -143,6 +155,8 @@
       "descriptor": "version_2/experts/topology2_balanced_lvrt/expert.json",
       "current_model": "version_2/experts/topology2_balanced_lvrt/models/hpt_t2_lvrt090_fr052_rr016_re008_phase_nonoise_actor_20260722_bc0.zip",
       "current_result": "version_2/experts/topology2_balanced_lvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -162,6 +176,8 @@
       "descriptor": "version_2/experts/topology2_single_phase_lvrt/expert.json",
       "current_model": "version_2/experts/topology2_single_phase_lvrt/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
       "current_result": "version_2/experts/topology2_single_phase_lvrt/results/targeted_matrix",
+      "current_data_manifest": "version_2/experts/topology2_single_phase_lvrt/manifests/data_manifest.json",
+      "current_proxy_calibration": "version_2/experts/topology2_single_phase_lvrt/proxy/model/hpt_proxy_calibration.json",
       "promotion_status": "promoted_local_boundary_expansion"
     },
     {
@@ -181,6 +197,8 @@
       "descriptor": "version_2/experts/topology2_two_phase_lvrt/expert.json",
       "current_model": "version_2/experts/topology2_two_phase_lvrt/models/hpt_stage6_t2_ab_lvrt090_faultrec080035_sacft_micro_20260728_chunk04.zip",
       "current_result": "version_2/experts/topology2_two_phase_lvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -198,6 +216,8 @@
       "descriptor": "version_2/experts/topology2_balanced_hvrt/expert.json",
       "current_model": "version_2/experts/topology2_balanced_hvrt/models/hpt_stage6_t2_balanced_hvrt110_chop760_sacft_micro_20260728_chunk01.zip",
       "current_result": "version_2/experts/topology2_balanced_hvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -217,6 +237,8 @@
       "descriptor": "version_2/experts/topology2_single_phase_hvrt/expert.json",
       "current_model": "version_2/experts/topology2_single_phase_hvrt/models/hpt_exact_t2_a_hvrt105_60ms_strongpos_actor_daggertraj_20260725_dagger1.zip",
       "current_result": "version_2/experts/topology2_single_phase_hvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     },
     {
@@ -236,6 +258,8 @@
       "descriptor": "version_2/experts/topology2_two_phase_hvrt/expert.json",
       "current_model": "version_2/experts/topology2_two_phase_hvrt/models/hpt_stage4_t2_ab_hvrt110_repair_20260726_01_topology2_ab_hvrt110_60ms_stage4_chunk03.zip",
       "current_result": "version_2/experts/topology2_two_phase_hvrt/results/center_case_switch_level.csv",
+      "current_data_manifest": null,
+      "current_proxy_calibration": null,
       "promotion_status": "historical_center_case_pass"
     }
   ]

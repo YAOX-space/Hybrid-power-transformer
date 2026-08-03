@@ -68,6 +68,8 @@ def test_committed_registry_matches_the_twelve_specs() -> None:
     for entry in registry["experts"]:
         assert entry["data"] == f"{entry['workspace']}/data"
         assert entry["proxy"] == f"{entry['workspace']}/proxy"
+        assert "current_data_manifest" in entry
+        assert "current_proxy_calibration" in entry
 
 
 def test_all_committed_experts_have_data_and_proxy_layout() -> None:

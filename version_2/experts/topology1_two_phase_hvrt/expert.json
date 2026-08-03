@@ -26,5 +26,7 @@
   },
   "current_model": "version_2/experts/topology1_two_phase_hvrt/models/hpt_stage6_t1_ab_hvrt110_detectorfix_sacft_20260728_chunk01.zip",
   "current_result": "version_2/experts/topology1_two_phase_hvrt/results/center_case_switch_level.csv",
+  "current_data_manifest": null,
+  "current_proxy_calibration": null,
   "promotion_status": "historical_center_case_pass"
 }

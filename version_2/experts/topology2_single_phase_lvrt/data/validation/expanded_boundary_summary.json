@@ -1,0 +1,32 @@
+{
+  "family_sac_after_finetune": {
+    "rows": 60,
+    "voltage_survival_pass_count": 46,
+    "envelope_pass_count": 60,
+    "recovery_pass_count": 60,
+    "vdc_pass_count": 52,
+    "gbt_vdc_survive_pass_count": 60,
+    "grid_current_pass_count": 60,
+    "score_mean": 115.5708186813595,
+    "score_min": 107.994899387403,
+    "score_max": 132.2397748134,
+    "grid_current_peak_max_pu": 1.36927773291655,
+    "envelope_violation_max_pu": 0.0,
+    "pass_while_dq_fails_count": 3,
+    "score_beats_dq_count": 45
+  },
+  "strong_dq": {
+    "rows": 60,
+    "voltage_survival_pass_count": 48,
+    "envelope_pass_count": 60,
+    "recovery_pass_count": 52,
+    "vdc_pass_count": 48,
+    "gbt_vdc_survive_pass_count": 48,
+    "grid_current_pass_count": 60,
+    "score_mean": 123.60036984284538,
+    "score_min": 109.232330779425,
+    "score_max": 226.750074740668,
+    "grid_current_peak_max_pu": 1.49367459924582,
+    "envelope_violation_max_pu": 0.0
+  }
+}

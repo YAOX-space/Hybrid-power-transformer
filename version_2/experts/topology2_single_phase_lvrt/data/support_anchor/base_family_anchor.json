@@ -1,0 +1,636 @@
+{
+  "schema": "hpt-family-specialist-anchor-v1",
+  "dataset": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/base_family_anchor.npz",
+  "samples": 16047,
+  "source_count": 9,
+  "sources": [
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0500_d120ms\\t2_a_lvrt_deep_energyaware_pu0500_d120ms_dq_anchor.npz",
+      "samples": 1263,
+      "action_mean": [
+        0.06661196798086166,
+        0.030027249827980995,
+        0.0,
+        0.0
+      ],
+      "action_min": [
+        -0.12089883536100388,
+        -0.26672014594078064,
+        0.0,
+        0.0
+      ],
+      "action_max": [
+        0.3862414062023163,
+        0.23128759860992432,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0500_d200ms\\t2_a_lvrt_deep_energyaware_pu0500_d200ms_dq_anchor.npz",
+      "samples": 1743,
+      "action_mean": [
+        0.08000797033309937,
+        -0.048416588455438614,
+        0.0,
+        0.0
+      ],
+      "action_min": [
+        -0.12089883536100388,
+        -0.26672014594078064,
+        0.0,
+        0.0
+      ],
+      "action_max": [
+        0.3862414062023163,
+        0.23128759860992432,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0500_d300ms\\t2_a_lvrt_deep_energyaware_pu0500_d300ms_dq_anchor.npz",
+      "samples": 2343,
+      "action_mean": [
+        0.09906306862831116,
+        -0.06771327555179596,
+        0.0,
+        0.0
+      ],
+      "action_min": [
+        -0.12089883536100388,
+        -0.26672014594078064,
+        0.0,
+        0.0
+      ],
+      "action_max": [
+        0.3862414062023163,
+        0.23128759860992432,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0575_d120ms\\t2_a_lvrt_deep_energyaware_pu0575_d120ms_dq_anchor.npz",
+      "samples": 1263,
+      "action_mean": [
+        0.07788734883069992,
+        0.01654435135424137,
+        0.0,
+        0.0
+      ],
+      "action_min": [
+        -0.12491394579410553,
+        -0.2623541057109833,
+        0.0,
+        0.0
+      ],
+      "action_max": [
+        0.36926841735839844,
+        0.23128759860992432,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0575_d200ms\\t2_a_lvrt_deep_energyaware_pu0575_d200ms_dq_anchor.npz",
+      "samples": 1743,
+      "action_mean": [
+        0.08852607756853104,
+        -0.045728009194135666,
+        0.0,
+        0.0
+      ],
+      "action_min": [
+        -0.12491394579410553,
+        -0.2623541057109833,
+        0.0,
+        0.0
+      ],
+      "action_max": [
+        0.36926841735839844,
+        0.23128759860992432,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0575_d300ms\\t2_a_lvrt_deep_energyaware_pu0575_d300ms_dq_anchor.npz",
+      "samples": 2343,
+      "action_mean": [
+        0.0910593643784523,
+        -0.0565371997654438,
+        0.0,
+        0.0
+      ],
+      "action_min": [
+        -0.12491394579410553,
+        -0.2623541057109833,
+        0.0,
+        0.0
+      ],
+      "action_max": [
+        0.36926841735839844,
+        0.23128759860992432,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0650_d120ms\\t2_a_lvrt_deep_energyaware_pu0650_d120ms_dq_anchor.npz",
+      "samples": 1263,
+      "action_mean": [
+        0.06643809378147125,
+        -0.0026118354871869087,
+        0.0,
+        0.0
+      ],
+      "action_min": [
+        -0.0931205004453659,
+        -0.2687615156173706,
+        0.0,
+        0.0
+      ],
+      "action_max": [
+        0.3213523328304291,
+        0.23128759860992432,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0650_d200ms\\t2_a_lvrt_deep_energyaware_pu0650_d200ms_dq_anchor.npz",
+      "samples": 1743,
+      "action_mean": [
+        0.07354293018579483,
+        -0.008485732600092888,
+        0.0,
+        0.0
+      ],
+      "action_min": [
+        -0.0931205004453659,
+        -0.2687615156173706,
+        0.0,
+        0.0
+      ],
+      "action_max": [
+        0.3213523328304291,
+        0.23128759860992432,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0650_d300ms\\t2_a_lvrt_deep_energyaware_pu0650_d300ms_dq_anchor.npz",
+      "samples": 2343,
+      "action_mean": [
+        0.08018256723880768,
+        -0.030093595385551453,
+        0.0,
+        0.0
+      ],
+      "action_min": [
+        -0.0931205004453659,
+        -0.2687615156173706,
+        0.0,
+        0.0
+      ],
+      "action_max": [
+        0.3213523328304291,
+        0.23128759860992432,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "action_mean": [
+    0.08236260712146759,
+    -0.030223345384001732,
+    0.0,
+    0.0
+  ],
+  "action_min": [
+    -0.12491394579410553,
+    -0.2687615156173706,
+    0.0,
+    0.0
+  ],
+  "action_max": [
+    0.3862414062023163,
+    0.23128759860992432,
+    0.0,
+    0.0
+  ],
+  "teacher_source": "strong_conventional_dq_family_traces",
+  "per_case": [
+    {
+      "case": {
+        "fault_pu": 0.5,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0500_d120ms"
+      },
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d120ms_20260802_163918.csv",
+      "anchor_summary": {
+        "trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d120ms_20260802_163918.csv",
+        "dataset": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0500_d120ms\\t2_a_lvrt_deep_energyaware_pu0500_d120ms_dq_anchor.npz",
+        "samples": 1263,
+        "source_rows": 153,
+        "zone_counts": {
+          "prefault": 30,
+          "fault": 60,
+          "recovery": 60,
+          "tail": 3
+        },
+        "action_mean": [
+          0.06661196798086166,
+          0.030027249827980995,
+          0.0,
+          0.0
+        ],
+        "action_min": [
+          -0.12089883536100388,
+          -0.26672014594078064,
+          0.0,
+          0.0
+        ],
+        "action_max": [
+          0.3862414062023163,
+          0.23128759860992432,
+          0.0,
+          0.0
+        ],
+        "target_columns": "action_01..action_04",
+        "teacher_source": "strong_conventional_dq_simulink_trace",
+        "min_time_s": 0.02
+      }
+    },
+    {
+      "case": {
+        "fault_pu": 0.5,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0500_d200ms"
+      },
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d200ms_20260802_164035.csv",
+      "anchor_summary": {
+        "trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d200ms_20260802_164035.csv",
+        "dataset": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0500_d200ms\\t2_a_lvrt_deep_energyaware_pu0500_d200ms_dq_anchor.npz",
+        "samples": 1743,
+        "source_rows": 193,
+        "zone_counts": {
+          "prefault": 30,
+          "fault": 100,
+          "recovery": 60,
+          "tail": 3
+        },
+        "action_mean": [
+          0.08000797033309937,
+          -0.048416588455438614,
+          0.0,
+          0.0
+        ],
+        "action_min": [
+          -0.12089883536100388,
+          -0.26672014594078064,
+          0.0,
+          0.0
+        ],
+        "action_max": [
+          0.3862414062023163,
+          0.23128759860992432,
+          0.0,
+          0.0
+        ],
+        "target_columns": "action_01..action_04",
+        "teacher_source": "strong_conventional_dq_simulink_trace",
+        "min_time_s": 0.02
+      }
+    },
+    {
+      "case": {
+        "fault_pu": 0.5,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0500_d300ms"
+      },
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d300ms_20260802_164151.csv",
+      "anchor_summary": {
+        "trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d300ms_20260802_164151.csv",
+        "dataset": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0500_d300ms\\t2_a_lvrt_deep_energyaware_pu0500_d300ms_dq_anchor.npz",
+        "samples": 2343,
+        "source_rows": 243,
+        "zone_counts": {
+          "prefault": 30,
+          "fault": 150,
+          "recovery": 60,
+          "tail": 3
+        },
+        "action_mean": [
+          0.09906306862831116,
+          -0.06771327555179596,
+          0.0,
+          0.0
+        ],
+        "action_min": [
+          -0.12089883536100388,
+          -0.26672014594078064,
+          0.0,
+          0.0
+        ],
+        "action_max": [
+          0.3862414062023163,
+          0.23128759860992432,
+          0.0,
+          0.0
+        ],
+        "target_columns": "action_01..action_04",
+        "teacher_source": "strong_conventional_dq_simulink_trace",
+        "min_time_s": 0.02
+      }
+    },
+    {
+      "case": {
+        "fault_pu": 0.575,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0575_d120ms"
+      },
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d120ms_20260802_164307.csv",
+      "anchor_summary": {
+        "trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d120ms_20260802_164307.csv",
+        "dataset": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0575_d120ms\\t2_a_lvrt_deep_energyaware_pu0575_d120ms_dq_anchor.npz",
+        "samples": 1263,
+        "source_rows": 153,
+        "zone_counts": {
+          "prefault": 30,
+          "fault": 60,
+          "recovery": 60,
+          "tail": 3
+        },
+        "action_mean": [
+          0.07788734883069992,
+          0.01654435135424137,
+          0.0,
+          0.0
+        ],
+        "action_min": [
+          -0.12491394579410553,
+          -0.2623541057109833,
+          0.0,
+          0.0
+        ],
+        "action_max": [
+          0.36926841735839844,
+          0.23128759860992432,
+          0.0,
+          0.0
+        ],
+        "target_columns": "action_01..action_04",
+        "teacher_source": "strong_conventional_dq_simulink_trace",
+        "min_time_s": 0.02
+      }
+    },
+    {
+      "case": {
+        "fault_pu": 0.575,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0575_d200ms"
+      },
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d200ms_20260802_164423.csv",
+      "anchor_summary": {
+        "trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d200ms_20260802_164423.csv",
+        "dataset": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0575_d200ms\\t2_a_lvrt_deep_energyaware_pu0575_d200ms_dq_anchor.npz",
+        "samples": 1743,
+        "source_rows": 193,
+        "zone_counts": {
+          "prefault": 30,
+          "fault": 100,
+          "recovery": 60,
+          "tail": 3
+        },
+        "action_mean": [
+          0.08852607756853104,
+          -0.045728009194135666,
+          0.0,
+          0.0
+        ],
+        "action_min": [
+          -0.12491394579410553,
+          -0.2623541057109833,
+          0.0,
+          0.0
+        ],
+        "action_max": [
+          0.36926841735839844,
+          0.23128759860992432,
+          0.0,
+          0.0
+        ],
+        "target_columns": "action_01..action_04",
+        "teacher_source": "strong_conventional_dq_simulink_trace",
+        "min_time_s": 0.02
+      }
+    },
+    {
+      "case": {
+        "fault_pu": 0.575,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0575_d300ms"
+      },
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d300ms_20260802_164539.csv",
+      "anchor_summary": {
+        "trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d300ms_20260802_164539.csv",
+        "dataset": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0575_d300ms\\t2_a_lvrt_deep_energyaware_pu0575_d300ms_dq_anchor.npz",
+        "samples": 2343,
+        "source_rows": 243,
+        "zone_counts": {
+          "prefault": 30,
+          "fault": 150,
+          "recovery": 60,
+          "tail": 3
+        },
+        "action_mean": [
+          0.0910593643784523,
+          -0.0565371997654438,
+          0.0,
+          0.0
+        ],
+        "action_min": [
+          -0.12491394579410553,
+          -0.2623541057109833,
+          0.0,
+          0.0
+        ],
+        "action_max": [
+          0.36926841735839844,
+          0.23128759860992432,
+          0.0,
+          0.0
+        ],
+        "target_columns": "action_01..action_04",
+        "teacher_source": "strong_conventional_dq_simulink_trace",
+        "min_time_s": 0.02
+      }
+    },
+    {
+      "case": {
+        "fault_pu": 0.65,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0650_d120ms"
+      },
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d120ms_20260802_164654.csv",
+      "anchor_summary": {
+        "trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d120ms_20260802_164654.csv",
+        "dataset": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0650_d120ms\\t2_a_lvrt_deep_energyaware_pu0650_d120ms_dq_anchor.npz",
+        "samples": 1263,
+        "source_rows": 153,
+        "zone_counts": {
+          "prefault": 30,
+          "fault": 60,
+          "recovery": 60,
+          "tail": 3
+        },
+        "action_mean": [
+          0.06643809378147125,
+          -0.0026118354871869087,
+          0.0,
+          0.0
+        ],
+        "action_min": [
+          -0.0931205004453659,
+          -0.2687615156173706,
+          0.0,
+          0.0
+        ],
+        "action_max": [
+          0.3213523328304291,
+          0.23128759860992432,
+          0.0,
+          0.0
+        ],
+        "target_columns": "action_01..action_04",
+        "teacher_source": "strong_conventional_dq_simulink_trace",
+        "min_time_s": 0.02
+      }
+    },
+    {
+      "case": {
+        "fault_pu": 0.65,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0650_d200ms"
+      },
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d200ms_20260802_164809.csv",
+      "anchor_summary": {
+        "trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d200ms_20260802_164809.csv",
+        "dataset": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0650_d200ms\\t2_a_lvrt_deep_energyaware_pu0650_d200ms_dq_anchor.npz",
+        "samples": 1743,
+        "source_rows": 193,
+        "zone_counts": {
+          "prefault": 30,
+          "fault": 100,
+          "recovery": 60,
+          "tail": 3
+        },
+        "action_mean": [
+          0.07354293018579483,
+          -0.008485732600092888,
+          0.0,
+          0.0
+        ],
+        "action_min": [
+          -0.0931205004453659,
+          -0.2687615156173706,
+          0.0,
+          0.0
+        ],
+        "action_max": [
+          0.3213523328304291,
+          0.23128759860992432,
+          0.0,
+          0.0
+        ],
+        "target_columns": "action_01..action_04",
+        "teacher_source": "strong_conventional_dq_simulink_trace",
+        "min_time_s": 0.02
+      }
+    },
+    {
+      "case": {
+        "fault_pu": 0.65,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0650_d300ms"
+      },
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d300ms_20260802_164926.csv",
+      "anchor_summary": {
+        "trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_trajectory_traces\\trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d300ms_20260802_164926.csv",
+        "dataset": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\anchors\\t2_a_lvrt_deep_energyaware_pu0650_d300ms\\t2_a_lvrt_deep_energyaware_pu0650_d300ms_dq_anchor.npz",
+        "samples": 2343,
+        "source_rows": 243,
+        "zone_counts": {
+          "prefault": 30,
+          "fault": 150,
+          "recovery": 60,
+          "tail": 3
+        },
+        "action_mean": [
+          0.08018256723880768,
+          -0.030093595385551453,
+          0.0,
+          0.0
+        ],
+        "action_min": [
+          -0.0931205004453659,
+          -0.2687615156173706,
+          0.0,
+          0.0
+        ],
+        "action_max": [
+          0.3213523328304291,
+          0.23128759860992432,
+          0.0,
+          0.0
+        ],
+        "target_columns": "action_01..action_04",
+        "teacher_source": "strong_conventional_dq_simulink_trace",
+        "min_time_s": 0.02
+      }
+    }
+  ],
+  "curation": {
+    "source": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/base_family_anchor.source.json",
+    "source_sha256": "492dc8cd2a3f42736ae2b3f609642f981cf9298c60efe4fd64bfcf967180ce96"
+  }
+}

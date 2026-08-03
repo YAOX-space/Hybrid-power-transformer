@@ -8,5 +8,13 @@
   "sha256": "44dadac630f30d72555ae5ed363301296ac6b1ed2cd6201bfb1043ae1299cde5",
   "controller": "hpt-voltage-sac",
   "training_steps": 6000,
+  "initial_checkpoint": "version_2/experts/topology2_single_phase_lvrt/models/hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803.zip",
+  "support_dataset": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/family_anchor_joint_support.npz",
+  "proxy_calibration": "version_2/experts/topology2_single_phase_lvrt/proxy/model/hpt_proxy_calibration.json",
+  "data_manifest": "version_2/experts/topology2_single_phase_lvrt/manifests/data_manifest.json",
+  "validation_evidence": [
+    "version_2/experts/topology2_single_phase_lvrt/data/validation/targeted_family_comparison_rows.csv",
+    "version_2/experts/topology2_single_phase_lvrt/data/validation/expanded_boundary_comparison_rows.csv"
+  ],
   "evidence_scope": "Switch-level topology2 A-phase deep-LVRT family; local voltage-survival boundary expansion only"
 }

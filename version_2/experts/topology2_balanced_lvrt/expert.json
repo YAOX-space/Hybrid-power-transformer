@@ -24,5 +24,7 @@
   },
   "current_model": "version_2/experts/topology2_balanced_lvrt/models/hpt_t2_lvrt090_fr052_rr016_re008_phase_nonoise_actor_20260722_bc0.zip",
   "current_result": "version_2/experts/topology2_balanced_lvrt/results/center_case_switch_level.csv",
+  "current_data_manifest": null,
+  "current_proxy_calibration": null,
   "promotion_status": "historical_center_case_pass"
 }

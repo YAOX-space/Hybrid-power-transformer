@@ -1,0 +1,112 @@
+{
+  "run_id": "hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803",
+  "controller": "hpt-voltage-sac",
+  "observation_dim": 24,
+  "action_dim": 4,
+  "steps": 6000,
+  "seed": 20268305,
+  "init_model": "data\\models\\hpt_t2_a_lvrt_deep_lowreg_precharge_support_sac_r1_20260802.zip",
+  "model_path": "data\\models\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803.zip",
+  "curriculum": "all",
+  "single_case": {
+    "enabled": false,
+    "topology": null,
+    "fault_pu": null,
+    "fault_duration_s": null,
+    "fault_start_s": 0.035,
+    "fault_stop_margin_s": 0.125,
+    "category": null,
+    "phase_key": "abc"
+  },
+  "family_case": {
+    "enabled": true,
+    "topology": "topology2",
+    "fault_pus": "0.5,0.6,0.625",
+    "fault_durations_ms": "160,200,240",
+    "fault_start_s": 0.08,
+    "fault_stop_margin_s": 0.125,
+    "category": "LVRT",
+    "phase_key": "a"
+  },
+  "controller_heads": "split",
+  "scenario_summary": {
+    "count": 9,
+    "topology": {
+      "topology2": 9
+    },
+    "category": {
+      "LVRT": 9
+    },
+    "fault_type": {
+      "1ph_g": 9
+    }
+  },
+  "proxy_calibration": {
+    "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803\\hpt_proxy_calibration_t2_a_deep_lvrt_joint_support_r1.json",
+    "schema": "hpt_proxy_calibration_v1",
+    "source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_proxy_sweep\\hpt_v2_sac_proxy_sweep_20260715_182303.csv",
+    "energy_source_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_v2_sac_energy_sweep\\hpt_v2_sac_energy_sweep_20260715_182415.csv",
+    "energy_bridge_mode": "calibrated_direct_energy_bridge_available",
+    "target_phase_rms": 207.0,
+    "topologies": [
+      "topology1",
+      "topology2"
+    ]
+  },
+  "metrics": {
+    "rollouts": 9,
+    "mean_return": -30144.294240506963,
+    "mean_final_v_pu": 1.002117305888517,
+    "max_abs_final_v_err": 0.008612236066024126,
+    "mean_final_vdc_pu": 0.9462394450743667,
+    "min_vdc_pu": 0.8842169046401978,
+    "min_episode_v_pu": 0.8968316316604614,
+    "max_episode_v_pu": 1.0490269660949707,
+    "condition_counts": {
+      "nominal": 9
+    }
+  },
+  "reward_trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803\\sac_training_reward_trace.csv",
+  "reward_trace_episodes": 32,
+  "diagnostics_trace_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803\\sac_training_diagnostics_trace.csv",
+  "diagnostics_trace_rows": 1501,
+  "split_head_init_from_shared": false,
+  "behavior_anchor": {
+    "enabled": false,
+    "epochs": 0,
+    "interval_steps": 500,
+    "episodes": 4,
+    "noise_std": 0.01,
+    "dataset": null,
+    "samples": 0,
+    "updates": 0,
+    "last_metrics": null,
+    "energy_head_only": false
+  },
+  "sac_support_regularization": {
+    "enabled": true,
+    "weight": 5000.0,
+    "batch_size": 512,
+    "anchor_episodes": 4,
+    "anchor_noise_std": 0.01,
+    "anchor_manifest": null,
+    "anchor_dataset": "lab\\results\\hpt_t2_a_lvrt_joint_support_anchor_20260803\\family_anchor_joint_support.npz",
+    "action_weights": "30,20,80,100",
+    "nearest_replay": true,
+    "energy_head_only": false,
+    "anchor_samples": 25647
+  },
+  "metadata_path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803\\metadata.json",
+  "reward_summary": {
+    "schema": "hpt-sac-reward-trace-summary-v1",
+    "run_dir": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803",
+    "reward_trace_files": [
+      "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803\\sac_training_reward_trace.csv"
+    ],
+    "combined_reward_csv": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803\\sac_training_reward_trace_combined.csv",
+    "reward_trace_rows": 32,
+    "protected_chunks_csv": "",
+    "protected_chunks_rows": 0,
+    "convergence_figure": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803\\sac_reward_and_switch_score_convergence.png"
+  }
+}

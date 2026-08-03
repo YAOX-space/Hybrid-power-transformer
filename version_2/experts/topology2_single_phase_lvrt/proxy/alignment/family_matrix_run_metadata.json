@@ -1,0 +1,136 @@
+{
+  "schema": "hpt-v2-experiment-metadata-v1",
+  "experiment_name": "hpt_family_proxy_matrix",
+  "created_at": "2026-08-03T02:02:45",
+  "run_dir": "lab\\results\\hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803\\hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803",
+  "command": [
+    "E:\\research_space\\Hybrid-power-transformer\\version_2\\sac\\calibration\\build_hpt_family_proxy_matrix.py",
+    "--comparison-csv",
+    "lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\family_specialist_comparison_rows.csv",
+    "lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_lowreg_precharge_sac_r1_probe9_20260802\\family_specialist_comparison_rows.csv",
+    "--out",
+    "lab\\results\\hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803\\family_switch_matrix.csv",
+    "--run-id",
+    "hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803"
+  ],
+  "git": {
+    "commit": "40ba2977612d3c0068ede620514c2ba9ad57a2e3",
+    "commit_short": "40ba297",
+    "branch": "research/hpt-autonomy-skill",
+    "dirty": true,
+    "status_count": 360,
+    "status_sample": [
+      "M .codex/skills/hpt-research-agent/SKILL.md",
+      " M .codex/skills/hpt-research-agent/references/30_day_roadmap.md",
+      " M .codex/skills/hpt-research-agent/references/interface_migration_policy.md",
+      " M .codex/skills/hpt-research-agent/references/research_charter.md",
+      " M docs/specs/algorithms/hpt-sac-controller/hpt-sac-controller-direct-sac-progress-2026-07-15.md",
+      " M docs/specs/algorithms/hpt-sac-controller/hpt-sac-controller-direct-sac-progress-2026-07-16-addendum.md",
+      " M docs/specs/algorithms/hpt-sac-controller/hpt-sac-controller-direct-sac-progress-2026-07-16.md",
+      " M docs/specs/algorithms/hpt-sac-controller/hpt-sac-controller-direct-sac-progress-2026-07-17.md",
+      " M docs/specs/algorithms/hpt-sac-controller/hpt-sac-controller-proxy-gap-20260715.md",
+      " M docs/specs/algorithms/hpt-sac-controller/hpt-sac-controller-specialist-matrix-addendum-2026-07-19.md",
+      " M docs/specs/algorithms/hpt-sac-controller/hpt-sac-controller-specialist-matrix-progress-2026-07-19.md",
+      " M docs/specs/algorithms/hpt-sac-controller/hpt-sac-controller-trajectory-autoresearch-progress-2026-07-18.md",
+      " M lab/results/.p3_current_runid",
+      " M lab/results/error_analysis_mi14_failures.csv",
+      " M lab/results/error_analysis_mi14_summary.json",
+      " M lab/results/frt_v2_spotcheck/S10_swell3.mat",
+      " M lab/results/frt_v2_spotcheck/S11_swell1.mat",
+      " M lab/results/frt_v2_spotcheck/S12_vbound.mat",
+      " M lab/results/frt_v2_spotcheck/S1_deep_sym.mat",
+      " M lab/results/frt_v2_spotcheck/S2_mid_sym.mat",
+      " M lab/results/frt_v2_spotcheck/S3_shallow_sym.mat",
+      " M lab/results/frt_v2_spotcheck/S4_deep_sym_scr10.mat",
+      " M lab/results/frt_v2_spotcheck/S5_1phg.mat",
+      " M lab/results/frt_v2_spotcheck/S6_2ph.mat",
+      " M lab/results/frt_v2_spotcheck/S7_2phg.mat",
+      " M lab/results/frt_v2_spotcheck/S8_1phg_scr10.mat",
+      " M lab/results/frt_v2_spotcheck/S9_recwin.mat",
+      " M lab/results/p3_full320_ode_proxy.json",
+      " M lab/results/p3_full320_sw_mi12.mat",
+      " M lab/results/residual_train.json",
+      " M lab/sac_asym_weights.mat",
+      " M lab/sac_hvrt_asym_weights.mat",
+      " M lab/sac_hvrt_sym_weights.mat",
+      " M lab/sac_residual_weights.mat",
+      " M lab/sac_sym_weights.mat",
+      " M lab/simulink/build_hpt_frt_full.m",
+      " M lab/simulink/frt_v2_calibrate.m",
+      " M lab/simulink/frt_v2_full320_switching.m",
+      " M lab/simulink/frt_v2_hlc.m",
+      " M lab/simulink/frt_v2_selected_expanded_switching.m",
+      " M lab/simulink/frt_v2_spotcheck.m",
+      " M lab/simulink/hpt_frt_full.slx",
+      " M lab/simulink/sac_asym_weights.mat",
+      " M lab/simulink/sac_hvrt_asym_weights.mat",
+      " M lab/simulink/sac_hvrt_sym_weights.mat",
+      " M lab/simulink/sac_residual_weights.mat",
+      " M lab/simulink/sac_sym_weights.mat",
+      " M src/hpt_frt/device/error_analysis_mi14.py",
+      " M src/hpt_frt/device/eval_full320_ode.py",
+      " M src/hpt_frt/device/eval_pass_sets_2040.py",
+      " M src/hpt_frt/device/eval_pure_sac_combo.py",
+      " M src/hpt_frt/device/export_pure_sac_combo.py",
+      " M src/hpt_frt/device/export_residual.py",
+      " M src/hpt_frt/device/frt_env.py",
+      " M src/hpt_frt/device/frt_env_v2.py",
+      " M src/hpt_frt/device/frt_metrics.py",
+      " M src/hpt_frt/device/gen_frt_scenarios.py",
+      " M src/hpt_frt/device/pure_sac_hard_curriculum.py",
+      " M src/hpt_frt/device/pure_sac_simtrace_bc.py",
+      " M src/hpt_frt/device/residual_env.py"
+    ],
+    "status_truncated": true
+  },
+  "python": {
+    "executable": "C:\\Users\\m1391\\AppData\\Local\\Programs\\Python\\Python38\\python.exe",
+    "version": "3.8.10 (tags/v3.8.10:3d8993a, May  3 2021, 11:48:03) [MSC v.1928 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0"
+  },
+  "topology_models": {},
+  "model_hashes": {},
+  "dataset_manifest": "lab\\results\\hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803\\family_switch_matrix.json",
+  "policy_checkpoint": null,
+  "policy_checkpoint_hash": null,
+  "config": {
+    "schema": "hpt-family-proxy-matrix-v1",
+    "run_id": "hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803",
+    "created_at": "2026-08-03T02:02:45",
+    "sources": [
+      {
+        "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\family_specialist_comparison_rows.csv",
+        "sha256": "f4dd7fe04a4a4dc2aff14c7dcb25a8b72da31df850711479419f0685599c4142"
+      },
+      {
+        "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_lowreg_precharge_sac_r1_probe9_20260802\\family_specialist_comparison_rows.csv",
+        "sha256": "0e254901499c053fc473a958177d0fc0828c2bc40dc155a08dd059fa5380f09d"
+      }
+    ],
+    "out": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803\\family_switch_matrix.csv",
+    "out_sha256": "ca982181c23ac6bf972f8be0840938d2e4e339dcc5dc6dd934f8b12f35d144a9",
+    "rows": 176,
+    "joint_rows": 132,
+    "conventional_rows": 44
+  },
+  "extra": {
+    "schema": "hpt-family-proxy-matrix-v1",
+    "run_id": "hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803",
+    "created_at": "2026-08-03T02:02:45",
+    "sources": [
+      {
+        "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\family_specialist_comparison_rows.csv",
+        "sha256": "f4dd7fe04a4a4dc2aff14c7dcb25a8b72da31df850711479419f0685599c4142"
+      },
+      {
+        "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_lowreg_precharge_sac_r1_probe9_20260802\\family_specialist_comparison_rows.csv",
+        "sha256": "0e254901499c053fc473a958177d0fc0828c2bc40dc155a08dd059fa5380f09d"
+      }
+    ],
+    "out": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803\\family_switch_matrix.csv",
+    "out_sha256": "ca982181c23ac6bf972f8be0840938d2e4e339dcc5dc6dd934f8b12f35d144a9",
+    "rows": 176,
+    "joint_rows": 132,
+    "conventional_rows": 44
+  }
+}

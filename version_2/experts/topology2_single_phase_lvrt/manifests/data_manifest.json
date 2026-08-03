@@ -1,0 +1,467 @@
+{
+  "schema": "hpt-v2-curated-expert-data-v1",
+  "expert_id": "topology2_single_phase_lvrt",
+  "git_head_at_curation": "bfe37bd0a6defab559208a87f43511e9cd9193c9",
+  "selection_spec": "version_2/experts/topology2_single_phase_lvrt/manifests/data_selection_20260803.json",
+  "selection_spec_sha256": "817f9db1edd4047fcb532318f73f2f078135baf553f0d461167a1c34e41faabd",
+  "selection_policy": {
+    "include": [
+      "Exact switch-level traces used to construct the promoted r6 support anchor",
+      "Final support-anchor dataset and its rebuild metadata",
+      "Final r2 family proxy calibration and every directly referenced calibration source",
+      "Targeted and expanded switch-level validation tables",
+      "The r5 predecessor checkpoint required to reproduce the r6 fine-tune"
+    ],
+    "exclude": [
+      "Superseded r1 proxy calibrations",
+      "Ad hoc probes and failed candidates not on the promoted r6 dependency chain",
+      "Generated MATLAB evaluator scripts and console logs already preserved with result evidence"
+    ]
+  },
+  "dataset_status": {
+    "raw_switch_level": "complete for the nine support-anchor source trajectories",
+    "train": "online proxy interactions were not persisted as a replay dataset",
+    "validation": "targeted 9-case and expanded 60-case switch-level evaluations",
+    "holdout": "not available; expanded matrix is post-selection validation, not untouched holdout",
+    "support_anchor": "complete final 25,647-sample anchor plus rebuild inputs",
+    "proxy": "final calibrated physics-proxy configuration and calibration sources; no untouched trajectory holdout alignment"
+  },
+  "artifact_count": 37,
+  "artifacts": [
+    {
+      "role": "switch_level_support_trace",
+      "source": "lab/results/hpt_v2_trajectory_traces/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d120ms_20260802_163918.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d120ms_20260802_163918.csv",
+      "sha256": "76ed5418d408a0724a2d3855df78120a6a1f53876a37cafeac008ad4135dcbd7",
+      "bytes": 131295,
+      "inspection": {
+        "format": "csv",
+        "rows": 163,
+        "columns": 70
+      }
+    },
+    {
+      "role": "switch_level_support_trace",
+      "source": "lab/results/hpt_v2_trajectory_traces/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d200ms_20260802_164035.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d200ms_20260802_164035.csv",
+      "sha256": "6d89d12e76cc874771aa500186d190185cf6e3821ffb132b3e51406e72dc42c2",
+      "bytes": 163676,
+      "inspection": {
+        "format": "csv",
+        "rows": 203,
+        "columns": 70
+      }
+    },
+    {
+      "role": "switch_level_support_trace",
+      "source": "lab/results/hpt_v2_trajectory_traces/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d300ms_20260802_164151.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d300ms_20260802_164151.csv",
+      "sha256": "246317255dcbca3056c62f95fea20c90e0515168d8b73e3422c964a86cbed64b",
+      "bytes": 203962,
+      "inspection": {
+        "format": "csv",
+        "rows": 253,
+        "columns": 70
+      }
+    },
+    {
+      "role": "switch_level_support_trace",
+      "source": "lab/results/hpt_v2_trajectory_traces/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d120ms_20260802_164307.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d120ms_20260802_164307.csv",
+      "sha256": "cf4776ed6aa6e5c407bfd92bb30a4d500b5d5d1a3d09df7678b8807ac242f1c2",
+      "bytes": 132212,
+      "inspection": {
+        "format": "csv",
+        "rows": 163,
+        "columns": 70
+      }
+    },
+    {
+      "role": "switch_level_support_trace",
+      "source": "lab/results/hpt_v2_trajectory_traces/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d200ms_20260802_164423.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d200ms_20260802_164423.csv",
+      "sha256": "e6e4ac5e381a7031604c480b9026eeda924443f98fe6a4b781b345de02d94781",
+      "bytes": 165909,
+      "inspection": {
+        "format": "csv",
+        "rows": 203,
+        "columns": 70
+      }
+    },
+    {
+      "role": "switch_level_support_trace",
+      "source": "lab/results/hpt_v2_trajectory_traces/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d300ms_20260802_164539.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d300ms_20260802_164539.csv",
+      "sha256": "df8e1f75033d295c7070b4499893135bac9a3f96e16921e919e6865a12ad546c",
+      "bytes": 205710,
+      "inspection": {
+        "format": "csv",
+        "rows": 253,
+        "columns": 70
+      }
+    },
+    {
+      "role": "switch_level_support_trace",
+      "source": "lab/results/hpt_v2_trajectory_traces/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d120ms_20260802_164654.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d120ms_20260802_164654.csv",
+      "sha256": "b2c8bd206f761c959ebff3c946ac93d79f9a8569ec5b3341ba4885f1c1ed9fdc",
+      "bytes": 132502,
+      "inspection": {
+        "format": "csv",
+        "rows": 163,
+        "columns": 70
+      }
+    },
+    {
+      "role": "switch_level_support_trace",
+      "source": "lab/results/hpt_v2_trajectory_traces/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d200ms_20260802_164809.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d200ms_20260802_164809.csv",
+      "sha256": "d20d3906a622272cd138e90d47c0c593344091734eb5cfdc4a61be8b5d12b0d5",
+      "bytes": 164324,
+      "inspection": {
+        "format": "csv",
+        "rows": 203,
+        "columns": 70
+      }
+    },
+    {
+      "role": "switch_level_support_trace",
+      "source": "lab/results/hpt_v2_trajectory_traces/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d300ms_20260802_164926.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d300ms_20260802_164926.csv",
+      "sha256": "e3f4b2761505feeeb03dd8e624551c8fdc5f8b2141d7aa40bb0302bdc525c08c",
+      "bytes": 204859,
+      "inspection": {
+        "format": "csv",
+        "rows": 253,
+        "columns": 70
+      }
+    },
+    {
+      "role": "base_support_anchor_metadata_source",
+      "source": "lab/results/hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802/family_anchor.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/base_family_anchor.source.json",
+      "sha256": "492dc8cd2a3f42736ae2b3f609642f981cf9298c60efe4fd64bfcf967180ce96",
+      "bytes": 22114,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-family-specialist-anchor-v1"
+      }
+    },
+    {
+      "role": "base_support_anchor_dataset",
+      "source": "lab/results/hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802/family_anchor.npz",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/base_family_anchor.npz",
+      "sha256": "4d053ba66fd12faedd29b41389898be9eaa59e43ffb0108826f3b7c6c45e385f",
+      "bytes": 110322,
+      "inspection": {
+        "format": "npz",
+        "arrays": {
+          "observations": [
+            16047,
+            24
+          ],
+          "actions": [
+            16047,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "role": "final_support_anchor_metadata_source",
+      "source": "lab/results/hpt_t2_a_lvrt_joint_support_anchor_20260803/family_anchor_joint_support.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/family_anchor_joint_support.source.json",
+      "sha256": "79ea35b766dae3753c23b213b3c82168d6cd1c5650ff0f6b7ab4eed32ac563a7",
+      "bytes": 13039,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-energyq-boost-family-anchor-v1"
+      }
+    },
+    {
+      "role": "final_support_anchor_dataset",
+      "source": "lab/results/hpt_t2_a_lvrt_joint_support_anchor_20260803/family_anchor_joint_support.npz",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/family_anchor_joint_support.npz",
+      "sha256": "7523ea41acacfd775bff3636572aa5ac8861f32c8fdedaec284f594876f67f7c",
+      "bytes": 104758,
+      "inspection": {
+        "format": "npz",
+        "arrays": {
+          "observations": [
+            25647,
+            24
+          ],
+          "actions": [
+            25647,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "role": "targeted_switch_validation_rows",
+      "source": "version_2/experts/topology2_single_phase_lvrt/results/targeted_matrix/family_specialist_comparison_rows.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/validation/targeted_family_comparison_rows.csv",
+      "sha256": "d0a23a2a448621d4330a2f474190a2d87bbef0a5093a024c139e582713ff7fc8",
+      "bytes": 82064,
+      "inspection": {
+        "format": "csv",
+        "rows": 27,
+        "columns": 194
+      }
+    },
+    {
+      "role": "targeted_switch_validation_summary",
+      "source": "version_2/experts/topology2_single_phase_lvrt/results/targeted_matrix/family_specialist_summary.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/validation/targeted_family_summary.json",
+      "sha256": "00a07782bd4d900b6719fec72a36b5c000caf0af36d8a0ce2ee5571da89d5c54",
+      "bytes": 1561,
+      "inspection": {
+        "format": "json",
+        "schema": null
+      }
+    },
+    {
+      "role": "expanded_switch_validation_rows",
+      "source": "version_2/experts/topology2_single_phase_lvrt/results/expanded_matrix/family_specialist_comparison_rows.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/validation/expanded_boundary_comparison_rows.csv",
+      "sha256": "b227804bbe3897b7964edb2914438188bf5d8cb1ab2aa9edd110b81669adb482",
+      "bytes": 344137,
+      "inspection": {
+        "format": "csv",
+        "rows": 120,
+        "columns": 194
+      }
+    },
+    {
+      "role": "expanded_switch_validation_summary",
+      "source": "version_2/experts/topology2_single_phase_lvrt/results/expanded_matrix/family_specialist_summary.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/validation/expanded_boundary_summary.json",
+      "sha256": "429487c3d0e053c728083305f459e85b5da715809d915a4ec03d7fc70be6d813",
+      "bytes": 980,
+      "inspection": {
+        "format": "json",
+        "schema": null
+      }
+    },
+    {
+      "role": "proxy_calibration_r2_source",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/hpt_proxy_calibration_t2_a_deep_lvrt_joint_support_r2.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/model/hpt_proxy_calibration_r2.source.json",
+      "sha256": "94f225d8937f3795b2dcdd93ea02f63fdcd603597263d6e4217bf02bb858a8e3",
+      "bytes": 791941,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt_proxy_calibration_v1"
+      }
+    },
+    {
+      "role": "proxy_family_switch_matrix",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/family_switch_matrix.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/family_switch_matrix.csv",
+      "sha256": "ca982181c23ac6bf972f8be0840938d2e4e339dcc5dc6dd934f8b12f35d144a9",
+      "bytes": 598485,
+      "inspection": {
+        "format": "csv",
+        "rows": 176,
+        "columns": 214
+      }
+    },
+    {
+      "role": "proxy_family_switch_matrix_metadata",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/family_switch_matrix.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/family_switch_matrix.json",
+      "sha256": "dcbddffdc3ecfd0402bae6b55e794260a5a3bfed904db465fdf8530f49507573",
+      "bytes": 1039,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-family-proxy-matrix-v1"
+      }
+    },
+    {
+      "role": "proxy_energy_q_support_matrix",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/frt_calibration_matrix_hpt_t2_a_lvrt_energyq_fixed_support_20260803.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/energy_q_support_matrix.csv",
+      "sha256": "1a67ed43ecfe7e396fd0417b4eb9da29e958d4062b72e6f56e9f794d90483d00",
+      "bytes": 10953,
+      "inspection": {
+        "format": "csv",
+        "rows": 10,
+        "columns": 82
+      }
+    },
+    {
+      "role": "proxy_energy_q_support_metadata",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/frt_calibration_matrix_hpt_t2_a_lvrt_energyq_fixed_support_20260803.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/energy_q_support_matrix.json",
+      "sha256": "5daba22e3c296352a8ccb7e1616e2e3d457279cb17e08d95d0775411e11440b9",
+      "bytes": 548,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-switch-validation-augmented-matrix-v1"
+      }
+    },
+    {
+      "role": "proxy_joint_support_matrix",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/frt_calibration_matrix_t2_a_deep_lvrt_joint_support_20260803_r1.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/joint_support_matrix.csv",
+      "sha256": "5c470f0f6885ca861ae7cc37a07fe5140117432556b6008e36d3e3f9436beb54",
+      "bytes": 17844,
+      "inspection": {
+        "format": "csv",
+        "rows": 18,
+        "columns": 82
+      }
+    },
+    {
+      "role": "proxy_joint_support_metadata",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/frt_calibration_matrix_t2_a_deep_lvrt_joint_support_20260803_r1.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/joint_support_matrix.json",
+      "sha256": "66517943d4ea61474b0adce9664eae14687606bbcad9bcb72f20f3e9ba528458",
+      "bytes": 524,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-switch-validation-augmented-matrix-v1"
+      }
+    },
+    {
+      "role": "proxy_energy_d_zero_matrix",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/frt_calibration_matrix_t2_a_deep_lvrt_energyd_zero_20260803_r1.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/energy_d_zero_matrix.csv",
+      "sha256": "881f5b3eac556c887df6511af794d0f55bde58c6e1ea9214c43f2b89df263998",
+      "bytes": 12469,
+      "inspection": {
+        "format": "csv",
+        "rows": 12,
+        "columns": 82
+      }
+    },
+    {
+      "role": "proxy_energy_d_zero_metadata",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/frt_calibration_matrix_t2_a_deep_lvrt_energyd_zero_20260803_r1.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/energy_d_zero_matrix.json",
+      "sha256": "87a21758674175bd88832ae6651c4eea7235af55528e0bb5cb61403909ec64bc",
+      "bytes": 534,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-switch-validation-augmented-matrix-v1"
+      }
+    },
+    {
+      "role": "base_proxy_sweep",
+      "source": "lab/results/hpt_v2_sac_proxy_sweep/hpt_v2_sac_proxy_sweep_20260715_182303.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/base_proxy_sweep.csv",
+      "sha256": "19e94eac37ba63ca15bc289c58eb8112cf6e019c647ae97e7e2484ffeb4e32c1",
+      "bytes": 13887,
+      "inspection": {
+        "format": "csv",
+        "rows": 30,
+        "columns": 45
+      }
+    },
+    {
+      "role": "base_energy_sweep",
+      "source": "lab/results/hpt_v2_sac_energy_sweep/hpt_v2_sac_energy_sweep_20260715_182415.csv",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/base_energy_sweep.csv",
+      "sha256": "ccd70f935477561c8d91e3ca4a4e5feb490095198e9d28828bd15cbb6f17255d",
+      "bytes": 17697,
+      "inspection": {
+        "format": "csv",
+        "rows": 42,
+        "columns": 43
+      }
+    },
+    {
+      "role": "proxy_family_matrix_run_metadata",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/metadata.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/family_matrix_run_metadata.json",
+      "sha256": "67a366f03a4691d416802fe1708f947b52993cf9f5bd55c3d7cedaccde77085b",
+      "bytes": 7432,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-v2-experiment-metadata-v1"
+      }
+    },
+    {
+      "role": "proxy_energy_q_run_metadata",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/hpt_t2_a_lvrt_energyq_fixed_support_20260803/metadata.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/energy_q_run_metadata.json",
+      "sha256": "e36803b9861dd003127cf1d381d98c7b411c74fd448bd2c0bd4cf13307105fc2",
+      "bytes": 6315,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-v2-experiment-metadata-v1"
+      }
+    },
+    {
+      "role": "proxy_energy_d_run_metadata",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/t2_a_deep_lvrt_energyd_zero_20260803_r1/metadata.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/energy_d_run_metadata.json",
+      "sha256": "9b7c00030acd86ab0d1f3b2a0e24d053aab9504463500d231b79858b69f6dc87",
+      "bytes": 6268,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-v2-experiment-metadata-v1"
+      }
+    },
+    {
+      "role": "proxy_joint_support_run_metadata",
+      "source": "lab/results/hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803/t2_a_deep_lvrt_joint_support_20260803_r1/metadata.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/alignment/joint_support_run_metadata.json",
+      "sha256": "54e868603a4211455f06e9b4a08a13002fa3826293142313804bf37441dfb7ae",
+      "bytes": 6239,
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-v2-experiment-metadata-v1"
+      }
+    },
+    {
+      "role": "r6_initial_checkpoint",
+      "source": "data/models/hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803.zip",
+      "target": "version_2/experts/topology2_single_phase_lvrt/models/hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803.zip",
+      "sha256": "f4bab55c20a075b75b0f4b5f40a70e25798df6bf66d67148d95c06d26304d7cc",
+      "bytes": 6197112,
+      "inspection": {
+        "format": "zip"
+      }
+    },
+    {
+      "role": "r6_initial_checkpoint_sidecar",
+      "source": "data/models/hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803.json",
+      "target": "version_2/experts/topology2_single_phase_lvrt/models/hpt_t2_a_lvrt_joint_support_family_sac_r5_20260803.json",
+      "sha256": "0c74026025dbe9b0a9f9f2b2fffe2824f85e5e54d073369720b2f8a7ea260bf6",
+      "bytes": 4433,
+      "inspection": {
+        "format": "json",
+        "schema": null
+      }
+    },
+    {
+      "role": "canonical_base_anchor_metadata",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/base_family_anchor.json",
+      "sha256": "b21a8604c157ba6d82f3f5e726a38f96b8c2bf0a1f0903466bb7f2a059c461dc",
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-family-specialist-anchor-v1"
+      }
+    },
+    {
+      "role": "canonical_support_anchor_metadata",
+      "target": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/family_anchor_joint_support.json",
+      "sha256": "5a3f2731cc963e970392c6dc09105540ba53aa5b35e28c4dfc4f6a326800791a",
+      "inspection": {
+        "format": "json",
+        "schema": "hpt-energyq-boost-family-anchor-v1"
+      }
+    },
+    {
+      "role": "canonical_family_proxy_calibration",
+      "target": "version_2/experts/topology2_single_phase_lvrt/proxy/model/hpt_proxy_calibration.json",
+      "sha256": "96e01df38b4e8914a387093cb20f37c554800c6f42cd5a39b878de89ff73b52f",
+      "inspection": {
+        "format": "json",
+        "schema": "hpt_proxy_calibration_v1"
+      }
+    }
+  ]
+}

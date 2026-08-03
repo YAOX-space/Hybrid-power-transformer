@@ -1,0 +1,9 @@
+{
+  "schema": "hpt-switch-validation-augmented-matrix-v1",
+  "run_id": "hpt_t2_a_lvrt_energyq_fixed_support_20260803",
+  "created_at": "2026-08-03T02:02:45",
+  "source_csv": "lab\\results\\hpt_t2_a_lvrt_energyq_sign_sweep_0600_200ms_switch_20260802_r3\\switch_validation_results.csv",
+  "source_hash": "b24f1a8a48640ba5c61d4852eed639435d5cb2375c049d7dd7e6aa9f221d9336",
+  "out_csv": "lab\\results\\hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803\\frt_calibration_matrix_hpt_t2_a_lvrt_energyq_fixed_support_20260803.csv",
+  "row_count": 10
+}

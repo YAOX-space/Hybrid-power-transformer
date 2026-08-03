@@ -186,12 +186,20 @@ def initialize_expert_workspaces() -> dict:
             },
             "current_model": None,
             "current_result": None,
+            "current_data_manifest": None,
+            "current_proxy_calibration": None,
             "promotion_status": "not_assigned",
         }
         descriptor_path = workspace.root / "expert.json"
         if descriptor_path.exists():
             existing = json.loads(descriptor_path.read_text(encoding="utf-8"))
-            for key in ("current_model", "current_result", "promotion_status"):
+            for key in (
+                "current_model",
+                "current_result",
+                "current_data_manifest",
+                "current_proxy_calibration",
+                "promotion_status",
+            ):
                 descriptor[key] = existing.get(key, descriptor[key])
         descriptor_path.write_text(
             json.dumps(descriptor, indent=2) + "\n",
@@ -206,6 +214,8 @@ def initialize_expert_workspaces() -> dict:
                 "descriptor": str(descriptor_path.relative_to(ROOT)).replace("\\", "/"),
                 "current_model": descriptor["current_model"],
                 "current_result": descriptor["current_result"],
+                "current_data_manifest": descriptor["current_data_manifest"],
+                "current_proxy_calibration": descriptor["current_proxy_calibration"],
                 "promotion_status": descriptor["promotion_status"],
             }
         )

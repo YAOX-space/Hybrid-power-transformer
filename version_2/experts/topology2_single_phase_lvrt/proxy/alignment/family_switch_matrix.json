@@ -1,0 +1,20 @@
+{
+  "schema": "hpt-family-proxy-matrix-v1",
+  "run_id": "hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803",
+  "created_at": "2026-08-03T02:02:45",
+  "sources": [
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_energyaware_r1_20260802\\family_specialist_comparison_rows.csv",
+      "sha256": "f4dd7fe04a4a4dc2aff14c7dcb25a8b72da31df850711479419f0685599c4142"
+    },
+    {
+      "path": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_family_specialist_t2_a_lvrt_deep_lowreg_precharge_sac_r1_probe9_20260802\\family_specialist_comparison_rows.csv",
+      "sha256": "0e254901499c053fc473a958177d0fc0828c2bc40dc155a08dd059fa5380f09d"
+    }
+  ],
+  "out": "E:\\research_space\\Hybrid-power-transformer\\lab\\results\\hpt_t2_a_lvrt_deep_family_proxy_matrix_20260803\\family_switch_matrix.csv",
+  "out_sha256": "ca982181c23ac6bf972f8be0840938d2e4e339dcc5dc6dd934f8b12f35d144a9",
+  "rows": 176,
+  "joint_rows": 132,
+  "conventional_rows": 44
+}

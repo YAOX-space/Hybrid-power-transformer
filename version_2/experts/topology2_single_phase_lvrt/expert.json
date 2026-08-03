@@ -26,5 +26,7 @@
   },
   "current_model": "version_2/experts/topology2_single_phase_lvrt/models/hpt_t2_a_lvrt_joint_support_family_sac_r6_20260803.zip",
   "current_result": "version_2/experts/topology2_single_phase_lvrt/results/targeted_matrix",
+  "current_data_manifest": "version_2/experts/topology2_single_phase_lvrt/manifests/data_manifest.json",
+  "current_proxy_calibration": "version_2/experts/topology2_single_phase_lvrt/proxy/model/hpt_proxy_calibration.json",
   "promotion_status": "promoted_local_boundary_expansion"
 }

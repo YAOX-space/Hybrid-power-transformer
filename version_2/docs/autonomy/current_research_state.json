@@ -55,6 +55,7 @@
   },
   "known_blockers": [
     "Fixed-action proxy calibration does not reliably rank policy trajectories near the active DC-link floor.",
+    "The promoted r6 lineage has no persisted SAC replay buffer or untouched family holdout split.",
     "Continuation candidates r7-r9 improved proxy return but reduced switch-level pass count.",
     "The current actor provides local boundary expansion but not greater total expanded-matrix pass area than strong dq."
   ],
@@ -66,6 +67,9 @@
   "canonical_paths": {
     "expert_registry": "version_2/experts/registry.json",
     "expert_workspace_resolver": "version_2/sac/expert_workspace.py",
+    "promoted_expert_data_manifest": "version_2/experts/topology2_single_phase_lvrt/manifests/data_manifest.json",
+    "promoted_expert_support_dataset": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/family_anchor_joint_support.npz",
+    "promoted_expert_proxy_calibration": "version_2/experts/topology2_single_phase_lvrt/proxy/model/hpt_proxy_calibration.json",
     "family_campaign": "version_2/sac/campaigns/run_hpt_family_specialist_matrix.py",
     "proxy_environment": "version_2/sac/hpt_voltage_sac_env.py",
     "sac_trainer": "version_2/sac/offline/train_hpt_voltage_sac.py",

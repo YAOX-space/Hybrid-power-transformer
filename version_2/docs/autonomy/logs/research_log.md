@@ -6020,3 +6020,20 @@
   than canonical output destinations. The twelve representative checkpoints
   are tracked through Git LFS; bulk run payloads remain ignored while compact
   descriptors, result indexes, and hashes are versioned.
+## 2026-08-03 - Curated topology2 single-phase LVRT data lineage
+
+- Consolidated the promoted r6 expert's useful legacy inputs under
+  `version_2/experts/topology2_single_phase_lvrt/{data,proxy}`.
+- Selected nine exact switch-level support traces, the final 25,647-sample
+  support anchor, the r2 proxy calibration and all directly referenced source
+  matrices, targeted/expanded validation tables, and the r5 predecessor
+  checkpoint.
+- Excluded superseded proxy revisions, unrelated probes, and failed candidates
+  outside the promoted dependency chain. Source artifacts remain available as
+  provenance; canonical copies are hash-indexed by `manifests/data_manifest.json`.
+- Rebuilt the final support anchor from canonical traces: observations and
+  actions matched the original arrays exactly. Loaded and stepped the
+  canonical proxy calibration successfully.
+- No persisted SAC replay buffer or untouched holdout dataset exists for this
+  run. The 60-cell matrix remains expanded validation evidence and is not
+  relabeled as holdout.

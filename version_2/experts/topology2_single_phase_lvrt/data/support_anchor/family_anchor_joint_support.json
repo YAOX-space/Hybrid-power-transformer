@@ -1,0 +1,463 @@
+{
+  "schema": "hpt-energyq-boost-family-anchor-v1",
+  "git_head": "40ba2977612d3c0068ede620514c2ba9ad57a2e3",
+  "base_family_anchor_json": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/base_family_anchor.json",
+  "base_family_anchor_sha256": "492dc8cd2a3f42736ae2b3f609642f981cf9298c60efe4fd64bfcf967180ce96",
+  "dataset": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/family_anchor_joint_support.npz",
+  "samples": 25647,
+  "source_count": 9,
+  "source_summaries": [
+    {
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d120ms_20260802_163918.csv",
+      "trace_sha256": "76ed5418d408a0724a2d3855df78120a6a1f53876a37cafeac008ad4135dcbd7",
+      "samples": 1983,
+      "source_rows": 153,
+      "zone_counts": {
+        "prefault": 30,
+        "fault": 60,
+        "recovery": 60,
+        "tail": 3
+      },
+      "weighted_zone_counts": {
+        "prefault": 60,
+        "fault": 1200,
+        "recovery": 720,
+        "tail": 3
+      },
+      "action_mean": [
+        0.04420465975999832,
+        0.0,
+        0.0,
+        0.5999879837036133
+      ],
+      "action_min": [
+        0.019999999552965164,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "action_max": [
+        0.05999999865889549,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "case": {
+        "fault_pu": 0.5,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0500_d120ms"
+      }
+    },
+    {
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d200ms_20260802_164035.csv",
+      "trace_sha256": "6d89d12e76cc874771aa500186d190185cf6e3821ffb132b3e51406e72dc42c2",
+      "samples": 2783,
+      "source_rows": 193,
+      "zone_counts": {
+        "prefault": 30,
+        "fault": 100,
+        "recovery": 60,
+        "tail": 3
+      },
+      "weighted_zone_counts": {
+        "prefault": 60,
+        "fault": 2000,
+        "recovery": 720,
+        "tail": 3
+      },
+      "action_mean": [
+        0.048745524138212204,
+        0.0,
+        0.0,
+        0.5999844074249268
+      ],
+      "action_min": [
+        0.019999999552965164,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "action_max": [
+        0.05999999865889549,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "case": {
+        "fault_pu": 0.5,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0500_d200ms"
+      }
+    },
+    {
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0500_d300ms_20260802_164151.csv",
+      "trace_sha256": "246317255dcbca3056c62f95fea20c90e0515168d8b73e3422c964a86cbed64b",
+      "samples": 3783,
+      "source_rows": 243,
+      "zone_counts": {
+        "prefault": 30,
+        "fault": 150,
+        "recovery": 60,
+        "tail": 3
+      },
+      "weighted_zone_counts": {
+        "prefault": 60,
+        "fault": 3000,
+        "recovery": 720,
+        "tail": 3
+      },
+      "action_mean": [
+        0.05172058194875717,
+        0.0,
+        0.0,
+        0.5999940037727356
+      ],
+      "action_min": [
+        0.019999999552965164,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "action_max": [
+        0.05999999865889549,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "case": {
+        "fault_pu": 0.5,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0500_d300ms"
+      }
+    },
+    {
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d120ms_20260802_164307.csv",
+      "trace_sha256": "cf4776ed6aa6e5c407bfd92bb30a4d500b5d5d1a3d09df7678b8807ac242f1c2",
+      "samples": 1983,
+      "source_rows": 153,
+      "zone_counts": {
+        "prefault": 30,
+        "fault": 60,
+        "recovery": 60,
+        "tail": 3
+      },
+      "weighted_zone_counts": {
+        "prefault": 60,
+        "fault": 1200,
+        "recovery": 720,
+        "tail": 3
+      },
+      "action_mean": [
+        0.04420465975999832,
+        0.0,
+        0.0,
+        0.5999879837036133
+      ],
+      "action_min": [
+        0.019999999552965164,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "action_max": [
+        0.05999999865889549,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "case": {
+        "fault_pu": 0.575,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0575_d120ms"
+      }
+    },
+    {
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d200ms_20260802_164423.csv",
+      "trace_sha256": "e6e4ac5e381a7031604c480b9026eeda924443f98fe6a4b781b345de02d94781",
+      "samples": 2783,
+      "source_rows": 193,
+      "zone_counts": {
+        "prefault": 30,
+        "fault": 100,
+        "recovery": 60,
+        "tail": 3
+      },
+      "weighted_zone_counts": {
+        "prefault": 60,
+        "fault": 2000,
+        "recovery": 720,
+        "tail": 3
+      },
+      "action_mean": [
+        0.048745524138212204,
+        0.0,
+        0.0,
+        0.5999844074249268
+      ],
+      "action_min": [
+        0.019999999552965164,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "action_max": [
+        0.05999999865889549,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "case": {
+        "fault_pu": 0.575,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0575_d200ms"
+      }
+    },
+    {
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0575_d300ms_20260802_164539.csv",
+      "trace_sha256": "df8e1f75033d295c7070b4499893135bac9a3f96e16921e919e6865a12ad546c",
+      "samples": 3783,
+      "source_rows": 243,
+      "zone_counts": {
+        "prefault": 30,
+        "fault": 150,
+        "recovery": 60,
+        "tail": 3
+      },
+      "weighted_zone_counts": {
+        "prefault": 60,
+        "fault": 3000,
+        "recovery": 720,
+        "tail": 3
+      },
+      "action_mean": [
+        0.05172058194875717,
+        0.0,
+        0.0,
+        0.5999940037727356
+      ],
+      "action_min": [
+        0.019999999552965164,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "action_max": [
+        0.05999999865889549,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "case": {
+        "fault_pu": 0.575,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0575_d300ms"
+      }
+    },
+    {
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d120ms_20260802_164654.csv",
+      "trace_sha256": "b2c8bd206f761c959ebff3c946ac93d79f9a8569ec5b3341ba4885f1c1ed9fdc",
+      "samples": 1983,
+      "source_rows": 153,
+      "zone_counts": {
+        "prefault": 30,
+        "fault": 60,
+        "recovery": 60,
+        "tail": 3
+      },
+      "weighted_zone_counts": {
+        "prefault": 60,
+        "fault": 1200,
+        "recovery": 720,
+        "tail": 3
+      },
+      "action_mean": [
+        0.04420465975999832,
+        0.0,
+        0.0,
+        0.5999879837036133
+      ],
+      "action_min": [
+        0.019999999552965164,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "action_max": [
+        0.05999999865889549,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "case": {
+        "fault_pu": 0.65,
+        "duration_s": 0.12,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0650_d120ms"
+      }
+    },
+    {
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d200ms_20260802_164809.csv",
+      "trace_sha256": "d20d3906a622272cd138e90d47c0c593344091734eb5cfdc4a61be8b5d12b0d5",
+      "samples": 2783,
+      "source_rows": 193,
+      "zone_counts": {
+        "prefault": 30,
+        "fault": 100,
+        "recovery": 60,
+        "tail": 3
+      },
+      "weighted_zone_counts": {
+        "prefault": 60,
+        "fault": 2000,
+        "recovery": 720,
+        "tail": 3
+      },
+      "action_mean": [
+        0.048745524138212204,
+        0.0,
+        0.0,
+        0.5999844074249268
+      ],
+      "action_min": [
+        0.019999999552965164,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "action_max": [
+        0.05999999865889549,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "case": {
+        "fault_pu": 0.65,
+        "duration_s": 0.2,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0650_d200ms"
+      }
+    },
+    {
+      "trace_csv": "version_2/experts/topology2_single_phase_lvrt/data/raw_switch_level/trajectory_trace_topology2_dqseed_t2_a_lvrt_deep_energyaware_pu0650_d300ms_20260802_164926.csv",
+      "trace_sha256": "e3f4b2761505feeeb03dd8e624551c8fdc5f8b2141d7aa40bb0302bdc525c08c",
+      "samples": 3783,
+      "source_rows": 243,
+      "zone_counts": {
+        "prefault": 30,
+        "fault": 150,
+        "recovery": 60,
+        "tail": 3
+      },
+      "weighted_zone_counts": {
+        "prefault": 60,
+        "fault": 3000,
+        "recovery": 720,
+        "tail": 3
+      },
+      "action_mean": [
+        0.05172058194875717,
+        0.0,
+        0.0,
+        0.5999940037727356
+      ],
+      "action_min": [
+        0.019999999552965164,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "action_max": [
+        0.05999999865889549,
+        0.0,
+        0.0,
+        0.6000000238418579
+      ],
+      "case": {
+        "fault_pu": 0.65,
+        "duration_s": 0.3,
+        "topology": "topology2",
+        "category": "LVRT",
+        "phase_key": "a",
+        "family_label": "t2_a_lvrt_deep_energyaware",
+        "label": "t2_a_lvrt_deep_energyaware_pu0650_d300ms"
+      }
+    }
+  ],
+  "action_mean": [
+    0.04901793599128723,
+    0.0,
+    0.0,
+    0.5998539924621582
+  ],
+  "action_min": [
+    0.019999999552965164,
+    0.0,
+    0.0,
+    0.6000000238418579
+  ],
+  "action_max": [
+    0.05999999865889549,
+    0.0,
+    0.0,
+    0.6000000238418579
+  ],
+  "config": {
+    "min_time_s": 0.02,
+    "prefault_repeat": 2,
+    "fault_repeat": 20,
+    "recovery_repeat": 12,
+    "tail_repeat": 1,
+    "fault_reg_d_scale": 0.0,
+    "fault_reg_d_offset": 0.06,
+    "recovery_reg_d_scale": 0.0,
+    "recovery_reg_d_offset": 0.02,
+    "reg_q_mode": "zero",
+    "fault_reg_q_scale": 0.5,
+    "recovery_reg_q_scale": 0.3,
+    "reg_d_clip_abs": 0.12,
+    "reg_q_clip_abs": 0.08,
+    "fault_energy_d": 0.0,
+    "fault_energy_q": 0.6,
+    "recovery_energy_d": 0.0,
+    "recovery_energy_q": 0.6,
+    "outside_reg_d": 0.02,
+    "outside_reg_q": 0.0,
+    "outside_energy_d": 0.0,
+    "outside_energy_q": 0.6,
+    "zero_energy_outside_fault": true
+  },
+  "curation": {
+    "source": "version_2/experts/topology2_single_phase_lvrt/data/support_anchor/family_anchor_joint_support.source.json",
+    "source_sha256": "79ea35b766dae3753c23b213b3c82168d6cd1c5650ff0f6b7ab4eed32ac563a7"
+  }
+}

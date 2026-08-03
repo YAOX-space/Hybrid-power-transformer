@@ -1,0 +1,17 @@
+{
+  "schema": "hpt-v2-expert-training-protocol-v1",
+  "expert_id": "topology2_single_phase_lvrt",
+  "training_mode": "online_sac_in_calibrated_physics_proxy_with_behavior_support",
+  "family_cases": {
+    "fault_depths_pu": [0.5, 0.6, 0.625],
+    "fault_durations_ms": [160, 200, 240],
+    "fault_start_s": 0.08,
+    "category": "LVRT",
+    "phase_key": "a",
+    "case_count": 9
+  },
+  "persisted_replay_buffer": false,
+  "support_dataset": "../support_anchor/family_anchor_joint_support.npz",
+  "proxy_calibration": "../../proxy/model/hpt_proxy_calibration.json",
+  "note": "The SAC replay transitions were generated online and were not saved. This directory records the protocol without claiming that a replay dataset exists."
+}
